@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# scripts/land <name> — land a finished task branch: rebase onto current main,
+# fast-forward merge, remove the worktree. Main's tree is a landing strip,
+# not a workbench — this script is the only thing that should touch it.
+# See CLAUDE.md "Branches and worktrees".
+set -euo pipefail
+
+name="${1:?usage: scripts/land <branch-name>}"
+root="$(git rev-parse --show-toplevel)"
+tree="$root/.worktrees/$name"
+
+[ -d "$tree" ] || { echo "no such worktree: $tree" >&2; exit 1; }
+
+# Landing strip must be clean and on main.
+[ "$(git -C "$root" branch --show-current)" = "main" ] || { echo "main checkout is not on main" >&2; exit 1; }
+git -C "$root" diff --quiet && git -C "$root" diff --cached --quiet || { echo "main's tree is dirty — landing strip must be clean" >&2; exit 1; }
+
+git -C "$tree" rebase main
+
+# --- run the loop green post-rebase: ADAPT PER STACK, then delete comment --
+# e.g. (cd "$tree" && make test)
+# --------------------------------------------------------------------------
+
+git -C "$root" merge --ff-only "$name"
+git -C "$root" worktree remove "$tree"
+git -C "$root" branch -d "$name"
+
+echo "landed: $name"

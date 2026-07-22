@@ -1,0 +1,4 @@
+# Task worktrees live inside the repo, ignored. See CLAUDE.md "Branches and worktrees".
+.worktrees/
+node_modules/
+dist/

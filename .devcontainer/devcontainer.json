@@ -1,0 +1,31 @@
+{
+	// Name is stamped from the directory by the `newrepo` scaffold function.
+	"name": "point-defense",
+
+	// Generic base image. Swap for a language-specific one as needed, e.g.
+	//   "mcr.microsoft.com/devcontainers/python:3.12"
+	//   "mcr.microsoft.com/devcontainers/javascript-node:20"
+	//   "mcr.microsoft.com/devcontainers/go:1"
+	"image": "mcr.microsoft.com/devcontainers/base:bookworm",
+
+	// Dev Container Features to add (https://containers.dev/features), e.g.
+	// "features": {
+	//   "ghcr.io/devcontainers/features/python:1": {}
+	// },
+
+	// Your dotfiles are cloned + installed automatically from your global VS Code
+	// settings (dotfiles.repository / installCommand = "./install.sh --no-host").
+	// This repo doesn't pin a dotfiles profile, so it uses the default (personal).
+	// To use a different profile for THIS repo only, uncomment and set:
+	// "containerEnv": { "DOTFILES_PROFILE": "trajectory" },
+
+	// Run once after the container is created:
+	// "postCreateCommand": "",
+
+	"customizations": {
+		"vscode": {
+			// "extensions": [],
+			// "settings": {}
+		}
+	}
+}
