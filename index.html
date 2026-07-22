@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Point Defense</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<!-- BODY-START -->
+<canvas id="field"></canvas>
+
+<div id="hud" class="hidden">
+  <div id="xpbar"><div id="xpfill"></div></div>
+  <div id="hudrow">
+    <span id="waveTxt">Wave 1</span>
+    <span id="lvlTxt">Lv 1</span>
+    <span class="spacer"></span>
+    <button id="pauseBtn" aria-label="Pause">❚❚</button>
+  </div>
+</div>
+
+<div id="menu" class="overlay">
+  <h1 class="title">POINT<span class="accent">·</span>DEFENSE</h1>
+  <p class="tagline">Every shape wants the Point. Disagree.</p>
+  <div id="menuStats"></div>
+  <div id="towerRow"></div>
+  <div class="btnrow">
+    <button id="startBtn" class="big primary">DEFEND</button>
+    <button id="techBtn" class="big">TECH TREE</button>
+  </div>
+  <p class="howto">TAP to fire · SWIPE to shockwave · HOLD to beam<br>
+  <span class="dim">(swipe &amp; hold weapons are found in the field)</span></p>
+  <div class="btnrow">
+    <button id="muteBtn" class="small"></button>
+  </div>
+  <p id="storageWarn" class="warn hidden">localStorage unavailable — progress won't persist.</p>
+</div>
+
+<div id="tech" class="overlay hidden">
+  <div class="techHead">
+    <button id="techBack" class="small">← BACK</button>
+    <h2>TECH TREE</h2>
+    <span id="techShards" class="shards"></span>
+  </div>
+  <div id="techGrid"></div>
+</div>
+
+<div id="levelup" class="overlay hidden">
+  <h2 id="levelupTitle">LEVEL UP</h2>
+  <div id="cardRow"></div>
+</div>
+
+<div id="pause" class="overlay hidden">
+  <h2>PAUSED</h2>
+  <div class="btnrow col">
+    <button id="resumeBtn" class="big primary">RESUME</button>
+    <button id="abandonBtn" class="big">ABANDON RUN</button>
+  </div>
+</div>
+
+<div id="over" class="overlay hidden">
+  <h2 class="fallen">THE POINT HAS FALLEN</h2>
+  <div id="overStats"></div>
+  <div class="btnrow col">
+    <button id="againBtn" class="big primary">AGAIN</button>
+    <button id="overTechBtn" class="big">TECH TREE</button>
+    <button id="overMenuBtn" class="big">MENU</button>
+  </div>
+</div>
+<!-- BODY-END -->
+<script type="module" src="src/app/main.js"></script>
+</body>
+</html>

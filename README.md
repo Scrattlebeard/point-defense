@@ -24,6 +24,10 @@ npm run dev           # = python3 -m http.server 8123, then open http://localhos
 npm run build         # = node scripts/build.mjs
 #   dist/index.html     — standalone single file (open anywhere, share, host)
 #   dist/artifact.html  — same, minus the outer html skeleton (Claude Artifact publishing)
+
+# visual smoke (headless screenshots; ?autostart skips menu, &turbo pre-simulates ~40s):
+firefox --headless --screenshot .smoke/menu.png --window-size=430,900 "file://$PWD/dist/index.html"
+firefox --headless --screenshot .smoke/battle.png --window-size=430,900 "file://$PWD/dist/index.html?autostart&turbo"
 ```
 
 ## Public seams
