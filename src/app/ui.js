@@ -126,8 +126,12 @@ function drawSpecimen(cv, sides, color, variantId) {
     ctx.beginPath(); ctx.arc(c, c, r * 0.4, 0, Math.PI * 2); ctx.fill();
   }
   if (variantId === 'regen') {
-    ctx.strokeStyle = v.color; ctx.lineWidth = 1.8;
-    ctx.beginPath(); ctx.arc(c, c, r + 5, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = v.color; ctx.lineWidth = 2;
+    const pr = r * 0.55;
+    ctx.beginPath();
+    ctx.moveTo(c - pr, c); ctx.lineTo(c + pr, c);
+    ctx.moveTo(c, c - pr); ctx.lineTo(c, c + pr);
+    ctx.stroke();
   }
   if (variantId === 'shielded') {
     ctx.strokeStyle = v.color; ctx.lineWidth = 2;

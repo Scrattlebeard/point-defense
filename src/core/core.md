@@ -111,13 +111,20 @@ run-scoped record lives in `S.introduced`. Forever-firsts still record to `meta.
 ## Variants (`config.js: VARIANTS`) — the color/highlight grammar
 
 A variant is a *modifier* on a base enemy: stat multipliers + one visual highlight.
+*(2026-07-24: swift's ×0.8 hp and armored's ×0.8 speed drawbacks removed — variants
+are threats, not trades; the highlight should mean "worse", full stop. XP bonuses
+unchanged. Same day: regen's highlight moved from a ring to a **pulsating green plus
+drawn inside the shape** — the ring vocabulary was crowded (frost circle, shield
+arcs, intro rings) and a medic cross reads instantly; stroked, not filled, so the
+fill-encodes-allegiance law holds: the volatile core stays the only filled thing on
+any enemy.)*
 Shape encodes species; highlight encodes the variation (pillar 3).
 
 | id | visual highlight | effect | xp mult | from wave |
 |----|------------------|--------|---------|-----------|
-| swift | white-hot glow outline | speed ×1.7, hp ×0.8 | 1.3 | 6 |
-| armored | thick steel outline | hp ×2.5, speed ×0.8 | 1.6 | 11 |
-| regen | green pulsing ring | heals 3% max hp / s | 1.5 | 17 |
+| swift | white-hot glow outline | speed ×1.7 | 1.3 | 6 |
+| armored | thick steel outline | hp ×2.5 | 1.6 | 11 |
+| regen | pulsating green plus inside the shape | heals 3% max hp / s | 1.5 | 17 |
 | shielded | rotating ring segments | absorbs first 3 damage instances (ring depletes visibly) | 1.6 | 21 |
 | volatile | pulsing orange core | on death: burst r=70 — **heals nearby shapes 30% of their max hp** and damages the Point if in range (reworked 2026-07-23: friendly fire made popping them a free win; a medic-bomb makes target priority a real decision) | 1.4 | 23 |
 

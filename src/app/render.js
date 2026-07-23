@@ -383,9 +383,14 @@ function drawEnemies(G) {
       ctx.beginPath(); ctx.arc(e.x, e.y, e.r * (0.35 + 0.12 * pulse), 0, TAU); ctx.fill();
     }
     if (e.variant === 'regen') {
+      // pulsating green plus inside the shape (core.md variants, 2026-07-24)
       ctx.strokeStyle = e.vdef.color;
-      ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 4 + 2 * pulse, 0, TAU); ctx.stroke();
+      ctx.lineWidth = 2.5;
+      const pr = e.r * (0.42 + 0.1 * pulse);
+      ctx.beginPath();
+      ctx.moveTo(e.x - pr, e.y); ctx.lineTo(e.x + pr, e.y);
+      ctx.moveTo(e.x, e.y - pr); ctx.lineTo(e.x, e.y + pr);
+      ctx.stroke();
     }
     if (e.variant === 'shielded' && e.shield > 0) {
       ctx.strokeStyle = e.vdef.color;
@@ -516,8 +521,12 @@ function drawMiniSpecimen(ctx, x, y, icon) {
     ctx.fillStyle = v.color;
     ctx.beginPath(); ctx.arc(x, y, r * 0.4, 0, TAU); ctx.fill();
   } else if (icon.variant === 'regen') {
-    ctx.strokeStyle = v.color; ctx.lineWidth = 1.4;
-    ctx.beginPath(); ctx.arc(x, y, r + 3.5, 0, TAU); ctx.stroke();
+    ctx.strokeStyle = v.color; ctx.lineWidth = 1.8;
+    const pr = r * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(x - pr, y); ctx.lineTo(x + pr, y);
+    ctx.moveTo(x, y - pr); ctx.lineTo(x, y + pr);
+    ctx.stroke();
   } else if (icon.variant === 'shielded') {
     ctx.strokeStyle = v.color; ctx.lineWidth = 1.6;
     for (let s = 0; s < 3; s++) {
