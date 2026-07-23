@@ -24,13 +24,17 @@ const G = {
 };
 setMuted(!G.meta.sound);
 
+const PHONE_ZOOM = 1.3; // app.md "Phone zoom" — thumb-sized entities on small screens
+
 function resize() {
   const dpr = Math.min(2, window.devicePixelRatio || 1);
-  G.W = window.innerWidth; G.H = window.innerHeight;
+  const zoom = Math.min(window.innerWidth, window.innerHeight) < 600 ? PHONE_ZOOM : 1;
+  G.zoom = zoom;
+  G.W = window.innerWidth / zoom; G.H = window.innerHeight / zoom;
   G.cx = G.W / 2; G.cy = G.H / 2;
-  canvas.width = Math.round(G.W * dpr);
-  canvas.height = Math.round(G.H * dpr);
-  G.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  canvas.width = Math.round(window.innerWidth * dpr);
+  canvas.height = Math.round(window.innerHeight * dpr);
+  G.ctx.setTransform(dpr * zoom, 0, 0, dpr * zoom, 0, 0);
 }
 window.addEventListener('resize', resize);
 resize();

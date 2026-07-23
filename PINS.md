@@ -8,6 +8,22 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
 - **Where:** `src/core/balance.js`, `src/core/config.js`; spec intent in `src/core/core.md`.
 - **Context:** Daniel is the playtester. Open questions: does the new bolt cadence (0.34−0.02L s) feel right vs the old spam ceiling? Is the L6 twin-volley worth reaching for? Tech costs vs actual shard income at waves 8+?
 
+## PWA-ify: manifest + fullscreen button (the honest route to orientation control)
+- **What:** Web app manifest (installable to home screen, standalone display, icon) + an
+  in-menu fullscreen toggle. Optionally `"orientation"` in the manifest and
+  `screen.orientation.lock()` behind the fullscreen gesture on Android.
+- **Why:** True landscape-forcing is impossible on the mobile web (iOS Safari has no
+  orientation lock at all; Android allows it only in fullscreen from a user gesture) —
+  a manifest is the only legitimate lever, and it also kills the URL bar, which is worth
+  more screen than any orientation trick. Decision 2026-07-23: do NOT force landscape —
+  the game is radially symmetric, portrait one-thumb play is a feature; orientation
+  stays player's choice.
+- **Where:** new `manifest.webmanifest` + link tag (build script must inline-or-emit it —
+  Pages can serve a second file, so no inlining contortions needed), `src/app/ui.js`
+  (menu button), README Deployment.
+- **Context:** Deploy is GitHub Pages since 2026-07-23, so multi-file output is fine.
+  Icon could reuse the 🎯 motif; service worker/offline explicitly out of scope until wanted.
+
 ## Haptics + better sound design
 - **What:** `navigator.vibrate` on tower hit / boss spawn; richer synth (noise bursts for explosions, filter sweeps).
 - **Why:** Phone-first game, big cheap juice win.
