@@ -113,6 +113,9 @@ test('meta tracks sightings: empty by default, preserved through payout', () => 
   const { meta } = payout(S, m);
   assert.ok(meta.seen.enemies.includes('grunt'));
   assert.ok(meta.seen.variants.includes('swift'));
+  // run-scoped introduction record starts empty every run (banners repeat by design)
+  assert.equal(S.introduced.enemies.size, 0);
+  assert.equal(S.introduced.variants.size, 0);
 });
 
 test('payout adds shards, tracks best wave, applies salvage, never pays zero', () => {

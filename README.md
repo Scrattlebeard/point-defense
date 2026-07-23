@@ -44,7 +44,7 @@ firefox --headless --screenshot .smoke/battle.png --window-size=430,900 "file://
 1. **Gestures are weapon classes — and the pointer is the aim.** The bolt (every tower
    has it) auto-fires toward the standing aim point: the live cursor on desktop, the
    last touch position on mobile. Aim lines show the volley directions. Swipe =
-   shockwave, hold = channeled beam — unlocked in-run via level-ups, so the gesture
+   force wall, hold = channeled beam — unlocked in-run via level-ups, so the gesture
    vocabulary teaches itself. Every tap and swipe also updates the aim — no gesture is
    ever a dead input. *(v1 fired bolts per tap; replaced after the 2026-07-23 playtest
    because spam-clicking out-damaged every auto weapon.)*

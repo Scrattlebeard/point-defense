@@ -1,22 +1,23 @@
-// Weapon executors: manual (bolt/shockwave/beam) + auto (orbit, nova, frost,
+// Weapon executors: manual (bolt/force-wall/beam) + auto (orbit, nova, frost,
 // tesla, seek, turret) + projectiles. Stats come from core config; every
 // cooldown is scaled by S.cdMult. No tuning constants of its own beyond
 // projectile plumbing (speeds/lifetimes of visuals).
 import { WEAPONS } from '../core/config.js';
 import { dist, distToSegment, TAU } from '../core/geom.js';
+import { enemyMass } from '../core/balance.js';
 import { damageEnemy, nearestEnemy, applyKnock } from './enemies.js';
 import { burst, shake } from './fx.js';
 import { sfx } from './audio.js';
 
 export function resetWeapons(G) {
   G.wt = {
-    boltT: 0.3, waveCd: 0,
+    boltT: 0.3, wallCd: 0,
     orbA: 0, novaT: 2.5, teslaT: 1.2, teslaReady: false, teslaCharge: 0, seekT: 1.6, turretT: 0.8,
     beamOwner: null, beamAim: null,
   };
   G.aim = { x: G.cx, y: G.cy - 160 }; // standing aim point; input moves it
   G.aura = null;
-  G.waveFx = [];
+  G.walls = [];
 }
 
 const lvl = (S, id) => S.weapons[id];
@@ -36,36 +37,65 @@ function boltVolley(G, tx, ty, st) {
   sfx('shoot');
 }
 
-// ---------- manual: shockwave (swipe) ----------
-export function fireShockwave(G, from, to) {
+// ---------- manual: force wall (swipe) ----------
+export function fireWall(G, from, to) {
   const S = G.S;
-  if (lvl(S, 'shockwave') < 1) return false;
-  if (G.wt.waveCd > 0) return false;
-  const st = stats(S, 'shockwave');
-  G.wt.waveCd = st.cd * S.cdMult;
-  const len = dist(from.x, from.y, to.x, to.y) || 1;
-  const dx = (to.x - from.x) / len, dy = (to.y - from.y) / len;
-  for (const e of S.enemies) {
-    if (e.dead) continue;
-    if (distToSegment(e.x, e.y, from.x, from.y, to.x, to.y) <= st.width / 2 + e.r) {
-      damageEnemy(G, e, st.dmg);
-      applyKnock(e, dx * st.knock, dy * st.knock);
-    }
+  if (lvl(S, 'wall') < 1) return false;
+  if (G.wt.wallCd > 0) return false;
+  const st = stats(S, 'wall');
+  G.wt.wallCd = st.cd;
+  // trim over-long swipes around their midpoint (core.md wall row)
+  let { x: ax, y: ay } = from, { x: bx, y: by } = to;
+  const len = dist(ax, ay, bx, by) || 1;
+  if (len > st.len) {
+    const mx = (ax + bx) / 2, my = (ay + by) / 2;
+    const ux = (bx - ax) / len, uy = (by - ay) / len;
+    ax = mx - ux * st.len / 2; ay = my - uy * st.len / 2;
+    bx = mx + ux * st.len / 2; by = my + uy * st.len / 2;
   }
-  G.waveFx.push({ from: { ...from }, to: { ...to }, width: st.width, t: 0 });
-  for (let i = 0; i <= 6; i++) {
-    burst(G.fx, from.x + (to.x - from.x) * (i / 6), from.y + (to.y - from.y) * (i / 6), '#4de8ff', 2, 90, 0.35, 2);
+  // outward normal: perpendicular pointing away from the Point
+  let nx = -(by - ay), ny = bx - ax;
+  const nl = Math.hypot(nx, ny) || 1;
+  nx /= nl; ny /= nl;
+  const mx = (ax + bx) / 2, my = (ay + by) / 2;
+  if (nx * (G.cx - mx) + ny * (G.cy - my) > 0) { nx = -nx; ny = -ny; }
+  while (G.walls.length >= st.maxWalls) G.walls.shift(); // cap: replace the oldest
+  G.walls.push({ ax, ay, bx, by, nx, ny, life: st.dur, maxLife: st.dur, tick: 0 });
+  for (let i = 0; i <= 5; i++) {
+    burst(G.fx, ax + (bx - ax) * (i / 5), ay + (by - ay) * (i / 5), '#4de8ff', 2, 80, 0.3, 2);
   }
-  shake(G.fx, 3);
   sfx('wave');
   return true;
+}
+
+function updateWalls(G, dt) {
+  const S = G.S;
+  if (!G.walls.length) return;
+  const st = stats(S, 'wall');
+  for (const w of G.walls) {
+    w.life -= dt;
+    w.tick -= dt;
+    const doTick = w.tick <= 0;
+    if (doTick) w.tick += st.tick;
+    for (const e of S.enemies) {
+      if (e.dead) continue;
+      if (distToSegment(e.x, e.y, w.ax, w.ay, w.bx, w.by) <= 14 + e.r) {
+        const m = enemyMass(e.age);
+        e.x += (w.nx * st.push * dt) / m;
+        e.y += (w.ny * st.push * dt) / m;
+        if (doTick) damageEnemy(G, e, st.dmg);
+      }
+    }
+  }
+  G.walls = G.walls.filter(w => w.life > 0);
 }
 
 // ---------- main per-frame update ----------
 export function updateWeapons(G, dt) {
   const S = G.S;
   const wt = G.wt;
-  wt.waveCd = Math.max(0, wt.waveCd - dt);
+  wt.wallCd = Math.max(0, wt.wallCd - dt);
+  updateWalls(G, dt);
 
   // bolt: auto-fires toward the standing aim; L6 adds a nearest-target volley
   if (lvl(S, 'bolt') >= 1) {
@@ -105,8 +135,9 @@ export function updateWeapons(G, dt) {
           damageEnemy(G, e, st.dmg);
           e.orbHit = S.time + 0.35;
           const d = dist(G.cx, G.cy, e.x, e.y) || 1;
-          // modest shove: with frost slow it must never exceed walking speed (core.md frost note)
-          applyKnock(e, ((e.x - G.cx) / d) * 35, ((e.y - G.cy) / d) * 35);
+          // shove restored 35→45 after the age-accrual fix: fresh shapes fling
+          // properly again, veterans still resist via mass (core.md enemyMass)
+          applyKnock(e, ((e.x - G.cx) / d) * 45, ((e.y - G.cy) / d) * 45);
         }
       }
     }
@@ -263,8 +294,6 @@ export function updateWeapons(G, dt) {
   }
   S.bullets = S.bullets.filter(b => !b.dead);
 
-  for (const w of G.waveFx) w.t += dt;
-  G.waveFx = G.waveFx.filter(w => w.t < 0.3);
 }
 
 /** Best-aligned living shape ahead of the missile's heading; nearest as fallback. */

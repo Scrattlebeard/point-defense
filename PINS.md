@@ -19,9 +19,3 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
 - **Why:** Every 5th wave currently differs only in hp scale; names deserve behaviors.
 - **Where:** `src/app/enemies.js` (boss branch), spec first in `src/core/core.md` Enemies.
 - **Context:** Keep decisions in core (a `BOSS_MOVES` table), execution in shell, per pillar 5.
-
-## Offer meta "reset save" affordance
-- **What:** A small "reset progress" in the menu (double-confirm), plus meta schema-version migration note.
-- **Why:** Public seam `pointdefense.meta.v1` is a save; there's no way to wipe it in-game.
-- **Where:** `src/app/ui.js` menu, `src/app/meta.js`.
-- **Context:** Key bump = save wipe = ADR-level per README; an explicit reset avoids ever needing that for testing.

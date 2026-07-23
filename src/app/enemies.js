@@ -8,6 +8,7 @@ import { burst, dmgText, shake, flash, announce } from './fx.js';
 import { sfx } from './audio.js';
 
 const TOWER_R = 24;
+const COMBAT_R = 280; // inertia-age accrual zone (core.md enemyMass)
 
 export function spawnEnemy(G, kind, variantId = null, x = null, y = null) {
   const S = G.S;
@@ -38,20 +39,26 @@ export function spawnEnemy(G, kind, variantId = null, x = null, y = null) {
     boss: isBoss, dead: false,
   };
   S.enemies.push(e);
-  // bestiary sighting record (core.md meta.seen) + on-field introduction of first
-  // sightings (core.md "Introductions"). Bosses introduce themselves by name banner.
+  // bestiary sighting record (core.md meta.seen) — forever-firsts
   const seen = G.meta?.seen;
   if (seen) {
-    if (!seen.enemies.includes(kind)) {
-      seen.enemies.push(kind);
+    if (!seen.enemies.includes(kind)) seen.enemies.push(kind);
+    if (variantId && !seen.variants.includes(variantId)) seen.variants.push(variantId);
+  }
+  // on-field introductions repeat every run (core.md "Introductions" — tutorial
+  // beat, not trophy). Bosses introduce themselves by name banner instead.
+  const intro = S.introduced;
+  if (intro) {
+    if (!intro.enemies.has(kind)) {
+      intro.enemies.add(kind);
       if (!isBoss) {
         announce(G.fx, `NEW SHAPE: ${def.name.toUpperCase()}`, def.color, def.intro);
         e.introduce = 3;
         sfx('discover');
       }
     }
-    if (variantId && !seen.variants.includes(variantId)) {
-      seen.variants.push(variantId);
+    if (variantId && !intro.variants.has(variantId)) {
+      intro.variants.add(variantId);
       announce(G.fx, `NEW SPECIMEN: ${v.name.toUpperCase()}`, v.color, v.desc);
       e.introduce = 3;
       sfx('discover');
@@ -143,7 +150,10 @@ export function updateEnemies(G, dt) {
   const S = G.S;
   for (const e of S.enemies) {
     if (e.dead) continue;
-    e.age += dt;
+    const d = dist(e.x, e.y, G.cx, G.cy) || 1;
+    // age accrues only inside the combat radius — the inertia clock starts when
+    // the fight does, not at spawn (core.md enemyMass; screen-size independence)
+    if (d < COMBAT_R) e.age += dt;
     if (e.introduce) e.introduce = Math.max(0, e.introduce - dt);
     e.flash = Math.max(0, e.flash - dt);
     e.contactCd = Math.max(0, e.contactCd - dt);
@@ -153,11 +163,10 @@ export function updateEnemies(G, dt) {
     }
     // frost aura slow, resisted by age-mass (core.md enemyMass)
     let slow = 1;
-    if (G.aura && dist(e.x, e.y, G.cx, G.cy) < G.aura.r + e.r) {
+    if (G.aura && d < G.aura.r + e.r) {
       slow = 1 - G.aura.slow / enemyMass(e.age);
     }
     // seek the Point
-    const d = dist(e.x, e.y, G.cx, G.cy) || 1;
     const ux = (G.cx - e.x) / d, uy = (G.cy - e.y) / d;
     e.x += (ux * e.spd * slow + e.kbx) * dt;
     e.y += (uy * e.spd * slow + e.kby) * dt;

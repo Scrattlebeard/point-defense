@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { defaultMeta, newRun, levelChoices, applyChoice } from '../src/core/state.js';
 import { makeFx, updateFx } from '../src/app/fx.js';
-import { resetWeapons, fireShockwave } from '../src/app/weapons.js';
+import { resetWeapons, fireWall } from '../src/app/weapons.js';
 import { resetWaveDirector, updateGame } from '../src/app/game.js';
 import { nearestEnemy, spawnEnemy } from '../src/app/enemies.js';
 
@@ -77,20 +77,27 @@ test('every tower survives its opening waves without crashing', () => {
   }
 });
 
-test('shockwave fires along a swipe and respects its cooldown', () => {
+test('force wall: pushes shapes away from the Point and ticks damage', () => {
   const G = makeG();
-  G.S.weapons.bolt = 0; // isolate the shockwave as the only kill source
-  G.S.weapons.shockwave = 1;
-  simulate(G, 10, { tap: false });
-  const before = G.S.kills;
-  // sweep across the whole field several times
-  let fired = 0;
-  for (let i = 0; i < 6; i++) {
-    if (fireShockwave(G, { x: 0, y: 100 + i * 120 }, { x: G.W, y: 100 + i * 120 })) fired++;
-    simulate(G, 2, { tap: false });
-  }
-  assert.ok(fired >= 5, `cooldown ate swipes: ${fired}/6`);
-  assert.ok(G.S.kills > before, 'shockwave sweeps killed nothing');
+  G.S.weapons.bolt = 0;
+  G.S.weapons.wall = 1;
+  const e = spawnEnemy(G, 'grunt', null, G.cx, G.cy - 150);
+  const y0 = e.y;
+  fireWall(G, { x: G.cx - 100, y: G.cy - 160 }, { x: G.cx + 100, y: G.cy - 160 });
+  assert.equal(G.walls.length, 1);
+  for (let i = 0; i < 30; i++) updateGame(G, 1 / 60); // 0.5s of contact
+  assert.ok(e.dead || e.y < y0, `wall neither pushed nor killed the grunt (y ${y0} -> ${e.y})`);
+});
+
+test('force wall: active-wall cap replaces the oldest', () => {
+  const G = makeG();
+  G.S.weapons.wall = 1; // maxWalls 1 at L1
+  fireWall(G, { x: 0, y: 100 }, { x: 120, y: 100 });
+  G.wt.wallCd = 0;
+  const ok = fireWall(G, { x: 0, y: 300 }, { x: 120, y: 300 });
+  assert.ok(ok, 'second swipe should conjure (replacing the first)');
+  assert.equal(G.walls.length, 1);
+  assert.ok(Math.abs(G.walls[0].ay - 300) < 30, 'oldest wall was not the one replaced');
 });
 
 test('a max-level beam channels on its own — no hold input ever given', () => {

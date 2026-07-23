@@ -74,14 +74,30 @@ function drawField(G) {
 
   drawAim(G);
 
-  // shockwave fx
-  for (const w of G.waveFx) {
-    const a = 1 - w.t / 0.3;
-    ctx.strokeStyle = `rgba(77, 232, 255, ${0.45 * a})`;
-    ctx.lineWidth = w.width * a;
+  // force walls — glowing barrier + outward push ticks
+  for (const w of G.walls) {
+    const a = clamp(w.life / w.maxLife, 0, 1);
+    const shimmer = 0.7 + 0.3 * Math.sin(S.time * 10 + w.ax);
     ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(w.from.x, w.from.y); ctx.lineTo(w.to.x, w.to.y); ctx.stroke();
+    ctx.strokeStyle = `rgba(77, 232, 255, ${0.2 * a})`;
+    ctx.lineWidth = 13;
+    ctx.beginPath(); ctx.moveTo(w.ax, w.ay); ctx.lineTo(w.bx, w.by); ctx.stroke();
+    ctx.strokeStyle = `rgba(159, 243, 255, ${(0.45 + 0.3 * shimmer) * a})`;
+    ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(w.ax, w.ay); ctx.lineTo(w.bx, w.by); ctx.stroke();
     ctx.lineCap = 'butt';
+    // outward push ticks along the wall
+    ctx.strokeStyle = `rgba(159, 243, 255, ${0.5 * a})`;
+    ctx.lineWidth = 1.5;
+    for (let i = 1; i <= 5; i++) {
+      const px = w.ax + (w.bx - w.ax) * (i / 6);
+      const py = w.ay + (w.by - w.ay) * (i / 6);
+      const ext = 7 + 3 * Math.sin(S.time * 8 + i);
+      ctx.beginPath();
+      ctx.moveTo(px + w.nx * 4, py + w.ny * 4);
+      ctx.lineTo(px + w.nx * (4 + ext), py + w.ny * (4 + ext));
+      ctx.stroke();
+    }
   }
 
   // beam — LOUD: layered glow + surge modulation + counter-flowing dashes (app.md juice)

@@ -57,3 +57,5 @@ gameplay screenshots) and by play; not unit-tested.
   small shake.
 - **Failure honesty:** if localStorage is unavailable, the game plays with in-memory
   meta and the menu shows "progress won't persist" — never a silent wipe.
+- **Reset progress:** menu carries a two-tap reset (arm → confirm within 4s) that
+  restores `defaultMeta()` and saves. Deliberate wipes only; no accidental ones.

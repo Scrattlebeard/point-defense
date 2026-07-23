@@ -34,10 +34,14 @@ prereqs enforced), not exact constants, so tuning stays cheap.
 - `shardPayout(wave, kills, bossKills) = round(3*wave + kills/10 + 8*bossKills)`,
   minimum 1 — **losing must always buy something** (pillar 4). Salvage tech multiplies.
 - `enemyMass(age) = 1 + min(2, age/15)` — **shapes gain inertia with age** (1 at spawn,
-  capped ×3 from 30s on). Knockback impulses and aura slow are divided by mass, so
-  crowd-control decays against anything that survives long enough — an old shape has
-  earned its momentum. (2026-07-23 playtest: complements the frost/orbit nerf; permanent
-  CC-lock must not be reachable at any level combination.)
+  capped ×3 from 30s on). Knockback impulses, wall push and aura slow are divided by
+  mass, so crowd-control decays against anything that survives long enough — an old
+  shape has earned its momentum. (2026-07-23 playtest: complements the frost/orbit
+  nerf; permanent CC-lock must not be reachable at any level combination.)
+  **Age = time spent inside the combat radius (280px of the Point), not time since
+  spawn** — travel time scales with screen size, and aging-in-transit pre-hardened
+  everything before its first contact (second 2026-07-23 finding: on a desktop window
+  a tank reached the mass cap before reaching the fight).
 
 ## Enemies (`config.js: ENEMIES`)
 
@@ -54,12 +58,13 @@ the boss, which rams, knocks itself back, and comes again.
 | boss | nonagon | `bossHp(w)` | 22 | 34 | 26 | 80 | — | every 5th wave | magenta |
 
 **Introductions (2026-07-23 playtest):** content is deliberately drip-fed — roughly one
-new shape or variant every 2–3 waves, stretching past wave 20 — and every **first
-sighting** of a kind/variant fires an on-field introduction: a banner ("NEW SHAPE:
+new shape or variant every 2–3 waves, stretching past wave 20 — and every first
+sighting **of the run** fires an on-field introduction: a banner ("NEW SHAPE:
 DART — fast and fragile" / "NEW SPECIMEN: REGEN — heals 3% max HP per second") plus a
 ~3s pulsing highlight ring around the arriving specimen so it can be found on screen.
-Sightings record to `meta.seen` (the bestiary). Bosses introduce themselves by name
-banner instead — no generic card.
+The banner repeats each run by design — it's a tutorial beat, not a trophy; the
+run-scoped record lives in `S.introduced`. Forever-firsts still record to `meta.seen`
+(the bestiary). Bosses introduce themselves by name banner instead — no generic card.
 
 ## Variants (`config.js: VARIANTS`) — the color/highlight grammar
 
@@ -93,7 +98,7 @@ Manual (gesture) weapons:
 | id | gesture | max | levels |
 |----|---------|-----|--------|
 | bolt | aim | 6 | auto-fires toward the aim point every 0.34−0.02L s (needs a live enemy); dmg 9+4L; L3: 2 bolts, L5: 3 bolts (small spread); L4: pierce 1; **L6: adds an independent second volley at the nearest shape** |
-| shockwave | swipe | 5 | dmg 16+7L along the swipe segment (width 55+9L), knockback 170+25L; cd 1.7−0.18L (floor 0.6); L5: double damage |
+| wall | swipe | 5 | **Force Wall** (reworked from the one-shot shockwave, 2026-07-23 playtest): the swipe conjures a stationary wall (length 150+40L, longer swipes trimmed around their midpoint) lasting 2.4s; shapes touching it are pushed along the wall's tower-away normal at (100+25L)÷mass px/s and take 5+3L dmg per 0.4s tick; active walls capped at 1/1/2/2/3 — swiping past the cap replaces the oldest; cd 0.4s |
 | beam | hold | 5 | ticks **per-target every 0.25s** at dps 30+18L (damage = dps×0.25 per tick) — so a shield loses one charge per *tick*, never per frame (playtest 2026-07-23: frame-rate ticking erased shields on touch); **per-target damage ramp** ×1→×2.5 over 2s of continuous exposure, decaying back over ~1.5s once out of the beam — sustained tracking is rewarded, field-flicking isn't; heat 0→1 in ~3.5s, forced cooldown at 1; L3: slower heat; **L5: no overheat and always-on — channels toward the standing aim point with no hold needed** (a no-overheat beam that still demanded holding would just be a finger tax) |
 
 Auto weapons (level-up pool):
@@ -157,8 +162,8 @@ A trace is `{t0, points: [{x, y, t}], holdEngaged}`. Classification:
 
 **The aim point** is a separate, standing input (not a gesture): every pointer
 position update — hover on desktop, any touch/drag on mobile — moves it, and the bolt
-auto-fires toward it. Taps therefore *aim* rather than fire; a swipe with no shockwave
-owned still re-aims at its endpoint (no dead inputs, README pillar 1).
+auto-fires toward it. Taps therefore *aim* rather than fire; a swipe with no force
+wall owned still re-aims at its endpoint (no dead inputs, README pillar 1).
 
 One hold at a time; concurrent other pointers still resolve as taps/swipes
 (multi-touch: beam with one finger, tap-fire with another).

@@ -90,6 +90,7 @@ button:active { transform: translateY(1px); }
   font-weight: 700;
 }
 .btnrow { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.danger { color: var(--danger); border-color: rgba(255, 92, 108, 0.45); }
 .btnrow.col { flex-direction: column; align-items: center; }
 
 /* ---------- Tower select ---------- */

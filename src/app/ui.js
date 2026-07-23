@@ -20,6 +20,21 @@ export function initUI(G, hooks) {
   $('bestBack').addEventListener('click', () => { renderMenu(G); showOnly('menu'); });
   $('techBack').addEventListener('click', () => { renderMenu(G); showOnly(G.returnTo || 'menu'); if (G.returnTo === 'over') renderGameOver(G, G.lastEarned); });
   $('muteBtn').addEventListener('click', () => H.onMute());
+  // two-tap reset: arm, then confirm within 4s (app.md "Reset progress")
+  let resetArmedUntil = 0;
+  $('resetBtn').addEventListener('click', () => {
+    if (Date.now() < resetArmedUntil) {
+      resetArmedUntil = 0;
+      $('resetBtn').textContent = 'RESET PROGRESS';
+      H.onReset();
+    } else {
+      resetArmedUntil = Date.now() + 4000;
+      $('resetBtn').textContent = 'REALLY? TAP AGAIN';
+      setTimeout(() => {
+        if (Date.now() >= resetArmedUntil) $('resetBtn').textContent = 'RESET PROGRESS';
+      }, 4100);
+    }
+  });
   $('pauseBtn').addEventListener('click', () => H.onPause());
   $('resumeBtn').addEventListener('click', () => H.onResume());
   $('abandonBtn').addEventListener('click', () => H.onAbandon());

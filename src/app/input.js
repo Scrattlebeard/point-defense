@@ -1,7 +1,7 @@
 // Pointer events → traces → core gesture classification → weapon triggers.
 // Multi-touch: one hold (beam) at a time; other pointers still tap/swipe.
 import { newTrace, addPoint, shouldEngageHold, classifyRelease } from '../core/gestures.js';
-import { fireShockwave } from './weapons.js';
+import { fireWall } from './weapons.js';
 import { initAudio } from './audio.js';
 
 export function initInput(G, canvas) {
@@ -34,8 +34,8 @@ export function initInput(G, canvas) {
     const g = classifyRelease(tr);
     if (g.type === 'tap') G.aim = { x: g.x, y: g.y };
     else if (g.type === 'swipe') {
-      // graceful degrade (README pillar 1): no shockwave → the swipe still re-aims
-      if (!fireShockwave(G, g.from, g.to)) G.aim = { x: g.to.x, y: g.to.y };
+      // graceful degrade (README pillar 1): no force wall → the swipe still re-aims
+      if (!fireWall(G, g.from, g.to)) G.aim = { x: g.to.x, y: g.to.y };
     }
     // hold: damage already applied while channeling; release just ends it
   };

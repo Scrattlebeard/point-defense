@@ -48,10 +48,10 @@ export const WEAPONS = {
     descs: ['Auto-fires toward your aim', '+damage', 'Fires 2 bolts', 'Bolts pierce one extra shape', 'Fires 3 bolts', 'MAX: second volley targets the nearest shape'],
     stats: l => ({ dmg: 9 + 4 * l, count: l >= 5 ? 3 : l >= 3 ? 2 : 1, pierce: l >= 4 ? 1 : 0, cd: 0.34 - 0.02 * l, twin: l >= 6 }),
   },
-  shockwave: {
-    name: 'Shockwave', kind: 'manual', gesture: 'swipe', max: 5, tag: 'SWIPE',
-    descs: ['Swipe to unleash a knockback wave', '+damage & width', 'Faster recharge', '+knockback & damage', 'MAX: double damage'],
-    stats: l => ({ dmg: (16 + 7 * l) * (l >= 5 ? 2 : 1), width: 55 + 9 * l, knock: 170 + 25 * l, cd: Math.max(0.6, 1.7 - 0.18 * l) }),
+  wall: {
+    name: 'Force Wall', kind: 'manual', gesture: 'swipe', max: 5, tag: 'SWIPE',
+    descs: ['Swipe a wall into being — it pushes shapes away from the Point', '+length & damage', '+1 wall, +push', '+length & damage', 'MAX: 3 walls, heavy push'],
+    stats: l => ({ len: 150 + 40 * l, dur: 2.4, push: 100 + 25 * l, dmg: 5 + 3 * l, tick: 0.4, maxWalls: [0, 1, 1, 2, 2, 3][l], cd: 0.4 }),
   },
   beam: {
     name: 'Lance Beam', kind: 'manual', gesture: 'hold', max: 5, tag: 'HOLD',

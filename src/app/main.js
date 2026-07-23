@@ -1,7 +1,7 @@
 // Entry point: boot, mode state machine, frame loop. Wires core decisions to
 // shell modules via plain calls + the ui hooks object. Mode transitions all
 // happen here — no other module changes G.mode.
-import { newRun, levelChoices, applyChoice, payout } from '../core/state.js';
+import { newRun, levelChoices, applyChoice, payout, defaultMeta } from '../core/state.js';
 import { buy } from '../core/tech.js';
 import { loadMeta, saveMeta } from './meta.js';
 import { makeFx, updateFx, announce } from './fx.js';
@@ -96,6 +96,11 @@ ui.initUI(G, {
     ui.renderMenu(G);
   },
   onMetaChanged: () => saveMeta(G.meta),
+  onReset: () => {
+    G.meta = defaultMeta();
+    saveMeta(G.meta);
+    ui.renderMenu(G);
+  },
 });
 
 initInput(G, canvas);
