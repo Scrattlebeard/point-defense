@@ -212,9 +212,19 @@ Tuning intent: a first run reaching wave 5–8 pays ~20–40◆ — enough for o
 
 A trace is `{t0, points: [{x, y, t}], holdEngaged}`. Classification:
 
-- **hold** — engages *during* the gesture once `t − t0 ≥ 0.28s` while max displacement
-  from origin < 14px, and only if the run owns a hold weapon. Once engaged, moving the
-  finger aims the beam (movement no longer reclassifies). Ends on release.
+- **hold** — engages *during* the gesture once the pointer has been **still for
+  0.28s**, where still = within 14px of a sliding anchor that resets every time the
+  pointer strays past it. Stillness is judged over the *recent* window, never since
+  the press: a press that starts in motion (finger already aim-tracking) simply
+  engages 0.28s after the finger settles. *(2026-07-24, second-playtester bug: the
+  old rule — max displacement from the press origin < 14px — permanently
+  disqualified any press that moved early; stillness afterward couldn't
+  rehabilitate it. "The beam won't trigger" was the classifier judging the
+  gesture's past instead of its present.)* Deliberate consequence: freezing
+  mid-swipe for 0.28s converts the gesture to a hold — stopping and holding *is*
+  holding, and the abandoned wall would have anchored at a start point the finger
+  left long ago. Only engages if the run owns a hold weapon. Once engaged, moving
+  the finger aims the beam (movement no longer reclassifies). Ends on release.
 - **swipe** — on release, if not hold-engaged and total path length ≥ 30px. Payload:
   first→last point segment.
 - **tap** — anything else on release. Payload: release point.
