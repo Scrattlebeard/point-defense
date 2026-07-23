@@ -37,6 +37,8 @@ export function renderFrame(G) {
   }
 }
 
+const SPARKS_ON = typeof location !== 'undefined' && location.search.includes('sparks');
+
 function drawGrid(G) {
   const { ctx, W, H } = G;
   ctx.strokeStyle = 'rgba(110, 150, 230, 0.055)';
@@ -47,6 +49,8 @@ function drawGrid(G) {
   ctx.stroke();
 
   // grid sparks (app.md): stateless ambient lights crawling the lanes.
+  // OFF by default — &sparks dev hatch; motion read as threat in playtest.
+  if (!SPARKS_ON) return;
   // Wall-clock on purpose — the room keeps humming through pause and menus.
   const t = performance.now() / 1000;
   const hash = n => { const s = Math.sin(n) * 43758.5453; return s - Math.floor(s); };

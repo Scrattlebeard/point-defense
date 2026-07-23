@@ -40,7 +40,8 @@ Dev hatches (query params on any build): `?autostart` skips the menu ·
 `&turbo` pre-simulates ~40s with a robot aimer (auto-picks level-ups) ·
 `&warp=N` pre-simulates exactly N seconds with *no* aimer (enemies survive to be
 photographed) · `&gear=frost:4,orbit:2` grants weapon levels after autostart (visual
-dev — capped at each weapon's max) · `?bestiary` opens a fully-revealed bestiary,
+dev — capped at each weapon's max) · `&sparks` enables the ambient grid sparks
+(off by default — app.md "Grid sparks") · `?bestiary` opens a fully-revealed bestiary,
 in-memory only.
 
 ## Deployment (GitHub Pages — canonical)
