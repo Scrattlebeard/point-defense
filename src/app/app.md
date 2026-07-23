@@ -56,6 +56,12 @@ simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not un
   level — plus a slow-rotating ring of rim crystals on the dashed circle. Stateless
   (derived from `S.time`, no particle arrays) and still *dim*: the legibility rule
   above outranks the juice; frost may sparkle but never bloom like nova.
+- **Grid sparks** (2026-07-23): faint lights crawl along the background grid lines —
+  a handful at a time, each running one full lane with a short gradient tail and a
+  fade-in/out envelope, lanes re-rolled per pass. Stateless (wall-clock derived, like
+  the frost motes) and deliberately *ambient*: they keep crawling through pause and
+  menus (they're the room, not the sim) and must stay below every gameplay signal —
+  dimmer than frost, unreadable as projectiles.
 - **Juice:** deaths burst in the enemy's color, tower hits shake + red vignette,
   level-ups pause the sim (cards are DOM, thumb-sized, stacked vertically on narrow
   screens). The beam is *loud*: layered glow (outer haze / mid sheath / white core)

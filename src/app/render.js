@@ -45,6 +45,40 @@ function drawGrid(G) {
   for (let x = 0; x <= W; x += 44) { ctx.moveTo(x, 0); ctx.lineTo(x, H); }
   for (let y = 0; y <= H; y += 44) { ctx.moveTo(0, y); ctx.lineTo(W, y); }
   ctx.stroke();
+
+  // grid sparks (app.md): stateless ambient lights crawling the lanes.
+  // Wall-clock on purpose — the room keeps humming through pause and menus.
+  const t = performance.now() / 1000;
+  const hash = n => { const s = Math.sin(n) * 43758.5453; return s - Math.floor(s); };
+  for (let k = 0; k < 9; k++) {
+    const period = 6 + (k % 4) * 2.1; // seconds per lane crossing
+    const phase = t / period + k * 0.37;
+    const cycle = Math.floor(phase);
+    const p = phase - cycle;
+    const h = hash(cycle * 127.1 + k * 311.7); // re-roll lane + direction per pass
+    const horiz = k % 2 === 0;
+    const span = horiz ? W : H;
+    const lanes = Math.max(1, Math.floor((horiz ? H : W) / 44) - 1);
+    const lane = (1 + Math.floor(h * lanes)) * 44;
+    const dir = h > 0.5 ? 1 : -1;
+    const head = dir > 0 ? p * span : (1 - p) * span;
+    const tail = head - dir * 34;
+    const a = 0.3 * Math.sin(Math.PI * p); // fade in/out across the run
+    const grad = horiz
+      ? ctx.createLinearGradient(tail, 0, head, 0)
+      : ctx.createLinearGradient(0, tail, 0, head);
+    grad.addColorStop(0, 'rgba(120, 200, 255, 0)');
+    grad.addColorStop(1, `rgba(150, 220, 255, ${a})`);
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    if (horiz) { ctx.moveTo(tail, lane); ctx.lineTo(head, lane); }
+    else { ctx.moveTo(lane, tail); ctx.lineTo(lane, head); }
+    ctx.stroke();
+    ctx.fillStyle = `rgba(200, 238, 255, ${a})`;
+    ctx.fillRect((horiz ? head : lane) - 1, (horiz ? lane : head) - 1, 2, 2);
+  }
+  ctx.lineWidth = 1;
 }
 
 function drawField(G) {
