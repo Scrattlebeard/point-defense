@@ -36,8 +36,13 @@ gameplay screenshots) and by play; not unit-tested.
 - **Performance guards:** particle and damage-number pools are capped; enemy count is
   soft-capped (~240) by pausing the spawn queue, never by dropping queued spawns.
 - **Aim feedback:** faint dashed aim lines from the Point toward the aim point — one
-  per bolt in the volley, at their true spread angles — plus a small reticle. The
-  bolt's *reach* is unbounded; the lines are direction indicators, not range.
+  per bolt in the volley, at their true spread angles — plus a small reticle.
+- **The play area is walled** (2026-07-23): player projectiles die against the
+  viewport boundary with a force-field *flare* — a streak of light along the unseen
+  wall — instead of silently vanishing; the beam clips at the boundary and blooms
+  against it while channeling. Deliberate gameplay consequence: player fire cannot
+  reach shapes that haven't entered the arena yet. Enemies pass the wall freely —
+  it's the Point's cage, not theirs.
 - **Loadout visibility:** the pause screen shows the full current loadout (weapons +
   levels + run modifiers); the level-up screen carries a compact one-line strip of
   the same, so picks are made in context.

@@ -6,7 +6,7 @@ import { WEAPONS } from '../core/config.js';
 import { dist, distToSegment, TAU } from '../core/geom.js';
 import { enemyMass } from '../core/balance.js';
 import { damageEnemy, nearestEnemy, applyKnock } from './enemies.js';
-import { burst, shake } from './fx.js';
+import { burst, shake, addFlare } from './fx.js';
 import { sfx } from './audio.js';
 
 export function resetWeapons(G) {
@@ -282,9 +282,18 @@ export function updateWeapons(G, dt) {
   }
 
   // bullets (bolt + turret)
+  const EDGE = 4; // arena wall inset (app.md "the play area is walled")
   for (const b of S.bullets) {
     b.life -= dt;
     b.x += b.vx * dt; b.y += b.vy * dt;
+    if (b.x < EDGE || b.x > G.W - EDGE || b.y < EDGE || b.y > G.H - EDGE) {
+      const fx = Math.min(Math.max(b.x, EDGE), G.W - EDGE);
+      const fy = Math.min(Math.max(b.y, EDGE), G.H - EDGE);
+      addFlare(G.fx, fx, fy,
+        b.x < EDGE ? 1 : b.x > G.W - EDGE ? -1 : 0,
+        b.y < EDGE ? 1 : b.y > G.H - EDGE ? -1 : 0);
+      b.dead = true; continue;
+    }
     if (b.life <= 0) { b.dead = true; continue; }
     for (const e of S.enemies) {
       if (e.dead || b.hit.has(e)) continue;
@@ -326,7 +335,15 @@ function updateBeam(G, dt) {
     const dx = target.x - G.cx, dy = target.y - G.cy;
     const len = Math.hypot(dx, dy);
     if (len > 4) {
-      const ex = G.cx + (dx / len) * 1600, ey = G.cy + (dy / len) * 1600;
+      // clip the beam at the arena wall (app.md): it blooms there, not beyond
+      const ux = dx / len, uy = dy / len;
+      const EDGE = 4;
+      let t = 1600;
+      if (ux > 0) t = Math.min(t, (G.W - EDGE - G.cx) / ux);
+      else if (ux < 0) t = Math.min(t, (EDGE - G.cx) / ux);
+      if (uy > 0) t = Math.min(t, (G.H - EDGE - G.cy) / uy);
+      else if (uy < 0) t = Math.min(t, (EDGE - G.cy) / uy);
+      const ex = G.cx + ux * t, ey = G.cy + uy * t;
       G.beamEnd = { x: ex, y: ey, width: st.width };
       inBeam = new Set();
       for (const e of S.enemies) {

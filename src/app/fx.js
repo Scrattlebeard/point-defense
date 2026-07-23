@@ -3,7 +3,14 @@ const MAX_PARTS = 350;
 const MAX_TEXTS = 60;
 
 export function makeFx() {
-  return { parts: [], texts: [], shake: 0, flash: 0 };
+  return { parts: [], texts: [], flares: [], shake: 0, flash: 0 };
+}
+
+/** Boundary flare: a projectile died against the arena wall at (x,y), normal (nx,ny). */
+export function addFlare(fx, x, y, nx, ny) {
+  if (fx.flares.length >= 40) return;
+  const nl = Math.hypot(nx, ny) || 1;
+  fx.flares.push({ x, y, nx: nx / nl, ny: ny / nl, t: 0, life: 0.35 });
 }
 
 export function burst(fx, x, y, color, n = 10, spd = 130, life = 0.5, size = 3) {
@@ -42,6 +49,8 @@ export function updateFx(fx, dt) {
   fx.parts = fx.parts.filter(p => p.t < p.life);
   for (const t of fx.texts) { t.t += dt; if (!t.center) t.y += t.vy * dt; }
   fx.texts = fx.texts.filter(t => t.t < t.life);
+  for (const f of fx.flares) f.t += dt;
+  fx.flares = fx.flares.filter(f => f.t < f.life);
   fx.shake = Math.max(0, fx.shake - 26 * dt);
   fx.flash = Math.max(0, fx.flash - 1.1 * dt);
 }

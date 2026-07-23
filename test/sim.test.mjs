@@ -160,6 +160,22 @@ test('beam ticks discretely: a brushing touch cannot strip a shield, sustained f
   assert.equal(e.shield, 0, 'sustained beam failed to strip the shield');
 });
 
+test('projectiles flare and die at the arena wall instead of flying on', () => {
+  const G = makeG();
+  spawnEnemy(G, 'grunt', null, G.W + 300, G.cy); // beyond the wall, walking in
+  G.aim = { x: G.W - 10, y: G.cy };              // bolts fly at the right edge
+  let flared = false;
+  for (let i = 0; i < 120; i++) {
+    updateGame(G, 1 / 60);
+    updateFx(G.fx, 1 / 60);
+    if (G.fx.flares.length) flared = true;
+    for (const b of G.S.bullets) {
+      assert.ok(b.x <= G.W + 1, 'a bullet escaped the arena');
+    }
+  }
+  assert.ok(flared, 'no boundary flare was ever emitted');
+});
+
 test('a maxed loadout deep-wave stress run does not explode', () => {
   const G = makeG('bastion', ['tesla', 'seek', 'turret']);
   for (const id of Object.keys(G.S.weapons)) G.S.weapons[id] = 5;

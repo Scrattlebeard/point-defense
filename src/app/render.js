@@ -137,6 +137,39 @@ function drawField(G) {
     ctx.setLineDash([]);
     ctx.lineDashOffset = 0;
     ctx.lineCap = 'butt';
+    // bloom where the beam meets the arena wall
+    const bloom = 10 + 4 * Math.sin(S.time * 15);
+    const bg = ctx.createRadialGradient(G.beamEnd.x, G.beamEnd.y, 1, G.beamEnd.x, G.beamEnd.y, bloom + 14);
+    bg.addColorStop(0, 'rgba(255, 255, 255, 0.7)');
+    bg.addColorStop(0.4, 'rgba(120, 240, 255, 0.35)');
+    bg.addColorStop(1, 'rgba(120, 240, 255, 0)');
+    ctx.fillStyle = bg;
+    ctx.beginPath(); ctx.arc(G.beamEnd.x, G.beamEnd.y, bloom + 14, 0, TAU); ctx.fill();
+  }
+
+  // arena-wall flares: projectiles dying against the invisible boundary
+  if (G.fx) {
+    for (const f of G.fx.flares) {
+      const a = clamp(1 - f.t / f.life, 0, 1);
+      const grow = 1 + f.t * 6;
+      // streak along the wall (perpendicular to the inward normal)
+      const tx = -f.ny, ty = f.nx;
+      const L = 16 * grow;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = `rgba(120, 240, 255, ${0.5 * a})`;
+      ctx.lineWidth = 5 * a + 1;
+      ctx.beginPath();
+      ctx.moveTo(f.x - tx * L, f.y - ty * L);
+      ctx.lineTo(f.x + tx * L, f.y + ty * L);
+      ctx.stroke();
+      ctx.strokeStyle = `rgba(255, 255, 255, ${0.7 * a})`;
+      ctx.lineWidth = 2 * a + 0.5;
+      ctx.beginPath();
+      ctx.moveTo(f.x - tx * L * 0.55, f.y - ty * L * 0.55);
+      ctx.lineTo(f.x + tx * L * 0.55, f.y + ty * L * 0.55);
+      ctx.stroke();
+      ctx.lineCap = 'butt';
+    }
   }
 
   // tesla zaps — under-glow + hot core
