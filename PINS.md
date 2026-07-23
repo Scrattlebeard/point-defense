@@ -25,9 +25,3 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
 - **Why:** Public seam `pointdefense.meta.v1` is a save; there's no way to wipe it in-game.
 - **Where:** `src/app/ui.js` menu, `src/app/meta.js`.
 - **Context:** Key bump = save wipe = ADR-level per README; an explicit reset avoids ever needing that for testing.
-
-## GitHub remote
-- **What:** `git remote add origin` + push (Scrattlebeard/point-defense or under zephyr's account — Daniel's call).
-- **Why:** Repo currently lives only on wisp; the durability story for repos outside the memory tree is a known gap (`workshop/repo-durability-gap.md`).
-- **Where:** repo root.
-- **Context:** Built overnight 2026-07-22→23; Daniel hasn't seen it yet — let him decide visibility before pushing anywhere.
