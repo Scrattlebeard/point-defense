@@ -51,7 +51,7 @@ function drawGrid(G) {
   const t = performance.now() / 1000;
   const hash = n => { const s = Math.sin(n) * 43758.5453; return s - Math.floor(s); };
   for (let k = 0; k < 9; k++) {
-    const period = 6 + (k % 4) * 2.1; // seconds per lane crossing
+    const period = 22 + (k % 4) * 5; // seconds per lane crossing — a drift, not a dash
     const phase = t / period + k * 0.37;
     const cycle = Math.floor(phase);
     const p = phase - cycle;
@@ -63,7 +63,7 @@ function drawGrid(G) {
     const dir = h > 0.5 ? 1 : -1;
     const head = dir > 0 ? p * span : (1 - p) * span;
     const tail = head - dir * 34;
-    const a = 0.3 * Math.sin(Math.PI * p); // fade in/out across the run
+    const a = 0.3 * Math.sin(Math.PI * p) ** 2; // gradual fade in/out across the run
     const grad = horiz
       ? ctx.createLinearGradient(tail, 0, head, 0)
       : ctx.createLinearGradient(0, tail, 0, head);
