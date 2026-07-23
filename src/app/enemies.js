@@ -70,6 +70,15 @@ export function spawnEnemy(G, kind, variantId = null, x = null, y = null) {
   return e;
 }
 
+/** The k nearest distinct live shapes to (x,y); same bounds rule as nearestEnemy. */
+export function nearestEnemies(S, x, y, k, bounds = null) {
+  if (k <= 0) return [];
+  const live = S.enemies.filter(e => !e.dead &&
+    !(bounds && (e.x < 0 || e.x > bounds.W || e.y < 0 || e.y > bounds.H)));
+  live.sort((a, b) => dist(x, y, a.x, a.y) - dist(x, y, b.x, b.y));
+  return live.slice(0, k);
+}
+
 export function nearestEnemy(S, x, y, maxR = Infinity, bounds = null) {
   let best = null, bestD = maxR;
   for (const e of S.enemies) {

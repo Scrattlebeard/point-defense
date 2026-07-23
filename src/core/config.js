@@ -45,8 +45,9 @@ export const VARIANTS = {
 export const WEAPONS = {
   bolt: {
     name: 'Bolt', kind: 'manual', gesture: 'aim', max: 6, tag: 'AIM',
-    descs: ['Auto-fires toward your aim', '+damage', 'Fires 2 bolts', 'Bolts pierce one extra shape', 'Fires 3 bolts', 'MAX: second volley targets the nearest shape'],
-    stats: l => ({ dmg: 9 + 4 * l, count: l >= 5 ? 3 : l >= 3 ? 2 : 1, pierce: l >= 4 ? 1 : 0, cd: 0.34 - 0.02 * l, twin: l >= 6 }),
+    descs: ['Auto-fires toward your aim', '+damage', 'A second bolt picks its own target', 'Bolts pierce one extra shape', 'A third bolt joins the hunt', 'MAX: five bolts — the pack hunts'],
+    // aimed bolt is always exactly 1; `auto` extras self-target (core.md bolt row)
+    stats: l => ({ dmg: 9 + 4 * l, auto: [0, 0, 0, 1, 1, 2, 4][l], pierce: l >= 4 ? 1 : 0, cd: 0.34 - 0.02 * l }),
   },
   wall: {
     name: 'Force Wall', kind: 'manual', gesture: 'swipe', max: 5, tag: 'SWIPE',
@@ -63,7 +64,7 @@ export const WEAPONS = {
   },
   orbit: {
     name: 'Orbitals', kind: 'auto', max: 5, tag: 'AUTO',
-    descs: ['A blade orbits the Point', '+1 blade', '+damage & radius', '+1 blade', 'MAX: 5 blades'],
+    descs: ['A blade circles the Point, grinding shapes it touches', '+1 blade', '+damage & radius', '+1 blade', 'MAX: 5 blades'],
     stats: l => ({ n: [0, 1, 2, 2, 3, 5][l], dmg: 10 + 6 * l, radius: 64 + 8 * l, speed: 2.3 + 0.18 * l }),
   },
   nova: {

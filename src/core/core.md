@@ -125,15 +125,15 @@ Manual (gesture) weapons:
 
 | id | gesture | max | levels |
 |----|---------|-----|--------|
-| bolt | aim | 6 | auto-fires toward the aim point every 0.34−0.02L s (needs a live enemy); dmg 9+4L; L3: 2 bolts, L5: 3 bolts (small spread); L4: pierce 1; **L6: adds an independent second volley at the nearest shape *inside the arena walls*** — bullets die at the wall, so a target beyond it would eat the whole volley for nothing (2026-07-23) |
+| bolt | aim | 6 | auto-fires toward the aim point every 0.34−0.02L s (needs a live enemy); dmg 9+4L; L4: pierce 1. **The aimed bolt is always exactly one bolt on the exact aim line** — extra bolts are *auto-aimed*, each fired at one of the nearest distinct shapes *inside the arena walls* (bullets die at the wall — an outside target eats a bolt for nothing, 2026-07-23): **L3 +1, L5 +2, L6 MAX +4** (five bolts total; fewer live in-bounds targets → fewer auto bolts, the aimed bolt always fires). *(Reworked 2026-07-23 after second-playtester feedback: the old L3/L5 spread volley straddled the aim point, so upgrading bolt made you STOP hitting what you aimed at — a downgrade to the weapon's whole identity. Two fixes were floated — skip to an odd count so a center bolt stays true, or split manual/auto; the split wins because aim fidelity holds at every level and the old L6 twin-volley fantasy survives as the auto pack. Old L6 was 6 bolts/volley with spread misses; new is 5 with near-guaranteed targeting — a wash or better.)* |
 | wall | swipe | 5 | **Force Wall** (reworked twice, 2026-07-23): the swipe conjures a stationary wall **anchored at the gesture's start** (length 150+40L; longer swipes trimmed toward the start — overshooting the tail must not move the wall). The wall is *siegeable*: it has **80+40L HP** that degens passively over ~5s, and shapes in contact **attack it** (their dmg every 0.9s) while being pushed along its tower-away normal at (100+25L)÷mass px/s and taking 5+2L dmg per 0.4s tick. Wall dies at 0 HP, whichever clock runs out first. Active walls: **1 until max level, 2 at L5**; swiping past the cap replaces the oldest; cd 0.4s |
-| beam | hold | 5 | ticks **per-target every 0.25s** at dps 34+20L (damage = dps×0.25 per tick) — so a shield loses one charge per *tick*, never per frame (playtest 2026-07-23: frame-rate ticking erased shields on touch); **per-target damage ramp** ×1→×2.5 over 2s of continuous exposure, decaying back over ~1.5s once out of the beam — sustained tracking is rewarded, field-flicking isn't; heat 0→1 in ~3.5s, forced cooldown at 1; L3: slower heat; **L5: no overheat and always-on — channels toward the standing aim point with no hold needed** (a no-overheat beam that still demanded holding would just be a finger tax) |
+| beam | hold | 5 | ticks **per-target every 0.25s** at dps 34+20L (damage = dps×0.25 per tick) — so a shield loses one charge per *tick*, never per frame (playtest 2026-07-23: frame-rate ticking erased shields on touch); **per-target damage ramp** ×1→×2.5 over 2s of continuous exposure, decaying back over ~1.5s once out of the beam — sustained tracking is rewarded, field-flicking isn't; heat 0→1 in ~3.5s, forced cooldown at 1, **re-arms at 0.35** (the heat gauge marks this threshold — the lockout must be legible, see app.md "Beam heat gauge"); L3: slower heat; **L5: no overheat and always-on — channels toward the standing aim point with no hold needed** (a no-overheat beam that still demanded holding would just be a finger tax) |
 
 Auto weapons (level-up pool):
 
 | id | max | behavior |
 |----|-----|----------|
-| orbit | 5 | blades orbiting the Point — count 1/2/2/3/5, dmg 10+6L, per-enemy hit cooldown 0.35s |
+| orbit | 5 | blades orbiting the Point — **contact damage**: a blade grinds any shape it touches (they never shoot; the card text must say so — 2026-07-23 second playtester read "blade orbits" and waited for it to fire); count 1/2/2/3/5, dmg 10+6L, per-enemy hit cooldown 0.35s |
 | nova | 5 | expanding ring every 5.0−0.6L s (floor 1.7), dmg 16+8L, radius 120+26L |
 | frost | 5 | slow aura, radius 100+26L, slow 22/28/33/38/45% *(was …62%; capped after the 2026-07-23 playtest — max slow + orbital knockback held enemies in place indefinitely)* |
 | tesla | 5 | chain lightning every 2.3−0.22L s: 2/3/3/4/6 chains, dmg 12+7L, falloff 0.8/jump — **tech-locked** |
@@ -146,7 +146,12 @@ stacking additively on the run's damage multiplier).
 
 Level-up choice generation (`state.js: levelChoices(state, rng)`): 3 distinct options
 drawn from {each owned weapon below max, each unowned *pool-unlocked* weapon, generic
-cards}. New weapons are tagged NEW; upgrades show current→next level.
+cards}. **Card chips are a control-scheme vocabulary, nothing else:** AIM / SWIPE /
+HOLD / AUTO on weapons, PASSIVE on generic cards. A new weapon keeps its control chip
+— newness is marked in the level line ("NEW — Level 1"), never in the chip slot
+(2026-07-23 second playtester: NEW-as-chip hid *how the weapon fires* on exactly the
+pick where that matters most, and BOOST didn't say "this is not a weapon" — PASSIVE
+does). Upgrades show current→next level.
 
 ## Towers (`config.js: TOWERS`)
 

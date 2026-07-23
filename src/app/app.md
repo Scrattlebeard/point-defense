@@ -35,8 +35,10 @@ simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not un
   the part that explodes. (2026-07-23 playtest direction.)
 - **Performance guards:** particle and damage-number pools are capped; enemy count is
   soft-capped (~240) by pausing the spawn queue, never by dropping queued spawns.
-- **Aim feedback:** faint dashed aim lines from the Point toward the aim point — one
-  per bolt in the volley, at their true spread angles — plus a small reticle.
+- **Aim feedback:** a single faint dashed aim line from the Point toward the aim
+  point, plus a small reticle. One line because the aimed bolt is always exactly one
+  bolt on that line (core.md bolt row); auto-aimed extras pick their own targets and
+  drawing their lines would be noise pretending to be information.
 - **The play area is walled** (2026-07-23): player projectiles die against the
   viewport boundary with a force-field *flare* — a streak of light along the unseen
   wall — instead of silently vanishing; the beam clips at the boundary and blooms
@@ -45,9 +47,25 @@ simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not un
   ~700px cap that expired short of the border on diagonals). Deliberate gameplay consequence: player fire cannot
   reach shapes that haven't entered the arena yet. Enemies pass the wall freely —
   it's the Point's cage, not theirs.
-- **Loadout visibility:** the pause screen shows the full current loadout (weapons +
-  levels + run modifiers); the level-up screen carries a compact one-line strip of
-  the same, so picks are made in context.
+- **Loadout visibility:** the pause screen is the run's *stats panel* (2026-07-23,
+  second playtester: "need better in-game stats and upgrades view" — pause is the
+  in-game home for it, one tap away and already sim-frozen): per-weapon rows with
+  level pips (`●●●○○`, MAX styled) and a **live stat readout computed from the same
+  `WEAPONS.stats` tables the sim uses** — never hand-written numbers that can drift —
+  plus run modifiers (dmg/cd/crit/regen) and a run line (wave · kills · time · HP).
+  The level-up screen keeps its compact one-line strip of the same, so picks are made
+  in context without burying the three cards.
+- **Beam heat gauge** (2026-07-23, second playtester: beam triggering "feels wonky" —
+  the real culprit was an *illegible lockout*: overheat silently ignores the hold):
+  bottom-center canvas bar, visible whenever the beam is owned and heat > 0 or
+  overheated. Amber fill, a **notch at the 0.35 re-arm threshold** (core.md beam row)
+  so the player can see exactly when the beam comes back, and while overheated the
+  bar flashes red under an explicit `OVERHEATED` label. The lockout may cost a
+  fight; it must never cost the player their mental model.
+- **XP bar prominence** (2026-07-23, second playtester): the top-edge XP bar is
+  thick enough to read mid-fight and glows brighter as it approaches full (CSS
+  class toggled ≥85%) — the level-up is the run's heartbeat and its approach should
+  be felt, not discovered.
 - **Aura vs nova legibility:** frost aura = dim *dashed* standing circle; nova = bright
   *solid* expanding ring. They must never share a visual register (2026-07-23 playtest:
   a frost upgrade read as "nova got bigger").

@@ -5,9 +5,13 @@
 import { WEAPONS } from '../core/config.js';
 import { dist, distToSegment, TAU } from '../core/geom.js';
 import { enemyMass } from '../core/balance.js';
-import { damageEnemy, nearestEnemy, applyKnock } from './enemies.js';
+import { damageEnemy, nearestEnemy, nearestEnemies, applyKnock } from './enemies.js';
 import { burst, shake, addFlare } from './fx.js';
 import { sfx } from './audio.js';
+
+// Overheat lockout releases at this heat level; the HUD gauge draws a notch here
+// so the player can see when the beam comes back (core.md beam row).
+export const BEAM_REARM = 0.35;
 
 export function resetWeapons(G) {
   G.wt = {
@@ -23,19 +27,16 @@ export function resetWeapons(G) {
 const lvl = (S, id) => S.weapons[id];
 const stats = (S, id) => WEAPONS[id].stats(S.weapons[id]);
 
-// ---------- bolt volley (aim-driven; fired by updateWeapons, never by input) ----------
-function boltVolley(G, tx, ty, st) {
-  const S = G.S;
-  const base = Math.atan2(ty - G.cy, tx - G.cx);
-  for (let i = 0; i < st.count; i++) {
-    const a = base + (i - (st.count - 1) / 2) * 0.11;
-    S.bullets.push({
-      // life is a safety net only — the arena wall is the real range (app.md)
-      x: G.cx, y: G.cy, vx: Math.cos(a) * 540, vy: Math.sin(a) * 540,
-      dmg: st.dmg, pierce: st.pierce, r: 3.5, life: 6, color: '#9ff3ff', hit: new Set(),
-    });
-  }
-  sfx('shoot');
+// ---------- bolt (aim-driven; fired by updateWeapons, never by input) ----------
+// One bolt EXACTLY on the aim line + st.auto bolts at nearest distinct in-bounds
+// shapes — aim fidelity is the weapon's identity (core.md bolt row, 2026-07-23).
+function fireBolt(G, tx, ty, st) {
+  const a = Math.atan2(ty - G.cy, tx - G.cx);
+  G.S.bullets.push({
+    // life is a safety net only — the arena wall is the real range (app.md)
+    x: G.cx, y: G.cy, vx: Math.cos(a) * 540, vy: Math.sin(a) * 540,
+    dmg: st.dmg, pierce: st.pierce, r: 3.5, life: 6, color: '#9ff3ff', hit: new Set(),
+  });
 }
 
 // ---------- manual: force wall (swipe) ----------
@@ -108,11 +109,11 @@ export function updateWeapons(G, dt) {
     wt.boltT -= dt;
     if (wt.boltT <= 0) {
       if (S.enemies.some(e => !e.dead)) {
-        if (G.aim) boltVolley(G, G.aim.x, G.aim.y, st);
-        if (st.twin) {
-          const e = nearestEnemy(S, G.cx, G.cy, Infinity, { W: G.W, H: G.H });
-          if (e) boltVolley(G, e.x, e.y, st);
+        if (G.aim) fireBolt(G, G.aim.x, G.aim.y, st);
+        for (const e of nearestEnemies(S, G.cx, G.cy, st.auto, { W: G.W, H: G.H })) {
+          fireBolt(G, e.x, e.y, st);
         }
+        sfx('shoot');
         wt.boltT = st.cd * S.cdMult;
       } else wt.boltT = 0.1;
     }
@@ -358,7 +359,7 @@ function updateBeam(G, dt) {
   } else {
     G.beamEnd = null;
     S.heat = Math.max(0, S.heat - 0.45 * dt);
-    if (S.overheated && S.heat < 0.35) S.overheated = false;
+    if (S.overheated && S.heat < BEAM_REARM) S.overheated = false;
   }
   // discrete per-target ticks + exposure ramp (core.md beam row): a shield loses
   // one charge per TICK, never per frame; sustained tracking cooks the target.

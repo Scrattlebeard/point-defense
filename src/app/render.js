@@ -3,6 +3,7 @@
 // effects stay cyan/white; single dark neon theme.
 import { TOWERS, WEAPONS, VARIANTS } from '../core/config.js';
 import { TAU, clamp } from '../core/geom.js';
+import { BEAM_REARM } from './weapons.js';
 
 const TOWER_R = 24;
 
@@ -342,18 +343,15 @@ function drawTeslaCharge(G) {
 function drawAim(G) {
   const { ctx, S } = G;
   if (!G.aim || S.weapons.bolt < 1) return;
-  const st = WEAPONS.bolt.stats(S.weapons.bolt);
-  const base = Math.atan2(G.aim.y - G.cy, G.aim.x - G.cx);
+  // single line: the aimed bolt is always exactly one bolt on it (app.md Aim feedback)
+  const a = Math.atan2(G.aim.y - G.cy, G.aim.x - G.cx);
   ctx.setLineDash([3, 7]);
   ctx.strokeStyle = 'rgba(159, 243, 255, 0.3)';
   ctx.lineWidth = 1.5;
-  for (let i = 0; i < st.count; i++) {
-    const a = base + (i - (st.count - 1) / 2) * 0.11;
-    ctx.beginPath();
-    ctx.moveTo(G.cx + Math.cos(a) * 36, G.cy + Math.sin(a) * 36);
-    ctx.lineTo(G.cx + Math.cos(a) * 160, G.cy + Math.sin(a) * 160);
-    ctx.stroke();
-  }
+  ctx.beginPath();
+  ctx.moveTo(G.cx + Math.cos(a) * 36, G.cy + Math.sin(a) * 36);
+  ctx.lineTo(G.cx + Math.cos(a) * 160, G.cy + Math.sin(a) * 160);
+  ctx.stroke();
   ctx.setLineDash([]);
   // reticle at the aim point
   ctx.strokeStyle = 'rgba(159, 243, 255, 0.55)';
@@ -481,15 +479,30 @@ function drawBossBar(G) {
   ctx.fillRect(x, y, bw * clamp(boss.hp / boss.maxHp, 0, 1), 6);
 }
 
+// Beam heat gauge (app.md): the overheat lockout must be legible — bar with a
+// re-arm notch at BEAM_REARM, flashing OVERHEATED label while locked out.
 function drawHeat(G) {
   const { ctx, S, W, H } = G;
-  if (S.weapons.beam < 1 || S.heat <= 0.01) return;
-  const bw = 120;
-  const x = (W - bw) / 2, y = H - 26 - (window.visualViewport ? 0 : 0);
-  ctx.fillStyle = 'rgba(255,255,255,0.1)';
-  ctx.fillRect(x, y, bw, 5);
+  if (S.weapons.beam < 1 || (S.heat <= 0.01 && !S.overheated)) return;
+  const bw = 170, bh = 8;
+  const x = (W - bw) / 2, y = H - 34;
+  ctx.fillStyle = 'rgba(10, 13, 21, 0.65)';
+  ctx.fillRect(x - 4, y - 4, bw + 8, bh + 8);
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+  ctx.fillRect(x, y, bw, bh);
+  const flash = S.overheated ? 0.55 + 0.45 * Math.sin(performance.now() / 90) : 1;
+  ctx.globalAlpha = flash;
   ctx.fillStyle = S.overheated ? '#ff5c6c' : '#ffb84d';
-  ctx.fillRect(x, y, bw * S.heat, 5);
+  ctx.fillRect(x, y, bw * S.heat, bh);
+  ctx.globalAlpha = 1;
+  // re-arm notch: the beam comes back when the fill drains past this line
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+  ctx.fillRect(x + bw * BEAM_REARM - 1, y - 2, 2, bh + 4);
+  ctx.font = '600 10px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = S.overheated ? '#ff7c88' : 'rgba(255, 210, 130, 0.8)';
+  ctx.fillText(S.overheated ? 'OVERHEATED' : 'HEAT', W / 2, y - 9);
+  ctx.textAlign = 'left';
 }
 
 // mini wireframe specimen for banners: shape + variant highlight grammar at r≈9
