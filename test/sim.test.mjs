@@ -92,6 +92,14 @@ test('shockwave fires along a swipe and respects its cooldown', () => {
   assert.ok(G.S.kills > before, 'shockwave sweeps killed nothing');
 });
 
+test('a max-level beam channels on its own — no hold input ever given', () => {
+  const G = makeG();
+  G.S.weapons.bolt = 0;
+  G.S.weapons.beam = 5;
+  simulate(G, 30); // robot only aims; nothing ever sets wt.beamAim
+  assert.ok(G.S.kills > 0, 'always-on beam killed nothing');
+});
+
 test('a maxed loadout deep-wave stress run does not explode', () => {
   const G = makeG('bastion', ['tesla', 'seek', 'turret']);
   for (const id of Object.keys(G.S.weapons)) G.S.weapons[id] = 5;

@@ -72,7 +72,7 @@ Manual (gesture) weapons:
 |----|---------|-----|--------|
 | bolt | aim | 6 | auto-fires toward the aim point every 0.34−0.02L s (needs a live enemy); dmg 9+4L; L3: 2 bolts, L5: 3 bolts (small spread); L4: pierce 1; **L6: adds an independent second volley at the nearest shape** |
 | shockwave | swipe | 5 | dmg 16+7L along the swipe segment (width 55+9L), knockback 170+25L; cd 1.7−0.18L (floor 0.6); L5: double damage |
-| beam | hold | 5 | 26+16L dps in a beam through the finger; heat 0→1 in ~3.5s, forced cooldown at 1; L3: slower heat; **L5: no overheat** |
+| beam | hold | 5 | 26+16L dps in a beam through the finger; heat 0→1 in ~3.5s, forced cooldown at 1; L3: slower heat; **L5: no overheat and always-on — channels toward the standing aim point with no hold needed** (a no-overheat beam that still demanded holding would just be a finger tax; playtest 2026-07-23) |
 
 Auto weapons (level-up pool):
 

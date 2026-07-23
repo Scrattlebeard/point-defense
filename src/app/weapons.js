@@ -251,10 +251,12 @@ function updateBeam(G, dt) {
   const S = G.S;
   const wt = G.wt;
   const l = lvl(S, 'beam');
-  const beaming = l >= 1 && wt.beamAim && !S.overheated;
+  // at max level the beam is always-on, tracking the standing aim (core.md beam row)
+  const st = l >= 1 ? stats(S, 'beam') : null;
+  const target = wt.beamAim || (st?.alwaysOn ? G.aim : null);
+  const beaming = l >= 1 && target && !S.overheated;
   if (beaming) {
-    const st = stats(S, 'beam');
-    const dx = wt.beamAim.x - G.cx, dy = wt.beamAim.y - G.cy;
+    const dx = target.x - G.cx, dy = target.y - G.cy;
     const len = Math.hypot(dx, dy);
     if (len > 4) {
       const ex = G.cx + (dx / len) * 1600, ey = G.cy + (dy / len) * 1600;

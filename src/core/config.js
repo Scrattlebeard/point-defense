@@ -53,8 +53,8 @@ export const WEAPONS = {
   },
   beam: {
     name: 'Lance Beam', kind: 'manual', gesture: 'hold', max: 5, tag: 'HOLD',
-    descs: ['Hold to channel a beam', '+damage', '+width, runs cooler', '+damage', 'MAX: never overheats'],
-    stats: l => ({ dps: 26 + 16 * l, width: 9 + 2.5 * l, heatRate: l >= 5 ? 0 : (l >= 3 ? 0.22 : 0.29) }),
+    descs: ['Hold to channel a beam', '+damage', '+width, runs cooler', '+damage', 'MAX: always on, aims itself at your reticle'],
+    stats: l => ({ dps: 26 + 16 * l, width: 9 + 2.5 * l, heatRate: l >= 5 ? 0 : (l >= 3 ? 0.22 : 0.29), alwaysOn: l >= 5 }),
   },
   orbit: {
     name: 'Orbitals', kind: 'auto', max: 5, tag: 'AUTO',
