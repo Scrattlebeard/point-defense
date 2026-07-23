@@ -24,7 +24,7 @@ const G = {
 };
 setMuted(!G.meta.sound);
 
-const PHONE_ZOOM = 1.3; // app.md "Phone zoom" — thumb-sized entities on small screens
+const PHONE_ZOOM = 0.75; // app.md "Phone zoom (out)" — more arena on small screens
 
 function resize() {
   const dpr = Math.min(2, window.devicePixelRatio || 1);
