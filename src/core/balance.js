@@ -22,3 +22,6 @@ export const shardPayout = (wave, kills, bossKills) =>
 
 /** Shapes gain inertia with age: knockback and aura slow divide by this (core.md). */
 export const enemyMass = age => 1 + Math.min(2, age / 15);
+
+/** Player knockback on bosses divides by this on top of age-mass (core.md). */
+export const BOSS_KNOCK_RESIST = 6;

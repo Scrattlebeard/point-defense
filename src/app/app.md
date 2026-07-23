@@ -39,7 +39,12 @@ simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not un
   point, plus a small reticle. One line because fans are center-true (core.md bolt
   row) — exactly one bolt flies the line you see; flank bolts are bonuses and the
   auto stream picks its own targets, so drawing their lines would be noise
-  pretending to be information.
+  pretending to be information. **The reticle is a gold crosshair with a dark
+  casing** (2026-07-24 playtest: the old cyan circle vanished inside the beam's
+  cyan glow exactly when you needed it — lining up a wall swipe mid-beam). Gold is
+  the *input* register, cyan is *fire*: the one thing that must stay findable
+  inside player effects cannot share their color family. The dark under-stroke
+  keeps it visible against both the beam core and the bare grid.
 - **The play area is walled** (2026-07-23): player projectiles die against the
   viewport boundary with a force-field *flare* — a streak of light along the unseen
   wall — instead of silently vanishing; the beam clips at the boundary and blooms

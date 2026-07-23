@@ -65,6 +65,11 @@ prereqs enforced), not exact constants, so tuning stays cheap.
   mass, so crowd-control decays against anything that survives long enough — an old
   shape has earned its momentum. (2026-07-23 playtest: complements the frost/orbit
   nerf; permanent CC-lock must not be reachable at any level combination.)
+  **Bosses resist knockback ×6 on top of age-mass** (`BOSS_KNOCK_RESIST`,
+  2026-07-24 — a shape with a name should not be shoved around by an orbital graze).
+  Applies to *player-inflicted* impulses only (`applyKnock`): the boss's ram recoil
+  is self-imposed and unaffected, and frost slow deliberately keeps full effect on
+  bosses — frost's role as the counter-boss tool survives the resistance.
   **Age = time spent inside the combat radius (280px of the Point), not time since
   spawn** — travel time scales with screen size, and aging-in-transit pre-hardened
   everything before its first contact (second 2026-07-23 finding: on a desktop window

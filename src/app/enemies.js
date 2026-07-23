@@ -1,7 +1,7 @@
 // Enemy entities: spawning (base × variant), movement, contact, damage/death
 // side-effects. Rules and numbers come from core; this file executes them.
 import { ENEMIES, VARIANTS, SPLIT } from '../core/config.js';
-import { enemyHpMult, enemySpeedMult, bossHp, enemyMass } from '../core/balance.js';
+import { enemyHpMult, enemySpeedMult, bossHp, enemyMass, BOSS_KNOCK_RESIST } from '../core/balance.js';
 import { addXp } from '../core/state.js';
 import { dist, edgeSpawn } from '../core/geom.js';
 import { burst, dmgText, shake, flash, announce } from './fx.js';
@@ -100,9 +100,10 @@ function hitTower(G, dmg) {
   sfx('hurt');
 }
 
-/** Knockback entry point: impulses divide by age-mass (core.md enemyMass). */
+/** Knockback entry point: impulses divide by age-mass; bosses resist ×6 on top
+ *  (core.md enemyMass note — ram recoil bypasses this on purpose). */
 export function applyKnock(e, ix, iy) {
-  const m = enemyMass(e.age);
+  const m = enemyMass(e.age) * (e.boss ? BOSS_KNOCK_RESIST : 1);
   e.kbx += ix / m;
   e.kby += iy / m;
 }

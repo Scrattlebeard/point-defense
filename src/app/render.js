@@ -346,11 +346,23 @@ function drawAim(G) {
   ctx.lineTo(G.cx + Math.cos(a) * 160, G.cy + Math.sin(a) * 160);
   ctx.stroke();
   ctx.setLineDash([]);
-  // reticle at the aim point
-  ctx.strokeStyle = 'rgba(159, 243, 255, 0.55)';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.arc(G.aim.x, G.aim.y, 7, 0, TAU); ctx.stroke();
-  ctx.beginPath(); ctx.arc(G.aim.x, G.aim.y, 1.2, 0, TAU); ctx.stroke();
+  // reticle: gold crosshair with dark casing — gold is the input register, cyan
+  // is fire; must stay findable inside the beam glow (app.md Aim feedback)
+  const rx = G.aim.x, ry = G.aim.y;
+  for (const [w, c] of [[4, 'rgba(7, 10, 18, 0.85)'], [1.8, 'rgba(255, 210, 77, 0.95)']]) {
+    ctx.lineWidth = w;
+    ctx.strokeStyle = c;
+    ctx.beginPath();
+    for (let k = 0; k < 4; k++) {
+      const a = (k * Math.PI) / 2;
+      ctx.moveTo(rx + Math.cos(a) * 4.5, ry + Math.sin(a) * 4.5);
+      ctx.lineTo(rx + Math.cos(a) * 10, ry + Math.sin(a) * 10);
+    }
+    ctx.stroke();
+  }
+  ctx.fillStyle = 'rgba(255, 210, 77, 0.95)';
+  ctx.beginPath(); ctx.arc(rx, ry, 1.5, 0, TAU); ctx.fill();
+  ctx.lineWidth = 1;
 }
 
 function drawEnemies(G) {
