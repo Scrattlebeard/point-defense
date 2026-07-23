@@ -277,17 +277,16 @@ function updateBeam(G, dt) {
   const st = l >= 1 ? stats(S, 'beam') : null;
   const target = wt.beamAim || (st?.alwaysOn ? G.aim : null);
   const beaming = l >= 1 && target && !S.overheated;
+  let inBeam = null;
   if (beaming) {
     const dx = target.x - G.cx, dy = target.y - G.cy;
     const len = Math.hypot(dx, dy);
     if (len > 4) {
       const ex = G.cx + (dx / len) * 1600, ey = G.cy + (dy / len) * 1600;
       G.beamEnd = { x: ex, y: ey, width: st.width };
+      inBeam = new Set();
       for (const e of S.enemies) {
-        if (e.dead) continue;
-        if (distToSegment(e.x, e.y, G.cx, G.cy, ex, ey) <= st.width / 2 + e.r) {
-          damageEnemy(G, e, st.dps * dt, { silent: true });
-        }
+        if (!e.dead && distToSegment(e.x, e.y, G.cx, G.cy, ex, ey) <= st.width / 2 + e.r) inBeam.add(e);
       }
       if (st.heatRate > 0) {
         S.heat = Math.min(1, S.heat + st.heatRate * dt);
@@ -298,5 +297,21 @@ function updateBeam(G, dt) {
     G.beamEnd = null;
     S.heat = Math.max(0, S.heat - 0.45 * dt);
     if (S.overheated && S.heat < 0.35) S.overheated = false;
+  }
+  // discrete per-target ticks + exposure ramp (core.md beam row): a shield loses
+  // one charge per TICK, never per frame; sustained tracking cooks the target.
+  for (const e of S.enemies) {
+    if (e.dead) continue;
+    if (inBeam && inBeam.has(e)) {
+      e.beamHeat = Math.min(1, e.beamHeat + dt / st.rampUp);
+      e.beamTick -= dt;
+      if (e.beamTick <= 0) {
+        damageEnemy(G, e, st.dps * st.tick * (1 + (st.rampMax - 1) * e.beamHeat));
+        e.beamTick += st.tick;
+      }
+    } else if (e.beamHeat > 0) {
+      e.beamHeat = Math.max(0, e.beamHeat - dt / 1.5);
+      e.beamTick = 0; // re-entry ticks immediately
+    }
   }
 }

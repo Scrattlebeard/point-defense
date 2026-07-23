@@ -34,6 +34,7 @@ export function spawnEnemy(G, kind, variantId = null, x = null, y = null) {
     variant: variantId, vdef: v,
     shield: v?.shield || 0,
     kbx: 0, kby: 0, contactCd: 0, flash: 0, orbHit: 0, age: 0,
+    beamHeat: 0, beamTick: 0,
     boss: isBoss, dead: false,
   };
   S.enemies.push(e);

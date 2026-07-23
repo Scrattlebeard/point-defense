@@ -8,7 +8,7 @@ import { defaultMeta, newRun, levelChoices, applyChoice } from '../src/core/stat
 import { makeFx, updateFx } from '../src/app/fx.js';
 import { resetWeapons, fireShockwave } from '../src/app/weapons.js';
 import { resetWaveDirector, updateGame } from '../src/app/game.js';
-import { nearestEnemy } from '../src/app/enemies.js';
+import { nearestEnemy, spawnEnemy } from '../src/app/enemies.js';
 
 function makeG(towerId = 'bastion', tech = []) {
   const meta = { ...defaultMeta(), tech };
@@ -106,6 +106,19 @@ test('seekers connect: a seeker-only loadout clears shapes unaided', () => {
   G.S.weapons.seek = 3;
   simulate(G, 45, { tap: false }); // nobody aims; homing must do all the work
   assert.ok(G.S.kills > 8, `seekers only killed ${G.S.kills}`);
+});
+
+test('beam ticks discretely: a brushing touch cannot strip a shield, sustained focus can', () => {
+  const G = makeG();
+  G.S.weapons.bolt = 0;
+  G.S.weapons.beam = 1;
+  const e = spawnEnemy(G, 'grunt', 'shielded', G.cx, G.cy - 220);
+  e.shield = 3;
+  G.wt.beamAim = { x: G.cx, y: G.cy - 300 }; // beam straight through the grunt
+  for (let i = 0; i < 18; i++) updateGame(G, 1 / 60); // ~0.3s of contact
+  assert.ok(e.shield >= 1, `0.3s of beam stripped the whole shield (left: ${e.shield})`);
+  for (let i = 0; i < 60; i++) updateGame(G, 1 / 60); // ~1.3s total
+  assert.equal(e.shield, 0, 'sustained beam failed to strip the shield');
 });
 
 test('a maxed loadout deep-wave stress run does not explode', () => {
