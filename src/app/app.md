@@ -29,7 +29,10 @@ gameplay screenshots) and by play; not unit-tested.
   context-menu suppressed (long-press must not open menus on mobile).
 - **The dark neon-arcade look is the single theme** (ADR-0002). Enemy species = hue,
   variant = highlight; player effects live in the cyan/white family to stay separable
-  from enemy hues.
+  from enemy hues. **Fill encodes allegiance: solid = the player's (tower, bullets,
+  blades), outline-only wireframe = threats.** Enemy shapes are strokes, never fills —
+  the only filled element on an enemy is the volatile variant's core, which is exactly
+  the part that explodes. (2026-07-23 playtest direction.)
 - **Performance guards:** particle and damage-number pools are capped; enemy count is
   soft-capped (~240) by pausing the spawn queue, never by dropping queued spawns.
 - **Aim feedback:** faint dashed aim lines from the Point toward the aim point — one

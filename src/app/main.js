@@ -107,7 +107,10 @@ document.addEventListener('visibilitychange', () => {
 // ---------- frame loop ----------
 let last = performance.now();
 function loop(now) {
-  const dt = Math.min(0.033, (now - last) / 1000);
+  // clamp BOTH ends: rAF timestamps can run backward vs performance.now()
+  // (seen in headless Firefox), and negative dt turns every "decay toward
+  // zero" (enemy flash, cooldowns) into a generator. Sim time never rewinds.
+  const dt = Math.max(0, Math.min(0.033, (now - last) / 1000));
   last = now;
   if (G.mode === 'play') {
     updateInput(G);
@@ -123,15 +126,19 @@ function loop(now) {
 
 ui.renderMenu(G);
 ui.showOnly('menu');
-// Dev/smoke-test hatches: ?autostart skips the menu; ?turbo pre-simulates ~14s
-// (auto-picking level-ups) so a headless screenshot lands mid-battle.
+// Dev/smoke-test hatches: ?autostart skips the menu; ?turbo pre-simulates ~40s
+// (auto-picking level-ups) so a headless screenshot lands mid-battle; ?warp=N
+// pre-simulates exactly N seconds instead.
+const warpMatch = location.search.match(/warp=(\d+)/);
 if (location.search.includes('autostart')) {
   startRun();
-  if (location.search.includes('turbo')) {
+  if (location.search.includes('turbo') || warpMatch) {
     let tapT = 0;
-    for (let i = 0; i < 2400; i++) {
+    const bot = location.search.includes('turbo'); // warp alone = time passes, nobody aims
+    const frames = warpMatch ? Number(warpMatch[1]) * 60 : 2400;
+    for (let i = 0; i < frames; i++) {
       tapT -= 1 / 60;
-      if (tapT <= 0) {
+      if (bot && tapT <= 0) {
         const e = nearestEnemy(G.S, G.cx, G.cy);
         if (e) { G.aim = { x: e.x, y: e.y }; tapT = 0.2; }
       }

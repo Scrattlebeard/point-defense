@@ -195,15 +195,18 @@ function drawEnemies(G) {
       ctx.shadowBlur = 14;
     }
 
-    ctx.fillStyle = e.flash > 0 ? '#ffffff' : e.color;
+    // wireframe: enemies are outlines, never fills (app.md "fill encodes allegiance")
+    ctx.lineWidth = 2 + e.r * 0.05;
+    ctx.strokeStyle = e.flash > 0 ? '#ffffff' : e.color;
     poly(ctx, e.x, e.y, e.r, e.sides, e.rot);
-    ctx.fill();
+    ctx.stroke();
+    if (e.flash > 0) { ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'; ctx.fill(); } // hit pop
     ctx.shadowBlur = 0;
 
     if (e.variant === 'armored') {
       ctx.strokeStyle = e.vdef.color;
-      ctx.lineWidth = 4;
-      poly(ctx, e.x, e.y, e.r + 3, e.sides, e.rot);
+      ctx.lineWidth = 3.5;
+      poly(ctx, e.x, e.y, e.r + 4, e.sides, e.rot);
       ctx.stroke();
     }
     if (e.variant === 'volatile') {
