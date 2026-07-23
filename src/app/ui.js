@@ -1,13 +1,13 @@
 // DOM overlays + HUD. Reads core tables directly; all game actions go through
 // hooks injected by main.js (no circular imports, no rules in here).
-import { TOWERS, TECH, WEAPONS, GENERICS, ENEMIES, VARIANTS } from '../core/config.js';
+import { TOWERS, TECH, WEAPONS, GENERICS, ENEMIES, VARIANTS, ACHIEVEMENTS } from '../core/config.js';
 import { towerUnlocked } from '../core/state.js';
 import { canBuy } from '../core/tech.js';
 import { storageOk } from './meta.js';
 import { poly } from './render.js';
 
 const $ = id => document.getElementById(id);
-const OVERLAYS = ['menu', 'tech', 'bestiary', 'levelup', 'pause', 'over'];
+const OVERLAYS = ['menu', 'tech', 'bestiary', 'records', 'levelup', 'pause', 'over'];
 const BRANCHES = ['Hull', 'Arms', 'Mind', 'Arsenal', 'Towers'];
 
 let H = null; // hooks
@@ -18,6 +18,8 @@ export function initUI(G, hooks) {
   $('techBtn').addEventListener('click', () => { renderTech(G); showOnly('tech'); });
   $('bestBtn').addEventListener('click', () => { renderBestiary(G); showOnly('bestiary'); });
   $('bestBack').addEventListener('click', () => { renderMenu(G); showOnly('menu'); });
+  $('recBtn').addEventListener('click', () => { renderRecords(G); showOnly('records'); });
+  $('recBack').addEventListener('click', () => { renderMenu(G); showOnly('menu'); });
   $('techBack').addEventListener('click', () => { renderMenu(G); showOnly(G.returnTo || 'menu'); if (G.returnTo === 'over') renderGameOver(G, G.lastEarned); });
   $('muteBtn').addEventListener('click', () => H.onMute());
   // two-tap reset: arm, then confirm within 4s (app.md "Reset progress")
@@ -173,6 +175,49 @@ export function renderBestiary(G) {
     `${seen.variants.length}/${Object.keys(VARIANTS).length} variants`;
 }
 
+// ---------- records ----------
+export function renderRecords(G) {
+  const m = G.meta;
+  const list = $('scoreList');
+  list.innerHTML = '<h3>HIGH SCORES</h3>';
+  if (!m.scores.length) {
+    const row = document.createElement('div');
+    row.className = 'scoreRow empty';
+    row.textContent = 'No runs on record — the shapes are waiting.';
+    list.appendChild(row);
+  }
+  m.scores.forEach((s, i) => {
+    const row = document.createElement('div');
+    row.className = 'scoreRow';
+    const t = TOWERS[s.tower];
+    row.innerHTML =
+      `<span class="srank">${i + 1}.</span>` +
+      `<span class="swave">Wave ${s.wave}</span>` +
+      `<span class="skills">${s.kills} kills</span>` +
+      `<span class="stower" style="color:${t?.color || 'inherit'}">${t?.name || s.tower}</span>`;
+    list.appendChild(row);
+  });
+  const grid = $('achGrid');
+  grid.innerHTML = '<h3>ACHIEVEMENTS</h3>';
+  for (const a of ACHIEVEMENTS) {
+    const owned = m.ach.includes(a.id);
+    const el = document.createElement('div');
+    el.className = 'achCard' + (owned ? '' : ' locked');
+    el.innerHTML = `<span class="aname">${owned ? '🏆 ' : ''}${a.name}</span><span class="adesc">${a.desc}</span>`;
+    grid.appendChild(el);
+  }
+  $('achCount').textContent = `${m.ach.length}/${ACHIEVEMENTS.length}`;
+}
+
+/** Queued DOM toast — works over any overlay (app.md). */
+export function toast(html) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.innerHTML = html;
+  $('toasts').appendChild(el);
+  setTimeout(() => el.remove(), 3600);
+}
+
 function loadoutHTML(S) {
   const items = [];
   for (const [id, l] of Object.entries(S.weapons)) {
@@ -222,10 +267,11 @@ export function renderLevelUp(G, choices) {
   }
 }
 
-export function renderGameOver(G, earned) {
+export function renderGameOver(G, earned, rank = 0) {
   G.lastEarned = earned;
   const S = G.S;
   $('overStats').innerHTML =
+    (rank > 0 ? `<b style="color:#ffd24d">HIGH SCORE #${rank}</b><br>` : '') +
     `Wave <b>${S.wave}</b> · ${S.kills} shapes disassembled<br>` +
     `<span class="earned">+◆ ${earned} shards</span><br>` +
     `<span class="dim">◆ ${G.meta.shards} total · best wave ${G.meta.best}</span>`;

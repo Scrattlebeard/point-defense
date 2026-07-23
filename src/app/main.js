@@ -1,7 +1,7 @@
 // Entry point: boot, mode state machine, frame loop. Wires core decisions to
 // shell modules via plain calls + the ui hooks object. Mode transitions all
 // happen here — no other module changes G.mode.
-import { newRun, levelChoices, applyChoice, payout, defaultMeta } from '../core/state.js';
+import { newRun, levelChoices, applyChoice, payout, defaultMeta, addScore, evalAchievements } from '../core/state.js';
 import { buy } from '../core/tech.js';
 import { loadMeta, saveMeta } from './meta.js';
 import { makeFx, updateFx, announce } from './fx.js';
@@ -58,14 +58,28 @@ function openLevelUp() {
 }
 
 function finishRun() {
-  const { meta, earned } = payout(G.S, G.meta);
-  G.meta = meta;
+  const { meta: paid, earned } = payout(G.S, G.meta);
+  const { meta: scored, rank } = addScore(paid, {
+    wave: G.S.wave, kills: G.S.kills, tower: G.S.towerId, ts: Date.now(),
+  });
+  G.meta = scored;
+  announceAchievements(G.S);
   saveMeta(G.meta);
   G.mode = 'over';
   clearInput(G);
   sfx('gameover');
-  ui.renderGameOver(G, earned);
+  ui.renderGameOver(G, earned, rank);
   ui.showOnly('over');
+}
+
+/** Evaluate achievements after any meta change; toast the new ones. */
+function announceAchievements(S = null) {
+  const { meta, unlocked } = evalAchievements(G.meta, S);
+  G.meta = meta;
+  for (const a of unlocked) {
+    ui.toast(`🏆 <b>${a.name}</b> — ${a.desc}`);
+    sfx('discover');
+  }
 }
 
 function pauseGame() {
@@ -88,7 +102,11 @@ ui.initUI(G, {
     if (G.S.pendingLevels > 0) openLevelUp();
     else { G.mode = 'play'; ui.showOnly(null); }
   },
-  onBuy: id => { G.meta = buy(id, G.meta); saveMeta(G.meta); },
+  onBuy: id => {
+    G.meta = buy(id, G.meta);
+    announceAchievements();
+    saveMeta(G.meta);
+  },
   onMute: () => {
     G.meta.sound = !G.meta.sound;
     setMuted(!G.meta.sound);

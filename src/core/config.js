@@ -101,6 +101,26 @@ export const GENERICS = {
   coolant:   { name: 'Coolant',   desc: '−5% cooldowns this run' },
 };
 
+// ---------- Achievements ----------
+// Pure predicates over (meta, finalRunState|null); S-dependent ones unlock only at
+// run end (core.md "Records"). This list is the single home.
+export const ACHIEVEMENTS = [
+  { id: 'first',      name: 'First Blood',       desc: 'Disassemble your first shape', test: m => m.totalKills >= 1 },
+  { id: 'regicide',   name: 'Regicide',          desc: 'Fell a named boss', test: m => m.totalBossKills >= 1 },
+  { id: 'wave5',      name: 'Meet the Nobility', desc: 'Reach wave 5', test: m => m.best >= 5 },
+  { id: 'wave10',     name: 'Double Digits',     desc: 'Reach wave 10', test: m => m.best >= 10 },
+  { id: 'wave20',     name: 'Deep Geometry',     desc: 'Reach wave 20', test: m => m.best >= 20 },
+  { id: 'wave40',     name: 'The Recirculation', desc: 'Reach wave 40 — the nobles return changed', test: m => m.best >= 40 },
+  { id: 'kills500',   name: 'Shape Crime',       desc: '500 lifetime kills', test: m => m.totalKills >= 500 },
+  { id: 'hoarder',    name: 'Hoarder',           desc: 'Earn 500 lifetime shards', test: m => m.totalShards >= 500 },
+  { id: 'investor',   name: 'Investor',          desc: 'Own 10 tech nodes', test: m => m.tech.length >= 10 },
+  { id: 'garrison',   name: 'Full Garrison',     desc: 'Unlock every tower', test: m => ['tower_tempest', 'tower_warden', 'tower_lance'].every(t => m.tech.includes(t)) },
+  { id: 'guide',      name: 'Field Guide',       desc: 'Sight every shape', test: m => m.seen.enemies.length >= Object.keys(ENEMIES).length },
+  { id: 'taxonomy',   name: 'Complete Taxonomy', desc: 'Fill the bestiary', test: m => m.seen.enemies.length >= Object.keys(ENEMIES).length && m.seen.variants.length >= Object.keys(VARIANTS).length },
+  { id: 'specialist', name: 'Specialist',        desc: 'Max out a weapon in one run', test: (m, S) => !!S && Object.entries(S.weapons).some(([id, l]) => l >= WEAPONS[id].max) },
+  { id: 'overqual',   name: 'Overqualified',     desc: 'Reach level 12 in one run', test: (m, S) => !!S && S.lvl >= 12 },
+];
+
 // ---------- Towers ----------
 // Every tower taps bolt (README pillar 1); identity = stat profile + extra starter.
 export const TOWERS = {

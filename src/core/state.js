@@ -1,6 +1,6 @@
 // Run-state math: creation, XP/leveling, level-up choices, payout.
 // The shell mutates entity arrays inside S during play; the *rules* stay here.
-import { TOWERS, WEAPONS, GENERICS } from './config.js';
+import { TOWERS, WEAPONS, GENERICS, ACHIEVEMENTS } from './config.js';
 import { effectsOf } from './tech.js';
 import { xpForLevel, shardPayout } from './balance.js';
 
@@ -8,6 +8,8 @@ export function defaultMeta() {
   return {
     shards: 0, best: 0, tech: [], tower: 'bastion', sound: true,
     seen: { enemies: [], variants: [] }, // bestiary discovery record (core.md)
+    scores: [], ach: [],                 // records (core.md "Records")
+    totalKills: 0, totalBossKills: 0, totalShards: 0,
   };
 }
 
@@ -106,7 +108,34 @@ export function payout(S, meta) {
   const fx = effectsOf(meta.tech);
   const earned = Math.max(1, Math.round(shardPayout(S.wave, S.kills, S.bossKills) * fx.salvageMult));
   return {
-    meta: { ...meta, shards: meta.shards + earned, best: Math.max(meta.best, S.wave) },
+    meta: {
+      ...meta,
+      shards: meta.shards + earned,
+      best: Math.max(meta.best, S.wave),
+      totalKills: (meta.totalKills || 0) + S.kills,
+      totalBossKills: (meta.totalBossKills || 0) + S.bossKills,
+      totalShards: (meta.totalShards || 0) + earned,
+    },
     earned,
+  };
+}
+
+/** Top-10 high scores, wave then kills. Returns {meta, rank} — rank 0 if it didn't place. */
+export function addScore(meta, entry) {
+  const scores = [...(meta.scores || []), entry]
+    .sort((a, b) => b.wave - a.wave || b.kills - a.kills)
+    .slice(0, 10);
+  const idx = scores.indexOf(entry);
+  return { meta: { ...meta, scores }, rank: idx >= 0 ? idx + 1 : 0 };
+}
+
+/** Evaluate achievements over (meta, finalRunState|null). Unlocks are forever. */
+export function evalAchievements(meta, S) {
+  const owned = new Set(meta.ach || []);
+  const unlocked = ACHIEVEMENTS.filter(a => !owned.has(a.id) && a.test(meta, S));
+  if (!unlocked.length) return { meta, unlocked };
+  return {
+    meta: { ...meta, ach: [...owned, ...unlocked.map(a => a.id)] },
+    unlocked,
   };
 }

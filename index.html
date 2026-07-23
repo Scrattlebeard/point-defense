@@ -27,8 +27,11 @@
   <div id="towerRow"></div>
   <div class="btnrow">
     <button id="startBtn" class="big primary">DEFEND</button>
+  </div>
+  <div class="btnrow">
     <button id="techBtn" class="big">TECH TREE</button>
     <button id="bestBtn" class="big">BESTIARY</button>
+    <button id="recBtn" class="big">RECORDS</button>
   </div>
   <p class="howto">POINT to aim · SWIPE a force wall · HOLD to beam<br>
   <span class="dim">(swipe &amp; hold weapons are found in the field)</span></p>
@@ -47,6 +50,18 @@
   </div>
   <div id="techGrid"></div>
 </div>
+
+<div id="records" class="overlay hidden">
+  <div class="techHead">
+    <button id="recBack" class="small">← BACK</button>
+    <h2>RECORDS</h2>
+    <span id="achCount" class="dim"></span>
+  </div>
+  <div id="scoreList"></div>
+  <div id="achGrid"></div>
+</div>
+
+<div id="toasts"></div>
 
 <div id="bestiary" class="overlay hidden">
   <div class="techHead">

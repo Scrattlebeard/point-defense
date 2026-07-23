@@ -208,6 +208,55 @@ button:active { transform: translateY(1px); }
 .bcard.unknown .bq { font-size: 26px; color: var(--dim); }
 .bcard.unknown .blore { font-style: normal; }
 
+/* ---------- Records (high scores + achievements) ---------- */
+#records { justify-content: flex-start; padding-top: calc(18px + env(safe-area-inset-top)); }
+#scoreList {
+  width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 4px;
+  font-variant-numeric: tabular-nums;
+}
+#scoreList h3, #achGrid h3 {
+  font-size: 12px; letter-spacing: 0.18em; color: var(--dim); font-weight: 600;
+  text-align: left; border-bottom: 1px solid var(--panel-edge);
+  padding-bottom: 3px; margin: 8px 0 4px;
+}
+.scoreRow {
+  display: flex; gap: 10px; align-items: baseline; text-align: left;
+  background: var(--panel); border: 1px solid var(--panel-edge);
+  border-radius: 8px; padding: 6px 12px; font-size: 13px;
+}
+.scoreRow .srank { color: var(--dim); width: 22px; }
+.scoreRow .swave { font-weight: 700; }
+.scoreRow .skills { color: var(--dim); }
+.scoreRow .stower { margin-left: auto; font-size: 12px; }
+.scoreRow.empty { color: var(--dim); justify-content: center; }
+#achGrid { width: 100%; max-width: 640px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+#achGrid h3 { width: 100%; }
+.achCard {
+  width: 150px; padding: 9px 10px; border-radius: 10px; text-align: left;
+  background: var(--panel); border: 1px solid var(--panel-edge);
+  display: flex; flex-direction: column; gap: 3px;
+}
+.achCard .aname { font-weight: 700; font-size: 12.5px; letter-spacing: 0.04em; color: #ffd24d; }
+.achCard .adesc { font-size: 11px; color: var(--dim); line-height: 1.4; }
+.achCard.locked { opacity: 0.4; }
+.achCard.locked .aname { color: var(--dim); }
+
+/* ---------- Achievement toasts ---------- */
+#toasts {
+  position: fixed; bottom: calc(18px + env(safe-area-inset-bottom));
+  left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; gap: 8px; z-index: 50; pointer-events: none;
+}
+.toast {
+  background: var(--panel); border: 1px solid #ffd24d; color: var(--ink);
+  border-radius: 12px; padding: 10px 18px; font-size: 14px; letter-spacing: 0.04em;
+  box-shadow: 0 0 18px -4px #ffd24d;
+  animation: toastIn 0.25s ease-out, toastOut 0.4s ease-in 3.1s forwards;
+}
+.toast b { color: #ffd24d; }
+@keyframes toastIn { from { opacity: 0; transform: translateY(14px); } }
+@keyframes toastOut { to { opacity: 0; transform: translateY(8px); } }
+
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }

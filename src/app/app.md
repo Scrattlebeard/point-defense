@@ -21,7 +21,7 @@ gameplay screenshots) and by play; not unit-tested.
 | `render.js` | Canvas drawing: field grid, entities (shape + variant highlight grammar), tower, beams/lightning/rings, HUD elements drawn on canvas (hp arc, boss bar) |
 | `fx.js` | Particles, floating damage numbers, announcements, screen shake, hit flashes — capped pools, purely cosmetic. Announcements (wave / debut / boss name) anchor **top-left under the HUD**, linger **15s**, and debut/boss banners carry a **mini specimen icon** (the wireframe shape with its variant highlight) so the banner teaches what to look for (2026-07-23 playtest) |
 | `audio.js` | WebAudio synth one-shots (fire, death, nova, levelup, hurt, gameover); lazy AudioContext on first gesture; mute persisted via meta |
-| `ui.js` | DOM overlays: menu, tower select, tech tree (branch columns, node states: owned/available/locked), **bestiary** (discovered enemies/variants with wireframe icon canvases; "?" cards for the unmet), level-up cards, pause, game-over payout |
+| `ui.js` | DOM overlays: menu, tower select, tech tree (branch columns, node states: owned/available/locked), **bestiary** (discovered enemies/variants with wireframe icon canvases; "?" cards for the unmet), **records** (top-10 high scores + achievement grid, locked entries dimmed), level-up cards, pause, game-over payout (with high-score rank when placed), **achievement toasts** (DOM, bottom-center, queued — they must work over any overlay, including menus) |
 
 ## Shell-level behaviors (presentation truths)
 

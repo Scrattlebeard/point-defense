@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { defaultMeta, newRun, addXp, levelChoices, applyChoice, payout } from '../src/core/state.js';
+import { defaultMeta, newRun, addXp, levelChoices, applyChoice, payout, addScore, evalAchievements } from '../src/core/state.js';
 import { xpForLevel } from '../src/core/balance.js';
 import { WEAPONS } from '../src/core/config.js';
 import { mulberry32 } from '../src/core/rng.js';
@@ -116,6 +116,52 @@ test('meta tracks sightings: empty by default, preserved through payout', () => 
   // run-scoped introduction record starts empty every run (banners repeat by design)
   assert.equal(S.introduced.enemies.size, 0);
   assert.equal(S.introduced.variants.size, 0);
+});
+
+test('addScore keeps a sorted top-10 and reports the rank', () => {
+  let m = defaultMeta();
+  for (let w = 1; w <= 12; w++) {
+    ({ meta: m } = addScore(m, { wave: w, kills: w * 10, tower: 'bastion', ts: w }));
+  }
+  assert.equal(m.scores.length, 10, 'list must trim to 10');
+  assert.equal(m.scores[0].wave, 12, 'best run first');
+  assert.equal(m.scores[9].wave, 3, 'worst surviving entry is wave 3');
+  const { rank } = addScore(m, { wave: 8, kills: 999, tower: 'lance', ts: 99 });
+  assert.equal(rank, 5, 'wave-8 with more kills ranks above the old wave-8');
+  const { rank: noRank } = addScore(m, { wave: 1, kills: 0, tower: 'bastion', ts: 99 });
+  assert.equal(noRank, 0, 'a run that does not place reports rank 0');
+});
+
+test('payout accumulates lifetime totals', () => {
+  const S = newRun(defaultMeta(), 'bastion');
+  S.wave = 6; S.kills = 40; S.bossKills = 1;
+  const { meta, earned } = payout(S, defaultMeta());
+  assert.equal(meta.totalKills, 40);
+  assert.equal(meta.totalBossKills, 1);
+  assert.equal(meta.totalShards, earned);
+});
+
+test('achievements unlock once and never re-award', () => {
+  let m = { ...defaultMeta(), totalKills: 1, totalBossKills: 1, best: 5 };
+  const first = evalAchievements(m, null);
+  m = first.meta;
+  const ids = first.unlocked.map(a => a.id);
+  assert.ok(ids.includes('first'), 'First Blood should unlock');
+  assert.ok(ids.includes('regicide'), 'Regicide should unlock');
+  assert.ok(ids.includes('wave5'), 'Meet the Nobility should unlock');
+  const again = evalAchievements(m, null);
+  assert.equal(again.unlocked.length, 0, 're-evaluation must not re-award');
+  assert.equal(new Set(again.meta.ach).size, again.meta.ach.length, 'no duplicate ids');
+});
+
+test('run-scoped achievements need the final run state', () => {
+  const m = { ...defaultMeta(), totalKills: 1 };
+  const S = newRun(defaultMeta(), 'bastion');
+  S.weapons.orbit = 5; // maxed
+  const withRun = evalAchievements(m, S);
+  assert.ok(withRun.unlocked.some(a => a.id === 'specialist'));
+  const without = evalAchievements(m, null);
+  assert.ok(!without.unlocked.some(a => a.id === 'specialist'), 'menu-time eval must not see run state');
 });
 
 test('payout adds shards, tracks best wave, applies salvage, never pays zero', () => {

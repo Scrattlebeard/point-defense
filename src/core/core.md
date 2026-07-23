@@ -181,8 +181,27 @@ returns the new meta (shards added, best wave maxed, no other mutation).
 
 Meta shape (persisted by the shell, versioned key `pointdefense.meta.v1`):
 `{ shards, best, tech: [nodeIds], tower: lastSelectedId, sound: bool,
-seen: { enemies: [kinds], variants: [ids] } }`. `seen` is the **bestiary's discovery
+seen: { enemies: [kinds], variants: [ids] },
+scores: [{wave, kills, tower, ts}], ach: [achievementIds],
+totalKills, totalBossKills, totalShards }`. `seen` is the **bestiary's discovery
 record**: a kind/variant is recorded the first time one spawns in a run (sighting, not
-kill); undiscovered entries render as "?" cards. Old saves without `seen` inherit the
-empty default on load. Enemy/variant tables in `config.js` carry `lore` + display
+kill); undiscovered entries render as "?" cards. Old saves missing any field inherit
+the defaults on load. Enemy/variant tables in `config.js` carry `lore` + display
 `desc` strings for the bestiary — content, single home.
+
+## Records (high scores & achievements)
+
+- **High scores** (`state.js: addScore`): top-10 runs, sorted by wave then kills;
+  `addScore(meta, entry)` returns the new meta and the entry's 1-based rank (0 if it
+  didn't place). Recorded at run end; timestamps supplied by the shell.
+- **Lifetime totals** accumulate in `payout`: `totalKills`, `totalBossKills`,
+  `totalShards` (earned, post-salvage).
+- **Achievements** (`config.js: ACHIEVEMENTS`, logic `state.js: evalAchievements`):
+  pure predicates over `(meta, finalRunState?)`, evaluated after every meta change
+  (run end, tech purchase); once unlocked, an id stays in `meta.ach` forever —
+  re-evaluation never re-awards. The list (config is the single home): First Blood
+  (a kill) · Regicide (a boss) · Meet the Nobility / Double Digits / Deep Geometry /
+  The Recirculation (waves 5/10/20/40) · Shape Crime (500 lifetime kills) · Hoarder
+  (500 lifetime shards) · Investor (10 tech nodes) · Full Garrison (all towers) ·
+  Field Guide (all shapes seen) · Complete Taxonomy (bestiary full) · Specialist
+  (max a weapon in one run) · Overqualified (reach level 12 in one run).
