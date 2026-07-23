@@ -1,8 +1,8 @@
 // Per-frame simulation orchestration + wave director. Decisions (composition,
 // healing, payout) come from core; this file only sequences them in time.
-import { composeWave, rollVariant } from '../core/waves.js';
+import { composeWave, rollVariant, pickVariant } from '../core/waves.js';
 import { waveCleared } from '../core/state.js';
-import { BOSS_NAMES } from '../core/config.js';
+import { BOSS_NAMES, VARIANTS } from '../core/config.js';
 import { spawnEnemy, updateEnemies } from './enemies.js';
 import { updateWeapons } from './weapons.js';
 import { announce } from './fx.js';
@@ -36,8 +36,16 @@ function directWaves(G, dt) {
       if (S.enemies.length >= SOFT_CAP) { wd.spawnT = 0.5; return; }
       const kind = wd.plan.spawns[wd.idx++];
       if (kind === 'boss') {
-        spawnEnemy(G, 'boss');
-        announce(G.fx, BOSS_NAMES[G.bossIdx % BOSS_NAMES.length], '#ff3df0', 'approaches');
+        // once the name roster recirculates, every returning noble carries a
+        // guaranteed variant, worn as an epithet (core.md "Boss variants")
+        const recirc = G.bossIdx >= BOSS_NAMES.length;
+        const bv = recirc ? pickVariant(S.wave, Math.random) : null;
+        spawnEnemy(G, 'boss', bv);
+        const name = BOSS_NAMES[G.bossIdx % BOSS_NAMES.length];
+        announce(G.fx,
+          bv ? `${name}, THE ${VARIANTS[bv].name.toUpperCase()}` : name,
+          '#ff3df0',
+          bv ? VARIANTS[bv].desc : 'approaches');
         G.bossIdx++;
         sfx('boss');
       } else {

@@ -46,7 +46,10 @@ gameplay screenshots) and by play; not unit-tested.
   a frost upgrade read as "nova got bigger").
 - **Juice:** deaths burst in the enemy's color, tower hits shake + red vignette,
   level-ups pause the sim (cards are DOM, thumb-sized, stacked vertically on narrow
-  screens). The beam *breathes*: width/alpha pulse plus a flowing dash overlay so the
-  channel reads as energy in motion, not a static line.
+  screens). The beam is *loud*: layered glow (outer haze / mid sheath / white core)
+  with visible surge modulation, fast forward-flowing dashes and a faint counter-flow —
+  energy in motion, unmistakably on. The tesla coil *telegraphs*: crackling sparks
+  build at the tower's rim as its cooldown charges, and each discharge bursts at the
+  tower and the first target with a small shake.
 - **Failure honesty:** if localStorage is unavailable, the game plays with in-memory
   meta and the menu shows "progress won't persist" — never a silent wipe.

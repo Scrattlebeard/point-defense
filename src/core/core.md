@@ -71,14 +71,20 @@ Shape encodes species; highlight encodes the variation (pillar 3).
 | swift | white-hot glow outline | speed ×1.7, hp ×0.8 | 1.3 | 6 |
 | armored | thick steel outline | hp ×2.5, speed ×0.8 | 1.6 | 11 |
 | regen | green pulsing ring | heals 3% max hp / s | 1.5 | 17 |
-| shielded | rotating ring segments | absorbs first 3 damage instances (ring depletes visibly) | 1.6 | 20 |
+| shielded | rotating ring segments | absorbs first 3 damage instances (ring depletes visibly) | 1.6 | 21 |
 | volatile | pulsing orange core | on death: explosion r=70 — damages *other enemies* (2× its dmg) and the Point if in range | 1.4 | 23 |
 
 Roll: from wave 6, each non-boss spawn has `min(0.35, 0.015*(w−5))` chance of one
 variant chosen uniformly **from those whose `from wave` has arrived** — the pool
-widens as the run deepens, so each variant gets its own debut. Bosses never roll
-variants. (Ordering intent: mechanically simplest first; volatile last because its
-lesson costs the most to learn.)
+widens as the run deepens, so each variant gets its own debut. Debut waves avoid
+boss waves (multiples of 5) so introduction banners and boss-name banners don't
+land together — hence shielded at 21, not 20. (Ordering intent: mechanically
+simplest first; volatile last because its lesson costs the most to learn.)
+
+**Boss variants:** bosses roll no variants until the name roster recirculates
+(boss #8, wave 40). From then on, every returning noble carries a **guaranteed**
+variant from the debuted pool, announced as an epithet — *"SIR CUMFERENCE, THE
+ARMORED"*. A name you've beaten coming back changed is the lategame's escalation.
 
 ## Weapons (`config.js: WEAPONS`)
 

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { composeWave, rollVariant } from '../src/core/waves.js';
+import { composeWave, rollVariant, pickVariant } from '../src/core/waves.js';
 import { ENEMIES, VARIANTS } from '../src/core/config.js';
 import { waveBudget } from '../src/core/balance.js';
 import { mulberry32 } from '../src/core/rng.js';
@@ -53,6 +53,14 @@ test('rollVariant: never before wave 6, valid id or null after', () => {
   const v = rollVariant(10, () => 0);
   assert.ok(Object.keys(VARIANTS).includes(v));
   assert.equal(rollVariant(10, () => 0.999), null);
+});
+
+test('pickVariant: guaranteed pick from the debuted pool (recirculating bosses)', () => {
+  assert.equal(pickVariant(1, () => 0), null, 'nothing has debuted at wave 1');
+  for (let seed = 0; seed < 40; seed++) {
+    const v = pickVariant(40, mulberry32(seed));
+    assert.ok(Object.keys(VARIANTS).includes(v), 'wave-40 boss must always get a variant');
+  }
 });
 
 test('rollVariant respects per-variant debut waves', () => {

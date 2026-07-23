@@ -11,7 +11,7 @@ import { sfx } from './audio.js';
 export function resetWeapons(G) {
   G.wt = {
     boltT: 0.3, waveCd: 0,
-    orbA: 0, novaT: 2.5, teslaT: 1.2, seekT: 1.6, turretT: 0.8,
+    orbA: 0, novaT: 2.5, teslaT: 1.2, teslaCd: 0, seekT: 1.6, turretT: 0.8,
     beamOwner: null, beamAim: null,
   };
   G.aim = { x: G.cx, y: G.cy - 160 }; // standing aim point; input moves it
@@ -141,7 +141,7 @@ export function updateWeapons(G, dt) {
     if (wt.teslaT <= 0) {
       const first = nearestEnemy(S, G.cx, G.cy, st.range);
       if (first) {
-        wt.teslaT = st.cd * S.cdMult;
+        wt.teslaT = wt.teslaCd = st.cd * S.cdMult;
         const targets = [first];
         while (targets.length < st.chains) {
           const last = targets[targets.length - 1];
@@ -156,12 +156,16 @@ export function updateWeapons(G, dt) {
         }
         targets.forEach((e, i) => damageEnemy(G, e, st.dmg * Math.pow(0.8, i)));
         S.zaps.push({ pts: [{ x: G.cx, y: G.cy }, ...targets.map(e => ({ x: e.x, y: e.y }))], t: 0 });
+        // discharge oomph: the built-up charge visibly lets go (app.md)
+        burst(G.fx, G.cx, G.cy, '#bee6ff', 9, 170, 0.3, 2);
+        burst(G.fx, first.x, first.y, '#bee6ff', 7, 130, 0.25, 2);
+        shake(G.fx, 2);
         sfx('zap');
       } else wt.teslaT = 0.2;
     }
   }
   for (const z of S.zaps) z.t += dt;
-  S.zaps = S.zaps.filter(z => z.t < 0.14);
+  S.zaps = S.zaps.filter(z => z.t < 0.18);
 
   // seekers
   if (lvl(S, 'seek') >= 1) {

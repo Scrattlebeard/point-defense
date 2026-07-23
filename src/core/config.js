@@ -35,7 +35,7 @@ export const VARIANTS = {
   swift:    { name: 'Swift',    highlight: 'glow',    color: '#ffffff', minWave: 6,  hpMult: 0.8, spdMult: 1.7, xpMult: 1.3, desc: '×1.7 speed, ×0.8 HP', lore: 'White-hot and in a hurry.' },
   armored:  { name: 'Armored',  highlight: 'outline', color: '#b8c4d4', minWave: 11, hpMult: 2.5, spdMult: 0.8, xpMult: 1.6, desc: '×2.5 HP, ×0.8 speed', lore: 'Wears the outline like a promise.' },
   regen:    { name: 'Regen',    highlight: 'ring',    color: '#4dff88', minWave: 17, xpMult: 1.5, regenPct: 0.03, desc: 'heals 3% max HP per second', lore: 'Time is on its side.' },
-  shielded: { name: 'Shielded', highlight: 'shield',  color: '#7fd8ff', minWave: 20, xpMult: 1.6, shield: 3, desc: 'blocks the first 3 hits', lore: 'Three polite refusals, then it listens.' },
+  shielded: { name: 'Shielded', highlight: 'shield',  color: '#7fd8ff', minWave: 21, xpMult: 1.6, shield: 3, desc: 'blocks the first 3 hits', lore: 'Three polite refusals, then it listens.' },
   volatile: { name: 'Volatile', highlight: 'core',    color: '#ff8630', minWave: 23, xpMult: 1.4, explode: { r: 70, dmgMult: 2 }, desc: 'explodes on death — harms nearby shapes, and the Point if close', lore: 'Do not pop at close range.' },
 };
 

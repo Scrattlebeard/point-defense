@@ -84,41 +84,55 @@ function drawField(G) {
     ctx.lineCap = 'butt';
   }
 
-  // beam — breathes: width/alpha pulse + flowing dash overlay (app.md juice)
+  // beam — LOUD: layered glow + surge modulation + counter-flowing dashes (app.md juice)
   if (G.beamEnd) {
-    const pulse = 1 + 0.16 * Math.sin(S.time * 11);
+    const t = S.time;
+    const pulse = 1 + 0.3 * Math.sin(t * 13);
+    const surge = 0.75 + 0.25 * Math.sin(t * 23) * Math.sin(t * 3.7);
+    const line = () => { ctx.beginPath(); ctx.moveTo(G.cx, G.cy); ctx.lineTo(G.beamEnd.x, G.beamEnd.y); ctx.stroke(); };
     ctx.lineCap = 'round';
-    ctx.strokeStyle = `rgba(77, 232, 255, ${0.22 + 0.07 * Math.sin(S.time * 17)})`;
-    ctx.lineWidth = (G.beamEnd.width + 8) * pulse;
-    ctx.beginPath(); ctx.moveTo(G.cx, G.cy); ctx.lineTo(G.beamEnd.x, G.beamEnd.y); ctx.stroke();
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-    ctx.lineWidth = Math.max(2, G.beamEnd.width * 0.4 * pulse);
-    ctx.beginPath(); ctx.moveTo(G.cx, G.cy); ctx.lineTo(G.beamEnd.x, G.beamEnd.y); ctx.stroke();
-    // energy flowing outward along the channel
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([14, 30]);
-    ctx.lineDashOffset = -((S.time * 420) % 44);
-    ctx.beginPath(); ctx.moveTo(G.cx, G.cy); ctx.lineTo(G.beamEnd.x, G.beamEnd.y); ctx.stroke();
+    ctx.strokeStyle = `rgba(77, 232, 255, ${0.18 * surge})`;   // outer haze
+    ctx.lineWidth = (G.beamEnd.width + 16) * pulse;
+    line();
+    ctx.strokeStyle = `rgba(120, 240, 255, ${0.45 * surge})`;  // mid sheath
+    ctx.lineWidth = (G.beamEnd.width + 4) * (0.7 + 0.3 * pulse);
+    line();
+    ctx.strokeStyle = `rgba(255, 255, 255, ${0.7 + 0.3 * surge})`; // white core
+    ctx.lineWidth = Math.max(2.5, G.beamEnd.width * 0.5 * pulse);
+    line();
+    // energy flowing outward, fast and chunky
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+    ctx.lineWidth = 3.5;
+    ctx.setLineDash([22, 26]);
+    ctx.lineDashOffset = -((t * 560) % 48);
+    line();
+    // faint counter-flow shimmer
+    ctx.strokeStyle = 'rgba(159, 243, 255, 0.3)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 40]);
+    ctx.lineDashOffset = (t * 300) % 46;
+    line();
     ctx.setLineDash([]);
     ctx.lineDashOffset = 0;
     ctx.lineCap = 'butt';
   }
 
-  // tesla zaps
+  // tesla zaps — under-glow + hot core
   for (const z of S.zaps) {
-    const a = 1 - z.t / 0.14;
-    ctx.strokeStyle = `rgba(190, 230, 255, ${0.9 * a})`;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    for (let i = 0; i < z.pts.length - 1; i++) {
-      const p = z.pts[i], q = z.pts[i + 1];
-      ctx.moveTo(p.x, p.y);
-      const mx = (p.x + q.x) / 2 + (Math.random() - 0.5) * 18;
-      const my = (p.y + q.y) / 2 + (Math.random() - 0.5) * 18;
-      ctx.quadraticCurveTo(mx, my, q.x, q.y);
+    const a = 1 - z.t / 0.18;
+    for (const [color, width] of [[`rgba(120, 200, 255, ${0.35 * a})`, 6], [`rgba(220, 240, 255, ${0.95 * a})`, 2.5]]) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.beginPath();
+      for (let i = 0; i < z.pts.length - 1; i++) {
+        const p = z.pts[i], q = z.pts[i + 1];
+        ctx.moveTo(p.x, p.y);
+        const mx = (p.x + q.x) / 2 + (Math.random() - 0.5) * 18;
+        const my = (p.y + q.y) / 2 + (Math.random() - 0.5) * 18;
+        ctx.quadraticCurveTo(mx, my, q.x, q.y);
+      }
+      ctx.stroke();
     }
-    ctx.stroke();
   }
 
   // bullets & missiles
@@ -163,11 +177,37 @@ function drawField(G) {
     }
   }
 
+  drawTeslaCharge(G);
   drawEnemies(G);
   drawTower(G);
   drawSwipeTrails(G);
   drawBossBar(G);
   drawHeat(G);
+}
+
+// crackling build-up at the tower rim while the tesla cooldown charges (app.md)
+function drawTeslaCharge(G) {
+  const { ctx, S } = G;
+  if (S.weapons.tesla < 1 || !G.wt.teslaCd) return;
+  const charge = clamp(1 - G.wt.teslaT / G.wt.teslaCd, 0, 1);
+  if (charge < 0.1) return;
+  ctx.fillStyle = `rgba(190, 230, 255, ${0.22 * charge})`;
+  ctx.beginPath(); ctx.arc(G.cx, G.cy, 6 + 5 * charge, 0, TAU); ctx.fill();
+  const n = Math.round(charge * 5);
+  ctx.strokeStyle = `rgba(190, 230, 255, ${0.3 + 0.5 * charge})`;
+  ctx.lineWidth = 1.5;
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * TAU;
+    const r0 = 27, r1 = r0 + 5 + 13 * charge * Math.random();
+    const rm = (r0 + r1) / 2;
+    ctx.beginPath();
+    ctx.moveTo(G.cx + Math.cos(a) * r0, G.cy + Math.sin(a) * r0);
+    ctx.quadraticCurveTo(
+      G.cx + Math.cos(a) * rm + (Math.random() - 0.5) * 7,
+      G.cy + Math.sin(a) * rm + (Math.random() - 0.5) * 7,
+      G.cx + Math.cos(a) * r1, G.cy + Math.sin(a) * r1);
+    ctx.stroke();
+  }
 }
 
 function drawAim(G) {
