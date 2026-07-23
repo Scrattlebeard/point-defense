@@ -25,15 +25,24 @@ prereqs enforced), not exact constants, so tuning stays cheap.
 
 ## Balance formulas (`balance.js`)
 
-- `enemyHpMult(w) = 1 + 0.185(w−1) + 0.0105(w−1)²` — exactly 1 at wave 1, strictly
-  increasing. *(Reshaped 2026-07-23 with the base-hp table ×1.15: stronger opening,
-  trimmed slope, re-converging with the old total-hp curve ≈ wave 35 and running
-  slightly under it beyond 40. Contact damage deliberately untouched — the harder
-  floor is volume and durability, not spikier punishment.)*
+- `enemyHpMult(w) = 1 + 0.34(w−1) + 0.006(w−1)²` — exactly 1 at wave 1, strictly
+  increasing. *(Re-reshaped 2026-07-24 — the onboarding curve: playtest verdict "we
+  start out too easy"; a new player's first death should arrive within player levels
+  ~5–10 so the first tech-tree visit is minutes away, not a quarter-hour. Front-loaded
+  linear slope, trimmed quadratic, converging with the 2026-07-23 curve ≈ wave 35 and
+  running slightly under beyond 40 — early bites harder, lategame keeps its shape.
+  **Calibrated by spike, not hand-waving:** headless robot runs (perfect 0.2s
+  retargeting, random picks, no walls/beam — a rough stand-in for a new human) died
+  at median wave 14 / lvl ~15 before, median wave 9 / lvl 8–11 after, first death in
+  3.5–5.5 min paying ~30 shards ≈ two starter tech nodes. Deaths quantize to boss
+  waves (5/10/15) — the intended wall is a named boss, not trash. Durability was the
+  lever because volume feeds back: more bodies = more XP, and the player scales with
+  the wave; tried first, moved the median barely. Contact damage stays untouched.)*
 - `enemySpeedMult(w) = min(1.6, 1 + (w-1)*0.012)` — capped so lategame stays readable.
-- `waveBudget(w) = 14 + 5w + 0.316w²` — strictly increasing. *(Reshaped 2026-07-23:
-  ~55% more bodies at wave 1, converging with the old budget ≈ wave 35.)*
-- `spawnInterval(w) = clamp(1.3 − 0.05w, 0.22, 1.3)` seconds between spawns (pacing
+- `waveBudget(w) = 22 + 7w + 0.21w²` — strictly increasing. *(2026-07-24, same
+  reshape: more bodies early, converging with the previous budget ≈ wave 22 and
+  running ~10% under at wave 40 — the deep waves lean on tougher shapes instead.)*
+- `spawnInterval(w) = clamp(1.1 − 0.05w, 0.22, 1.1)` seconds between spawns (pacing
   tightened alongside the bigger early waves).
 - `xpForLevel(l) = round(10 + 8(l−1) + 1.2(l−1)²)` — XP needed to go from level l to l+1.
 - `bossHp(w) = 1500 * (1 + 0.3*(w−5))` for boss waves (w = 5, 10, 15…). *(Tripled
