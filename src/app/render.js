@@ -374,27 +374,28 @@ function drawFx(G) {
     ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
   }
   ctx.globalAlpha = 1;
-  ctx.textAlign = 'center';
-  let centerIdx = 0; // stack simultaneous banners instead of overlapping them
+  let bannerY = 84; // announcements stack down the top-left, under the HUD (app.md)
   for (const t of fx.texts) {
     const a = clamp(1 - t.t / t.life, 0, 1);
     ctx.globalAlpha = t.center ? Math.min(1, a * 1.6) : a;
     if (t.center) {
+      ctx.textAlign = 'left';
       ctx.font = `800 ${t.size}px system-ui, sans-serif`;
       ctx.fillStyle = t.color;
-      const scale = 1 + 0.06 * Math.min(1, t.t * 6);
+      const scale = 1 + 0.05 * Math.min(1, t.t * 6);
       ctx.save();
-      ctx.translate(W / 2, H * 0.32 + centerIdx * 58);
-      centerIdx++;
+      ctx.translate(14, bannerY);
+      bannerY += t.sub ? 44 : 28;
       ctx.scale(scale, scale);
       ctx.fillText(t.str, 0, 0);
       if (t.sub) {
-        ctx.font = `500 13px system-ui, sans-serif`;
+        ctx.font = `500 12px system-ui, sans-serif`;
         ctx.fillStyle = 'rgba(223, 231, 247, 0.8)';
-        ctx.fillText(t.sub, 0, 22);
+        ctx.fillText(t.sub, 1, 17);
       }
       ctx.restore();
     } else {
+      ctx.textAlign = 'center';
       ctx.font = `700 ${t.size}px system-ui, sans-serif`;
       ctx.fillStyle = t.color;
       ctx.fillText(t.str, t.x, t.y);
