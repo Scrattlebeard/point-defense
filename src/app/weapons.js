@@ -30,8 +30,9 @@ function boltVolley(G, tx, ty, st) {
   for (let i = 0; i < st.count; i++) {
     const a = base + (i - (st.count - 1) / 2) * 0.11;
     S.bullets.push({
+      // life is a safety net only — the arena wall is the real range (app.md)
       x: G.cx, y: G.cy, vx: Math.cos(a) * 540, vy: Math.sin(a) * 540,
-      dmg: st.dmg, pierce: st.pierce, r: 3.5, life: 1.3, color: '#9ff3ff', hit: new Set(),
+      dmg: st.dmg, pierce: st.pierce, r: 3.5, life: 6, color: '#9ff3ff', hit: new Set(),
     });
   }
   sfx('shoot');
@@ -272,7 +273,7 @@ export function updateWeapons(G, dt) {
         const d = dist(tx, ty, e.x, e.y) || 1;
         S.bullets.push({
           x: tx, y: ty, vx: ((e.x - tx) / d) * 460, vy: ((e.y - ty) / d) * 460,
-          dmg: st.dmg, pierce: 0, r: 2.5, life: 1.1, color: '#ffd24d', hit: new Set(),
+          dmg: st.dmg, pierce: 0, r: 2.5, life: 6, color: '#ffd24d', hit: new Set(),
         });
         fired = true;
       }

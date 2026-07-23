@@ -40,7 +40,9 @@ gameplay screenshots) and by play; not unit-tested.
 - **The play area is walled** (2026-07-23): player projectiles die against the
   viewport boundary with a force-field *flare* — a streak of light along the unseen
   wall — instead of silently vanishing; the beam clips at the boundary and blooms
-  against it while channeling. Deliberate gameplay consequence: player fire cannot
+  against it while channeling. **Bullets have no range cap — the wall IS the range**
+  (a lifetime remains only as a far-out safety net; the old 1.3s life was a hidden
+  ~700px cap that expired short of the border on diagonals). Deliberate gameplay consequence: player fire cannot
   reach shapes that haven't entered the arena yet. Enemies pass the wall freely —
   it's the Point's cage, not theirs.
 - **Loadout visibility:** the pause screen shows the full current loadout (weapons +
