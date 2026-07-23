@@ -66,13 +66,14 @@ export const WEAPONS = {
   orbit: {
     name: 'Orbitals', kind: 'auto', max: 5, tag: 'AUTO',
     descs: ['Two blades circle the Point, grinding shapes they touch', '+1 blade', '+damage & radius', '+1 blade', 'MAX: 5 blades'],
-    stats: l => ({ n: [0, 2, 3, 3, 4, 5][l], dmg: 10 + 6 * l, radius: 64 + 8 * l, speed: 2.3 + 0.18 * l }),
+    // radius pushed out 2026-07-24 — deliberate slight nerf (core.md orbit row)
+    stats: l => ({ n: [0, 2, 3, 3, 4, 5][l], dmg: 10 + 6 * l, radius: 88 + 8 * l, speed: 2.3 + 0.18 * l }),
   },
   nova: {
     name: 'Nova', kind: 'auto', max: 5, tag: 'AUTO',
     descs: ['The Point pulses a damaging ring', '+damage', 'Faster pulse', '+range & damage', 'MAX: fast and huge'],
-    // radius re-sloped 2026-07-24: bigger first pulse, same max (core.md nova row)
-    stats: l => ({ dmg: 16 + 8 * l, cd: Math.max(1.7, 5.0 - 0.6 * l), radius: 160 + 18 * l }),
+    // radius re-sloped twice 2026-07-24: "even more" first pulse (core.md nova row)
+    stats: l => ({ dmg: 16 + 8 * l, cd: Math.max(1.7, 5.0 - 0.6 * l), radius: 195 + 15 * l }),
   },
   frost: {
     name: 'Frost Aura', kind: 'auto', max: 5, tag: 'AUTO',

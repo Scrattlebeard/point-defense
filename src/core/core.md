@@ -25,7 +25,7 @@ prereqs enforced), not exact constants, so tuning stays cheap.
 
 ## Balance formulas (`balance.js`)
 
-- `enemyHpMult(w) = 1 + 0.34(w−1) + 0.006(w−1)²` — exactly 1 at wave 1, strictly
+- `enemyHpMult(w) = 1 + 0.46(w−1) + 0.004(w−1)²` — exactly 1 at wave 1, strictly
   increasing. *(Re-reshaped 2026-07-24 — the onboarding curve: playtest verdict "we
   start out too easy"; a new player's first death should arrive within player levels
   ~5–10 so the first tech-tree visit is minutes away, not a quarter-hour. Front-loaded
@@ -37,7 +37,15 @@ prereqs enforced), not exact constants, so tuning stays cheap.
   3.5–5.5 min paying ~30 shards ≈ two starter tech nodes. Deaths quantize to boss
   waves (5/10/15) — the intended wall is a named boss, not trash. (Re-checked after
   the same-day bolt-fan/orbit/nova rebalance: median 10, range 5–20 — still in band,
-  the buffed early autos lift the lucky tail more than the floor.) Durability was the
+  the buffed early autos lift the lucky tail more than the floor.) **Round 4 (same
+  day, "crank the enemy opening another notch"):** linear 0.185→0.34→**0.46**, quad
+  down to 0.004, converging with the original 2026-07-23 curve ≈ wave 45. The notch
+  was largely spent *holding the band against nova's second range buff* — nova at
+  L1-radius 210 with no enemy change sent the bot median to 17. First attempt put
+  the notch in `waveBudget` and made runs LONGER (median 17) — bodies are XP; the
+  budget-as-difficulty mistake is now twice-confirmed, durability is the only
+  early-difficulty lever that doesn't feed the player. Result: median 10, range
+  5–20; no-nova runs eat the full ~+20% early HP. Durability was the
   lever because volume feeds back: more bodies = more XP, and the player scales with
   the wave; tried first, moved the median barely. Contact damage stays untouched.)*
 - `enemySpeedMult(w) = min(1.6, 1 + (w-1)*0.012)` — capped so lategame stays readable.
@@ -144,8 +152,8 @@ Auto weapons (level-up pool):
 
 | id | max | behavior |
 |----|-----|----------|
-| orbit | 5 | blades orbiting the Point — **contact damage**: a blade grinds any shape it touches (they never shoot; the card text must say so — 2026-07-23 second playtester read "blade orbits" and waited for it to fire); count **2/3/3/4/5** *(started at 1 until 2026-07-24 — a single blade circling a 2D arena touches too little to feel like a weapon at all)*, dmg 10+6L, per-enemy hit cooldown 0.35s |
-| nova | 5 | expanding ring every 5.0−0.6L s (floor 1.7), dmg 16+8L, radius **160+18L** *(was 120+26L; re-sloped 2026-07-24 — L1 range up 146→178 so the first pulse already reaches past the orbit lane and feels like an answer to a crowd, max range unchanged at 250)* |
+| orbit | 5 | blades orbiting the Point — **contact damage**: a blade grinds any shape it touches (they never shoot; the card text must say so — 2026-07-23 second playtester read "blade orbits" and waited for it to fire); count **2/3/3/4/5** *(started at 1 until 2026-07-24 — a single blade circling a 2D arena touches too little to feel like a weapon at all)*, dmg 10+6L, orbit radius **88+8L** *(was 64+8L; pushed out 2026-07-24 as a deliberate slight nerf — every inbound path still crosses the ring, but blade arc-coverage of the longer circumference drops, so more shapes slip the band per crossing)*, per-enemy hit cooldown 0.35s |
+| nova | 5 | expanding ring every 5.0−0.6L s (floor 1.7), dmg 16+8L, radius **195+15L** *(120+26L → 160+18L → this, both 2026-07-24 — "even more": L1 pulse 146→178→210, max 250→270. Balance note: this buff alone moved the fresh-run bot median from 10 to 17; enemy HP round 4 exists to pay for it)* |
 | frost | 5 | slow aura, radius 100+26L, slow 22/28/33/38/45% *(was …62%; capped after the 2026-07-23 playtest — max slow + orbital knockback held enemies in place indefinitely)* |
 | tesla | 5 | chain lightning every 2.3−0.22L s: 2/3/3/4/6 chains, dmg 12+7L, falloff 0.8/jump — **tech-locked** |
 | seek | 5 | homing missiles: 1/1/2/2/3 per volley every 2.6−0.3L s, dmg 20+10L, small AoE — **tech-locked**. **Trajectory re-acquisition:** when a missile's target dies *or falls behind its heading*, it locks onto the best-aligned shape ahead of it instead (falling back to nearest if nothing's ahead) — a whiff curves into new prey rather than orbiting a lost cause (2026-07-23 playtest: limited turn rate made misses ineffective) |
