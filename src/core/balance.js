@@ -16,3 +16,6 @@ export const variantChance = w => (w <= 3 ? 0 : Math.min(0.35, 0.015 * (w - 3)))
 /** Losing must always buy something (README pillar 4). */
 export const shardPayout = (wave, kills, bossKills) =>
   Math.max(1, Math.round(3 * wave + kills / 10 + 8 * bossKills));
+
+/** Shapes gain inertia with age: knockback and aura slow divide by this (core.md). */
+export const enemyMass = age => 1 + Math.min(2, age / 15);

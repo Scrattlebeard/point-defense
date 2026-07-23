@@ -33,6 +33,11 @@ prereqs enforced), not exact constants, so tuning stays cheap.
 - `bossHp(w) = 500 * (1 + 0.3*(w−5))` for boss waves (w = 5, 10, 15…).
 - `shardPayout(wave, kills, bossKills) = round(3*wave + kills/10 + 8*bossKills)`,
   minimum 1 — **losing must always buy something** (pillar 4). Salvage tech multiplies.
+- `enemyMass(age) = 1 + min(2, age/15)` — **shapes gain inertia with age** (1 at spawn,
+  capped ×3 from 30s on). Knockback impulses and aura slow are divided by mass, so
+  crowd-control decays against anything that survives long enough — an old shape has
+  earned its momentum. (2026-07-23 playtest: complements the frost/orbit nerf; permanent
+  CC-lock must not be reachable at any level combination.)
 
 ## Enemies (`config.js: ENEMIES`)
 
@@ -82,7 +87,7 @@ Auto weapons (level-up pool):
 | nova | 5 | expanding ring every 5.2−0.6L s (floor 1.8), dmg 14+7L, radius 120+26L |
 | frost | 5 | slow aura, radius 100+26L, slow 22/28/33/38/45% *(was …62%; capped after the 2026-07-23 playtest — max slow + orbital knockback held enemies in place indefinitely)* |
 | tesla | 5 | chain lightning every 2.3−0.22L s: 2/3/3/4/6 chains, dmg 11+6L, falloff 0.8/jump — **tech-locked** |
-| seek | 5 | homing missiles: 1/1/2/2/3 per volley every 2.6−0.3L s, dmg 18+9L, small AoE — **tech-locked** |
+| seek | 5 | homing missiles: 1/1/2/2/3 per volley every 2.6−0.3L s, dmg 18+9L, small AoE — **tech-locked**. **Trajectory re-acquisition:** when a missile's target dies *or falls behind its heading*, it locks onto the best-aligned shape ahead of it instead (falling back to nearest if nothing's ahead) — a whiff curves into new prey rather than orbiting a lost cause (2026-07-23 playtest: limited turn rate made misses ineffective) |
 | turret | 5 | orbiting mini-turrets 1/1/2/2/3 shooting nearest, dmg 7+3.5L, cd 1.0−0.09L — **tech-locked** |
 
 Generic cards (always in pool): **Repair** (restore 40% max hp; only offered when

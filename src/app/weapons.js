@@ -4,7 +4,7 @@
 // projectile plumbing (speeds/lifetimes of visuals).
 import { WEAPONS } from '../core/config.js';
 import { dist, distToSegment, TAU } from '../core/geom.js';
-import { damageEnemy, nearestEnemy } from './enemies.js';
+import { damageEnemy, nearestEnemy, applyKnock } from './enemies.js';
 import { burst, shake } from './fx.js';
 import { sfx } from './audio.js';
 
@@ -49,7 +49,7 @@ export function fireShockwave(G, from, to) {
     if (e.dead) continue;
     if (distToSegment(e.x, e.y, from.x, from.y, to.x, to.y) <= st.width / 2 + e.r) {
       damageEnemy(G, e, st.dmg);
-      e.kbx += dx * st.knock; e.kby += dy * st.knock;
+      applyKnock(e, dx * st.knock, dy * st.knock);
     }
   }
   G.waveFx.push({ from: { ...from }, to: { ...to }, width: st.width, t: 0 });
@@ -106,7 +106,7 @@ export function updateWeapons(G, dt) {
           e.orbHit = S.time + 0.35;
           const d = dist(G.cx, G.cy, e.x, e.y) || 1;
           // modest shove: with frost slow it must never exceed walking speed (core.md frost note)
-          e.kbx += ((e.x - G.cx) / d) * 35; e.kby += ((e.y - G.cy) / d) * 35;
+          applyKnock(e, ((e.x - G.cx) / d) * 35, ((e.y - G.cy) / d) * 35);
         }
       }
     }
@@ -181,7 +181,16 @@ export function updateWeapons(G, dt) {
   }
   for (const m of S.missiles) {
     m.life -= dt;
-    if (!m.target || m.target.dead) m.target = nearestEnemy(S, m.x, m.y);
+    const sp0 = Math.hypot(m.vx, m.vy) || 1;
+    const vhx = m.vx / sp0, vhy = m.vy / sp0;
+    // trajectory re-acquisition (core.md seek row): retarget when the target is
+    // gone OR has fallen behind our heading — never orbit a lost cause.
+    let stale = !m.target || m.target.dead;
+    if (!stale) {
+      const d = dist(m.x, m.y, m.target.x, m.target.y) || 1;
+      if (((m.target.x - m.x) / d) * vhx + ((m.target.y - m.y) / d) * vhy < -0.1) stale = true;
+    }
+    if (stale) m.target = acquireAhead(S, m, vhx, vhy);
     if (m.target) {
       const d = dist(m.x, m.y, m.target.x, m.target.y) || 1;
       const ux = (m.target.x - m.x) / d, uy = (m.target.y - m.y) / d;
@@ -245,6 +254,19 @@ export function updateWeapons(G, dt) {
 
   for (const w of G.waveFx) w.t += dt;
   G.waveFx = G.waveFx.filter(w => w.t < 0.3);
+}
+
+/** Best-aligned living shape ahead of the missile's heading; nearest as fallback. */
+function acquireAhead(S, m, vhx, vhy) {
+  let best = null, bestScore = 0.15; // must be at least vaguely in front
+  for (const e of S.enemies) {
+    if (e.dead) continue;
+    const d = dist(m.x, m.y, e.x, e.y) || 1;
+    const align = ((e.x - m.x) / d) * vhx + ((e.y - m.y) / d) * vhy;
+    const score = align - d / 2200; // prefer aligned, mildly prefer close
+    if (score > bestScore) { bestScore = score; best = e; }
+  }
+  return best || nearestEnemy(S, m.x, m.y);
 }
 
 function updateBeam(G, dt) {

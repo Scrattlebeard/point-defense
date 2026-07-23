@@ -39,6 +39,13 @@ test('bossHp grows across boss waves', () => {
   assert.ok(B.bossHp(15) > B.bossHp(10));
 });
 
+test('enemyMass: 1 at spawn, grows with age, caps at 3', () => {
+  assert.equal(B.enemyMass(0), 1);
+  assert.ok(B.enemyMass(10) > B.enemyMass(1));
+  for (const a of [30, 60, 500]) assert.ok(B.enemyMass(a) <= 3);
+  assert.ok(Math.abs(B.enemyMass(60) - 3) < 1e-9);
+});
+
 test('shardPayout: losing always buys something, and deeper runs pay more', () => {
   assert.ok(B.shardPayout(0, 0, 0) >= 1);
   assert.ok(B.shardPayout(1, 0, 0) >= 1);

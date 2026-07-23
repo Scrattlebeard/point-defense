@@ -100,6 +100,14 @@ test('a max-level beam channels on its own — no hold input ever given', () => 
   assert.ok(G.S.kills > 0, 'always-on beam killed nothing');
 });
 
+test('seekers connect: a seeker-only loadout clears shapes unaided', () => {
+  const G = makeG('bastion', ['tesla', 'seek']);
+  G.S.weapons.bolt = 0;
+  G.S.weapons.seek = 3;
+  simulate(G, 45, { tap: false }); // nobody aims; homing must do all the work
+  assert.ok(G.S.kills > 8, `seekers only killed ${G.S.kills}`);
+});
+
 test('a maxed loadout deep-wave stress run does not explode', () => {
   const G = makeG('bastion', ['tesla', 'seek', 'turret']);
   for (const id of Object.keys(G.S.weapons)) G.S.weapons[id] = 5;

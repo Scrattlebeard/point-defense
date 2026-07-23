@@ -46,6 +46,7 @@ gameplay screenshots) and by play; not unit-tested.
   a frost upgrade read as "nova got bigger").
 - **Juice:** deaths burst in the enemy's color, tower hits shake + red vignette,
   level-ups pause the sim (cards are DOM, thumb-sized, stacked vertically on narrow
-  screens).
+  screens). The beam *breathes*: width/alpha pulse plus a flowing dash overlay so the
+  channel reads as energy in motion, not a static line.
 - **Failure honesty:** if localStorage is unavailable, the game plays with in-memory
   meta and the menu shows "progress won't persist" — never a silent wipe.

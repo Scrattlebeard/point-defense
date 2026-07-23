@@ -1,7 +1,7 @@
 // Enemy entities: spawning (base × variant), movement, contact, damage/death
 // side-effects. Rules and numbers come from core; this file executes them.
 import { ENEMIES, VARIANTS, SPLIT } from '../core/config.js';
-import { enemyHpMult, enemySpeedMult, bossHp } from '../core/balance.js';
+import { enemyHpMult, enemySpeedMult, bossHp, enemyMass } from '../core/balance.js';
 import { addXp } from '../core/state.js';
 import { dist } from '../core/geom.js';
 import { burst, dmgText, shake, flash } from './fx.js';
@@ -33,7 +33,7 @@ export function spawnEnemy(G, kind, variantId = null, x = null, y = null) {
     rotSpd: (Math.random() < 0.5 ? -1 : 1) * (0.5 + Math.random() * 1.2),
     variant: variantId, vdef: v,
     shield: v?.shield || 0,
-    kbx: 0, kby: 0, contactCd: 0, flash: 0, orbHit: 0,
+    kbx: 0, kby: 0, contactCd: 0, flash: 0, orbHit: 0, age: 0,
     boss: isBoss, dead: false,
   };
   S.enemies.push(e);
@@ -56,6 +56,13 @@ function hitTower(G, dmg) {
   shake(G.fx, 7);
   flash(G.fx, 0.22);
   sfx('hurt');
+}
+
+/** Knockback entry point: impulses divide by age-mass (core.md enemyMass). */
+export function applyKnock(e, ix, iy) {
+  const m = enemyMass(e.age);
+  e.kbx += ix / m;
+  e.kby += iy / m;
 }
 
 /** Death by player: full side-effects (xp, splits, explosions). */
@@ -116,15 +123,18 @@ export function updateEnemies(G, dt) {
   const S = G.S;
   for (const e of S.enemies) {
     if (e.dead) continue;
+    e.age += dt;
     e.flash = Math.max(0, e.flash - dt);
     e.contactCd = Math.max(0, e.contactCd - dt);
     e.rot += e.rotSpd * dt;
     if (e.vdef?.regenPct && e.hp < e.maxHp) {
       e.hp = Math.min(e.maxHp, e.hp + e.maxHp * e.vdef.regenPct * dt);
     }
-    // frost aura slow
+    // frost aura slow, resisted by age-mass (core.md enemyMass)
     let slow = 1;
-    if (G.aura && dist(e.x, e.y, G.cx, G.cy) < G.aura.r + e.r) slow = 1 - G.aura.slow;
+    if (G.aura && dist(e.x, e.y, G.cx, G.cy) < G.aura.r + e.r) {
+      slow = 1 - G.aura.slow / enemyMass(e.age);
+    }
     // seek the Point
     const d = dist(e.x, e.y, G.cx, G.cy) || 1;
     const ux = (G.cx - e.x) / d, uy = (G.cy - e.y) / d;
@@ -138,7 +148,9 @@ export function updateEnemies(G, dt) {
         if (e.contactCd <= 0) {
           hitTower(G, e.dmg);
           e.contactCd = 1.1;
-          e.kbx = -ux * 420; e.kby = -uy * 420; // ram, recoil, return
+          // ram, recoil, return — an aged boss recoils less and rams more often
+          const m = enemyMass(e.age);
+          e.kbx = (-ux * 420) / m; e.kby = (-uy * 420) / m;
         }
       } else {
         hitTower(G, e.dmg);

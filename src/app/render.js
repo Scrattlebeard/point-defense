@@ -84,15 +84,24 @@ function drawField(G) {
     ctx.lineCap = 'butt';
   }
 
-  // beam
+  // beam — breathes: width/alpha pulse + flowing dash overlay (app.md juice)
   if (G.beamEnd) {
+    const pulse = 1 + 0.16 * Math.sin(S.time * 11);
     ctx.lineCap = 'round';
-    ctx.strokeStyle = 'rgba(77, 232, 255, 0.25)';
-    ctx.lineWidth = G.beamEnd.width + 8;
+    ctx.strokeStyle = `rgba(77, 232, 255, ${0.22 + 0.07 * Math.sin(S.time * 17)})`;
+    ctx.lineWidth = (G.beamEnd.width + 8) * pulse;
     ctx.beginPath(); ctx.moveTo(G.cx, G.cy); ctx.lineTo(G.beamEnd.x, G.beamEnd.y); ctx.stroke();
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-    ctx.lineWidth = Math.max(2, G.beamEnd.width * 0.4);
+    ctx.lineWidth = Math.max(2, G.beamEnd.width * 0.4 * pulse);
     ctx.beginPath(); ctx.moveTo(G.cx, G.cy); ctx.lineTo(G.beamEnd.x, G.beamEnd.y); ctx.stroke();
+    // energy flowing outward along the channel
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([14, 30]);
+    ctx.lineDashOffset = -((S.time * 420) % 44);
+    ctx.beginPath(); ctx.moveTo(G.cx, G.cy); ctx.lineTo(G.beamEnd.x, G.beamEnd.y); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.lineDashOffset = 0;
     ctx.lineCap = 'butt';
   }
 
