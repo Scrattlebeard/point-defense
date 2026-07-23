@@ -70,11 +70,17 @@ simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not un
 - **Aura vs nova legibility:** frost aura = dim *dashed* standing circle; nova = bright
   *solid* expanding ring. They must never share a visual register (2026-07-23 playtest:
   a frost upgrade read as "nova got bigger").
-- **Frost oomph** (2026-07-23, in lieu of a balance buff): inside the aura, procedural
-  ice motes — small diamond crystals drifting slowly inward, density scaling with aura
-  level — plus a slow-rotating ring of rim crystals on the dashed circle. Stateless
-  (derived from `S.time`, no particle arrays) and still *dim*: the legibility rule
-  above outranks the juice; frost may sparkle but never bloom like nova.
+- **Frost oomph** (2026-07-23, in lieu of a balance buff; reworked 2026-07-24 —
+  playtest: the drifting motes + rim spikes read as motion and edge clutter): inside
+  the aura, a field of **stationary** diamond ice crystals in varied sizes, each
+  **twinkling** on its own phase and rate — a long dim rest, then a brief sharp glint
+  (cubed sine envelope: a sparkle, not a glow). No drift, no rim crystals — the
+  dashed circle alone marks the boundary. Positions are per-index hashes spread by
+  golden angle with area-uniform radii, so density scales with aura radius (level)
+  and the field re-lays itself smoothly as the aura grows. Stateless (derived from
+  `S.time` + per-index hash, no particle arrays) and still *dim on average*: the
+  legibility rule above outranks the juice; frost may glitter but never bloom like
+  nova, and nothing inside the aura may appear to *move*.
 - **Grid sparks** (2026-07-23): **menu-only by default** — the menu overlays a dead
   field, so ambience there is free; in battle extra motion reads as potential threat in
   a game where every moving thing is one (playtest verdict same day: "I like the

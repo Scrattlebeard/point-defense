@@ -104,38 +104,31 @@ function drawField(G) {
     ctx.beginPath(); ctx.arc(G.cx, G.cy, G.aura.r, 0, TAU); ctx.stroke();
     ctx.setLineDash([]);
 
-    // frost oomph (app.md): stateless ice motes drifting inward + rim crystals.
-    // Everything derives from S.time — no particle state, dim by decree.
+    // frost oomph (app.md): stationary twinkling crystals, varied sizes, no rim
+    // spikes. Stateless — S.time + per-index hash; dim on average by decree.
     const t = S.time;
-    const motes = Math.round(G.aura.r / 18); // density scales with aura level
-    for (let i = 0; i < motes; i++) {
-      const seed = i * 2.399963; // golden angle: even angular spread
-      const cycle = 7 + (i % 5); // seconds per inward drift
-      const p = ((t / cycle) + i * 0.618) % 1;
-      const rr = G.aura.r * (1 - 0.85 * p) - 6;
-      if (rr < 22) continue;
-      const a = seed + t * 0.05 * (i % 2 ? 1 : -1);
+    const hash = n => { const s = Math.sin(n) * 43758.5453; return s - Math.floor(s); };
+    const crystals = Math.round(G.aura.r / 9); // density scales with aura level
+    for (let i = 0; i < crystals; i++) {
+      const a = i * 2.399963; // golden angle: even angular spread
+      // sqrt → area-uniform radii; inner 24px kept clear of the tower
+      const rr = 24 + Math.sqrt(hash(i * 12.9898 + 1)) * (G.aura.r - 34);
       const mx = G.cx + Math.cos(a) * rr, my = G.cy + Math.sin(a) * rr;
-      const size = 2 + (i % 3);
-      const glint = 0.14 + 0.12 * Math.sin(t * 2.1 + i * 1.7) + 0.14 * (1 - p);
-      ctx.fillStyle = `rgba(180, 232, 255, ${Math.max(0, glint)})`;
+      const size = 1.5 + 3 * hash(i * 7.13 + 2);
+      // twinkle: long dim rest, brief sharp glint (cubed sine = sparkle not glow)
+      const tw = Math.sin(t * (0.9 + 1.8 * hash(i * 3.7 + 3)) + hash(i * 5.1 + 4) * TAU);
+      const glint = 0.09 + 0.34 * Math.max(0, tw) ** 3;
+      ctx.fillStyle = `rgba(185, 234, 255, ${glint})`;
       ctx.beginPath();
       ctx.moveTo(mx, my - size); ctx.lineTo(mx + size * 0.6, my);
       ctx.lineTo(mx, my + size); ctx.lineTo(mx - size * 0.6, my);
       ctx.fill();
+      // the biggest crystals get a tiny core flash at glint peak
+      if (size > 3.4 && tw > 0.92) {
+        ctx.fillStyle = `rgba(235, 250, 255, ${0.5 * (tw - 0.92) / 0.08})`;
+        ctx.fillRect(mx - 0.8, my - 0.8, 1.6, 1.6);
+      }
     }
-    ctx.strokeStyle = 'rgba(170, 228, 255, 0.32)';
-    ctx.lineWidth = 1.5;
-    for (let i = 0; i < 10; i++) {
-      const a = (i / 10) * TAU + t * 0.12;
-      const c = Math.cos(a), s2 = Math.sin(a);
-      const r0 = G.aura.r - 4, r1 = G.aura.r + 4 + 3 * Math.sin(t * 1.6 + i * 2.1);
-      ctx.beginPath();
-      ctx.moveTo(G.cx + c * r0, G.cy + s2 * r0);
-      ctx.lineTo(G.cx + c * r1, G.cy + s2 * r1);
-      ctx.stroke();
-    }
-    ctx.lineWidth = 1;
   }
 
   // nova rings — bright and SOLID; frost stays dim and dashed (app.md legibility note)
