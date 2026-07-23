@@ -9,7 +9,7 @@ root="$(git rev-parse --show-toplevel)"
 trees="$root/.worktrees"
 
 mkdir -p "$trees"
-git -C "$root" worktree add -b "$name" "$trees/$name" master
+git -C "$root" worktree add -b "$name" "$trees/$name" main
 
 # Tests are dep-free, but `npm run build` needs esbuild; offline install is fast.
 (cd "$trees/$name" && npm ci --prefer-offline --no-audit --no-fund >/dev/null)

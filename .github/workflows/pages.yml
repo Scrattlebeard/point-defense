@@ -1,10 +1,10 @@
-# Deploy to GitHub Pages on every push to master.
+# Deploy to GitHub Pages on every push to main.
 # Spec: README.md "Deployment". Tests gate the deploy — red tests, no ship.
 name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   workflow_dispatch:
 
 permissions:

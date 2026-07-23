@@ -41,7 +41,7 @@ photographed) · `?bestiary` opens a fully-revealed bestiary, in-memory only.
 The phone-playable build is **GitHub Pages** at
 `https://scrattlebeard.github.io/point-defense/`.
 
-- `.github/workflows/pages.yml` deploys on every push to `master`: `npm ci` →
+- `.github/workflows/pages.yml` deploys on every push to `main`: `npm ci` →
   `npm test` → `npm run build` → publish `dist/`. A red test blocks the deploy —
   the pipeline enforces the ship loop, not convention.
 - Pages serves `dist/index.html` — the **full standalone document**, so the game owns
