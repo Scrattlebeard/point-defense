@@ -52,8 +52,8 @@ test('shardPayout: losing always buys something, and deeper runs pay more', () =
   assert.ok(B.shardPayout(10, 100, 2) > B.shardPayout(3, 20, 0));
 });
 
-test('variantChance: none before wave 4, capped at 0.35, non-decreasing', () => {
-  for (let w = 1; w <= 3; w++) assert.equal(B.variantChance(w), 0);
+test('variantChance: none before wave 6, capped at 0.35, non-decreasing', () => {
+  for (let w = 1; w <= 5; w++) assert.equal(B.variantChance(w), 0);
   for (let w = 1; w <= 100; w++) {
     assert.ok(B.variantChance(w) <= 0.35);
     assert.ok(B.variantChance(w + 1) >= B.variantChance(w));

@@ -4,7 +4,7 @@ import { ENEMIES, VARIANTS, SPLIT } from '../core/config.js';
 import { enemyHpMult, enemySpeedMult, bossHp, enemyMass } from '../core/balance.js';
 import { addXp } from '../core/state.js';
 import { dist } from '../core/geom.js';
-import { burst, dmgText, shake, flash } from './fx.js';
+import { burst, dmgText, shake, flash, announce } from './fx.js';
 import { sfx } from './audio.js';
 
 const TOWER_R = 24;
@@ -38,11 +38,24 @@ export function spawnEnemy(G, kind, variantId = null, x = null, y = null) {
     boss: isBoss, dead: false,
   };
   S.enemies.push(e);
-  // bestiary sighting record (core.md meta.seen) — persisted with the next meta save
+  // bestiary sighting record (core.md meta.seen) + on-field introduction of first
+  // sightings (core.md "Introductions"). Bosses introduce themselves by name banner.
   const seen = G.meta?.seen;
   if (seen) {
-    if (!seen.enemies.includes(kind)) seen.enemies.push(kind);
-    if (variantId && !seen.variants.includes(variantId)) seen.variants.push(variantId);
+    if (!seen.enemies.includes(kind)) {
+      seen.enemies.push(kind);
+      if (!isBoss) {
+        announce(G.fx, `NEW SHAPE: ${def.name.toUpperCase()}`, def.color, def.intro);
+        e.introduce = 3;
+        sfx('discover');
+      }
+    }
+    if (variantId && !seen.variants.includes(variantId)) {
+      seen.variants.push(variantId);
+      announce(G.fx, `NEW SPECIMEN: ${v.name.toUpperCase()}`, v.color, v.desc);
+      e.introduce = 3;
+      sfx('discover');
+    }
   }
   return e;
 }
@@ -131,6 +144,7 @@ export function updateEnemies(G, dt) {
   for (const e of S.enemies) {
     if (e.dead) continue;
     e.age += dt;
+    if (e.introduce) e.introduce = Math.max(0, e.introduce - dt);
     e.flash = Math.max(0, e.flash - dt);
     e.contactCd = Math.max(0, e.contactCd - dt);
     e.rot += e.rotSpd * dt;

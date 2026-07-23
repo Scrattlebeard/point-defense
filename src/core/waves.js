@@ -17,10 +17,11 @@ export function composeWave(w, rng) {
   return { spawns, interval: spawnInterval(w), boss };
 }
 
-/** One variant id or null, for a single non-boss spawn. */
+/** One variant id or null, for a single non-boss spawn. Pool = variants whose debut wave has arrived. */
 export function rollVariant(w, rng) {
   const c = variantChance(w);
   if (c <= 0 || rng() >= c) return null;
-  const keys = Object.keys(VARIANTS);
-  return keys[Math.floor(rng() * keys.length)];
+  const pool = Object.keys(VARIANTS).filter(id => VARIANTS[id].minWave <= w);
+  if (!pool.length) return null;
+  return pool[Math.floor(rng() * pool.length)];
 }

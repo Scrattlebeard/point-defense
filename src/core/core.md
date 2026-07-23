@@ -48,26 +48,37 @@ the boss, which rams, knocks itself back, and comes again.
 |----|-------|----|-------|--------|-----|----|------|-----------|-------|
 | grunt | circle | 12 | 40 | 12 | 8 | 2 | 1 | 1 | red |
 | dart | triangle | 8 | 88 | 10 | 6 | 2 | 1.5 | 2 | amber |
-| tank | square | 48 | 26 | 15 | 16 | 5 | 3 | 3 | violet |
-| splitter | pentagon | 34 | 34 | 14 | 10 | 6 | 4 | 5 | green — splits into 2 darts (60% dart hp) on death |
-| elite | hexagon | 110 | 30 | 18 | 20 | 12 | 8 | 8 | blue |
+| tank | square | 48 | 26 | 15 | 16 | 5 | 3 | 4 | violet |
+| splitter | pentagon | 34 | 34 | 14 | 10 | 6 | 4 | 8 | green — splits into 2 darts (60% dart hp) on death |
+| elite | hexagon | 110 | 30 | 18 | 20 | 12 | 8 | 14 | blue |
 | boss | nonagon | `bossHp(w)` | 22 | 34 | 26 | 80 | — | every 5th wave | magenta |
+
+**Introductions (2026-07-23 playtest):** content is deliberately drip-fed — roughly one
+new shape or variant every 2–3 waves, stretching past wave 20 — and every **first
+sighting** of a kind/variant fires an on-field introduction: a banner ("NEW SHAPE:
+DART — fast and fragile" / "NEW SPECIMEN: REGEN — heals 3% max HP per second") plus a
+~3s pulsing highlight ring around the arriving specimen so it can be found on screen.
+Sightings record to `meta.seen` (the bestiary). Bosses introduce themselves by name
+banner instead — no generic card.
 
 ## Variants (`config.js: VARIANTS`) — the color/highlight grammar
 
 A variant is a *modifier* on a base enemy: stat multipliers + one visual highlight.
 Shape encodes species; highlight encodes the variation (pillar 3).
 
-| id | visual highlight | effect | xp mult |
-|----|------------------|--------|---------|
-| swift | white-hot glow outline | speed ×1.7, hp ×0.8 | 1.3 |
-| armored | thick steel outline | hp ×2.5, speed ×0.8 | 1.6 |
-| volatile | pulsing orange core | on death: explosion r=70 — damages *other enemies* (2× its dmg) and the Point if in range | 1.4 |
-| regen | green pulsing ring | heals 3% max hp / s | 1.5 |
-| shielded | rotating ring segments | absorbs first 3 damage instances (ring depletes visibly) | 1.6 |
+| id | visual highlight | effect | xp mult | from wave |
+|----|------------------|--------|---------|-----------|
+| swift | white-hot glow outline | speed ×1.7, hp ×0.8 | 1.3 | 6 |
+| armored | thick steel outline | hp ×2.5, speed ×0.8 | 1.6 | 11 |
+| regen | green pulsing ring | heals 3% max hp / s | 1.5 | 17 |
+| shielded | rotating ring segments | absorbs first 3 damage instances (ring depletes visibly) | 1.6 | 20 |
+| volatile | pulsing orange core | on death: explosion r=70 — damages *other enemies* (2× its dmg) and the Point if in range | 1.4 | 23 |
 
-Roll: from wave 4, each non-boss spawn has `min(0.35, 0.015*(w−3))` chance of one
-uniformly-chosen variant. Bosses never roll variants.
+Roll: from wave 6, each non-boss spawn has `min(0.35, 0.015*(w−5))` chance of one
+variant chosen uniformly **from those whose `from wave` has arrived** — the pool
+widens as the run deepens, so each variant gets its own debut. Bosses never roll
+variants. (Ordering intent: mechanically simplest first; volatile last because its
+lesson costs the most to learn.)
 
 ## Weapons (`config.js: WEAPONS`)
 

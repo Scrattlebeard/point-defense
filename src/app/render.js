@@ -236,6 +236,18 @@ function drawEnemies(G) {
       }
     }
 
+    // introduction highlight: a fading dashed ring around a first-ever sighting
+    if (e.introduce > 0) {
+      const a = Math.min(1, e.introduce / 1.5);
+      ctx.strokeStyle = e.color;
+      ctx.globalAlpha = a * (0.55 + 0.35 * Math.sin(S.time * 9));
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 6]);
+      ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 11 + 2 * pulse, 0, TAU); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+    }
+
     // hp sliver for beefy shapes
     if (e.hp < e.maxHp && (e.boss || e.maxHp > 40)) {
       const w = e.r * 2;
@@ -322,6 +334,7 @@ function drawFx(G) {
   }
   ctx.globalAlpha = 1;
   ctx.textAlign = 'center';
+  let centerIdx = 0; // stack simultaneous banners instead of overlapping them
   for (const t of fx.texts) {
     const a = clamp(1 - t.t / t.life, 0, 1);
     ctx.globalAlpha = t.center ? Math.min(1, a * 1.6) : a;
@@ -330,7 +343,8 @@ function drawFx(G) {
       ctx.fillStyle = t.color;
       const scale = 1 + 0.06 * Math.min(1, t.t * 6);
       ctx.save();
-      ctx.translate(W / 2, H * 0.32);
+      ctx.translate(W / 2, H * 0.32 + centerIdx * 58);
+      centerIdx++;
       ctx.scale(scale, scale);
       ctx.fillText(t.str, 0, 0);
       if (t.sub) {

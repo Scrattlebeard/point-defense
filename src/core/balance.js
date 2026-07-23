@@ -11,7 +11,7 @@ export const xpForLevel = l => Math.round(10 + 8 * (l - 1) + 1.2 * (l - 1) * (l 
 export const bossHp = w => 500 * (1 + 0.3 * (w - 5));
 
 /** Chance that a non-boss spawn rolls a variant. Zero early, capped so lategame stays readable. */
-export const variantChance = w => (w <= 3 ? 0 : Math.min(0.35, 0.015 * (w - 3)));
+export const variantChance = w => (w <= 5 ? 0 : Math.min(0.35, 0.015 * (w - 5)));
 
 /** Losing must always buy something (README pillar 4). */
 export const shardPayout = (wave, kills, bossKills) =>

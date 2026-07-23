@@ -5,12 +5,12 @@
 // sides: 0 = circle. Contact with the Point deals dmg and the enemy dies (kamikaze);
 // the boss rams, knocks back, returns.
 export const ENEMIES = {
-  grunt:    { name: 'Grunt',    sides: 0, hp: 12,  spd: 40, r: 12, dmg: 8,  xp: 2,  cost: 1,   minWave: 1, color: '#ff5c6c', lore: 'A circle with commitment issues — it commits to exactly one direction.' },
-  dart:     { name: 'Dart',     sides: 3, hp: 8,   spd: 88, r: 10, dmg: 6,  xp: 2,  cost: 1.5, minWave: 2, color: '#ffb84d', lore: 'An acute problem. Arrives fast, leaves faster.' },
-  tank:     { name: 'Tank',     sides: 4, hp: 48,  spd: 26, r: 15, dmg: 16, xp: 5,  cost: 3,   minWave: 3, color: '#c06bff', lore: 'Four right angles, zero right of way.' },
-  splitter: { name: 'Splitter', sides: 5, hp: 34,  spd: 34, r: 14, dmg: 10, xp: 6,  cost: 4,   minWave: 5, color: '#59ff9c', lore: 'The whole is worse than the sum of its parts.' },
-  elite:    { name: 'Elite',    sides: 6, hp: 110, spd: 30, r: 18, dmg: 20, xp: 12, cost: 8,   minWave: 8, color: '#59d5ff', lore: 'Six sides, all of them rude.' },
-  boss:     { name: 'Boss',     sides: 9, hp: 500, spd: 22, r: 34, dmg: 26, xp: 80, cost: 0,   minWave: 5, color: '#ff3df0', lore: 'Nonagon nobility. They have names, and they will introduce themselves.' },
+  grunt:    { name: 'Grunt',    sides: 0, hp: 12,  spd: 40, r: 12, dmg: 8,  xp: 2,  cost: 1,   minWave: 1,  color: '#ff5c6c', intro: 'slow and direct', lore: 'A circle with commitment issues — it commits to exactly one direction.' },
+  dart:     { name: 'Dart',     sides: 3, hp: 8,   spd: 88, r: 10, dmg: 6,  xp: 2,  cost: 1.5, minWave: 2,  color: '#ffb84d', intro: 'fast and fragile', lore: 'An acute problem. Arrives fast, leaves faster.' },
+  tank:     { name: 'Tank',     sides: 4, hp: 48,  spd: 26, r: 15, dmg: 16, xp: 5,  cost: 3,   minWave: 4,  color: '#c06bff', intro: 'slow, heavily built', lore: 'Four right angles, zero right of way.' },
+  splitter: { name: 'Splitter', sides: 5, hp: 34,  spd: 34, r: 14, dmg: 10, xp: 6,  cost: 4,   minWave: 8,  color: '#59ff9c', intro: 'splits when destroyed', lore: 'The whole is worse than the sum of its parts.' },
+  elite:    { name: 'Elite',    sides: 6, hp: 110, spd: 30, r: 18, dmg: 20, xp: 12, cost: 8,   minWave: 14, color: '#59d5ff', intro: 'fast, tough, mean', lore: 'Six sides, all of them rude.' },
+  boss:     { name: 'Boss',     sides: 9, hp: 500, spd: 22, r: 34, dmg: 26, xp: 80, cost: 0,   minWave: 5,  color: '#ff3df0', intro: '', lore: 'Nonagon nobility. They have names, and they will introduce themselves.' },
 };
 
 // Splitter children: 2 darts at 60% hp.
@@ -29,12 +29,14 @@ export const BOSS_NAMES = [
 
 // ---------- Variants: the color/highlight grammar ----------
 // Shape says what it is; highlight says what's special (README pillar 3).
+// Debut order (minWave): mechanically simplest first; volatile last — its lesson
+// costs the most to learn (core.md Variants).
 export const VARIANTS = {
-  swift:    { name: 'Swift',    highlight: 'glow',    color: '#ffffff', hpMult: 0.8, spdMult: 1.7, xpMult: 1.3, desc: '×1.7 speed, ×0.8 HP', lore: 'White-hot and in a hurry.' },
-  armored:  { name: 'Armored',  highlight: 'outline', color: '#b8c4d4', hpMult: 2.5, spdMult: 0.8, xpMult: 1.6, desc: '×2.5 HP, ×0.8 speed', lore: 'Wears the outline like a promise.' },
-  volatile: { name: 'Volatile', highlight: 'core',    color: '#ff8630', xpMult: 1.4, explode: { r: 70, dmgMult: 2 }, desc: 'explodes on death — harms nearby shapes, and the Point if close', lore: 'Do not pop at close range.' },
-  regen:    { name: 'Regen',    highlight: 'ring',    color: '#4dff88', xpMult: 1.5, regenPct: 0.03, desc: 'heals 3% max HP per second', lore: 'Time is on its side.' },
-  shielded: { name: 'Shielded', highlight: 'shield',  color: '#7fd8ff', xpMult: 1.6, shield: 3, desc: 'blocks the first 3 hits', lore: 'Three polite refusals, then it listens.' },
+  swift:    { name: 'Swift',    highlight: 'glow',    color: '#ffffff', minWave: 6,  hpMult: 0.8, spdMult: 1.7, xpMult: 1.3, desc: '×1.7 speed, ×0.8 HP', lore: 'White-hot and in a hurry.' },
+  armored:  { name: 'Armored',  highlight: 'outline', color: '#b8c4d4', minWave: 11, hpMult: 2.5, spdMult: 0.8, xpMult: 1.6, desc: '×2.5 HP, ×0.8 speed', lore: 'Wears the outline like a promise.' },
+  regen:    { name: 'Regen',    highlight: 'ring',    color: '#4dff88', minWave: 17, xpMult: 1.5, regenPct: 0.03, desc: 'heals 3% max HP per second', lore: 'Time is on its side.' },
+  shielded: { name: 'Shielded', highlight: 'shield',  color: '#7fd8ff', minWave: 20, xpMult: 1.6, shield: 3, desc: 'blocks the first 3 hits', lore: 'Three polite refusals, then it listens.' },
+  volatile: { name: 'Volatile', highlight: 'core',    color: '#ff8630', minWave: 23, xpMult: 1.4, explode: { r: 70, dmgMult: 2 }, desc: 'explodes on death — harms nearby shapes, and the Point if close', lore: 'Do not pop at close range.' },
 };
 
 // ---------- Weapons ----------

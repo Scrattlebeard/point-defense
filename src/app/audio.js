@@ -38,6 +38,7 @@ const P = {
   seek:    [600, 1100, 0.09, 'triangle', 0.03],
   shield:  [1000, 700, 0.05, 'triangle', 0.035],
   boss:    [55, 130, 0.7, 'sawtooth', 0.1],
+  discover: [660, 1180, 0.16, 'triangle', 0.06],
 };
 
 export function sfx(name) {

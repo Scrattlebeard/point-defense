@@ -48,9 +48,23 @@ test('composeWave is deterministic under a seeded rng', () => {
   assert.deepEqual(a, b);
 });
 
-test('rollVariant: never before wave 4, valid id or null after', () => {
-  assert.equal(rollVariant(3, () => 0), null);
+test('rollVariant: never before wave 6, valid id or null after', () => {
+  assert.equal(rollVariant(5, () => 0), null);
   const v = rollVariant(10, () => 0);
   assert.ok(Object.keys(VARIANTS).includes(v));
   assert.equal(rollVariant(10, () => 0.999), null);
+});
+
+test('rollVariant respects per-variant debut waves', () => {
+  for (let seed = 0; seed < 60; seed++) {
+    const v = rollVariant(12, mulberry32(seed));
+    if (v) assert.ok(VARIANTS[v].minWave <= 12, `${v} debuted early at wave 12`);
+  }
+  // deep wave: the full pool is reachable
+  const seen = new Set();
+  for (let seed = 0; seed < 500; seed++) {
+    const v = rollVariant(30, mulberry32(seed));
+    if (v) seen.add(v);
+  }
+  assert.equal(seen.size, Object.keys(VARIANTS).length, 'full pool never surfaced at wave 30');
 });
