@@ -70,7 +70,7 @@ Manual (gesture) weapons:
 
 | id | gesture | max | levels |
 |----|---------|-----|--------|
-| bolt | tap | 6 | dmg 9+4L; L3: 2 bolts, L5: 3 bolts (small spread); L4: pierce 1; **L6: auto-fires at nearest every 0.45s** |
+| bolt | aim | 6 | auto-fires toward the aim point every 0.34−0.02L s (needs a live enemy); dmg 9+4L; L3: 2 bolts, L5: 3 bolts (small spread); L4: pierce 1; **L6: adds an independent second volley at the nearest shape** |
 | shockwave | swipe | 5 | dmg 16+7L along the swipe segment (width 55+9L), knockback 170+25L; cd 1.7−0.18L (floor 0.6); L5: double damage |
 | beam | hold | 5 | 26+16L dps in a beam through the finger; heat 0→1 in ~3.5s, forced cooldown at 1; L3: slower heat; **L5: no overheat** |
 
@@ -80,7 +80,7 @@ Auto weapons (level-up pool):
 |----|-----|----------|
 | orbit | 5 | blades orbiting the Point — count 1/2/2/3/5, dmg 9+5L, per-enemy hit cooldown 0.35s |
 | nova | 5 | expanding ring every 5.2−0.6L s (floor 1.8), dmg 14+7L, radius 120+26L |
-| frost | 5 | slow aura, radius 100+26L, slow 28/34/42/48/62% |
+| frost | 5 | slow aura, radius 100+26L, slow 22/28/33/38/45% *(was …62%; capped after the 2026-07-23 playtest — max slow + orbital knockback held enemies in place indefinitely)* |
 | tesla | 5 | chain lightning every 2.3−0.22L s: 2/3/3/4/6 chains, dmg 11+6L, falloff 0.8/jump — **tech-locked** |
 | seek | 5 | homing missiles: 1/1/2/2/3 per volley every 2.6−0.3L s, dmg 18+9L, small AoE — **tech-locked** |
 | turret | 5 | orbiting mini-turrets 1/1/2/2/3 shooting nearest, dmg 7+3.5L, cd 1.0−0.09L — **tech-locked** |
@@ -132,6 +132,11 @@ A trace is `{t0, points: [{x, y, t}], holdEngaged}`. Classification:
 - **swipe** — on release, if not hold-engaged and total path length ≥ 30px. Payload:
   first→last point segment.
 - **tap** — anything else on release. Payload: release point.
+
+**The aim point** is a separate, standing input (not a gesture): every pointer
+position update — hover on desktop, any touch/drag on mobile — moves it, and the bolt
+auto-fires toward it. Taps therefore *aim* rather than fire; a swipe with no shockwave
+owned still re-aims at its endpoint (no dead inputs, README pillar 1).
 
 One hold at a time; concurrent other pointers still resolve as taps/swipes
 (multi-touch: beam with one finger, tap-fire with another).

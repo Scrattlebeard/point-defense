@@ -85,10 +85,30 @@ export function renderTech(G) {
   }
 }
 
+function loadoutHTML(S) {
+  const items = [];
+  for (const [id, l] of Object.entries(S.weapons)) {
+    if (l < 1) continue;
+    const max = l >= WEAPONS[id].max;
+    items.push(`<span class="litem"><b>${WEAPONS[id].name}</b> ${max ? '<span class="lmax">MAX</span>' : 'Lv ' + l}</span>`);
+  }
+  const mods = [];
+  if (Math.abs(S.dmgMult - 1) > 1e-9) mods.push(`DMG ×${S.dmgMult.toFixed(2)}`);
+  if (Math.abs(S.cdMult - 1) > 1e-9) mods.push(`CD ×${S.cdMult.toFixed(2)}`);
+  if (S.critChance > 0) mods.push(`CRIT ${Math.round(S.critChance * 100)}%`);
+  if (S.regen > 0) mods.push(`REGEN ${S.regen.toFixed(1)}/s`);
+  return items.join('') + (mods.length ? `<span class="lmods">${mods.join(' · ')}</span>` : '');
+}
+
+export function renderPause(G) {
+  $('pauseLoadout').innerHTML = loadoutHTML(G.S);
+}
+
 export function renderLevelUp(G, choices) {
   const S = G.S;
   $('levelupTitle').textContent =
     S.pendingLevels > 1 ? `LEVEL UP — ${S.pendingLevels} picks banked` : 'LEVEL UP';
+  $('lvlLoadout').innerHTML = loadoutHTML(S);
   const row = $('cardRow');
   row.innerHTML = '';
   for (const c of choices) {

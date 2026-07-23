@@ -10,10 +10,11 @@ import { sfx } from './audio.js';
 
 export function resetWeapons(G) {
   G.wt = {
-    boltCd: 0, autoBoltT: 0.5, waveCd: 0,
+    boltT: 0.3, waveCd: 0,
     orbA: 0, novaT: 2.5, teslaT: 1.2, seekT: 1.6, turretT: 0.8,
     beamOwner: null, beamAim: null,
   };
+  G.aim = { x: G.cx, y: G.cy - 160 }; // standing aim point; input moves it
   G.aura = null;
   G.waveFx = [];
 }
@@ -21,15 +22,9 @@ export function resetWeapons(G) {
 const lvl = (S, id) => S.weapons[id];
 const stats = (S, id) => WEAPONS[id].stats(S.weapons[id]);
 
-// ---------- manual: bolt (tap) ----------
-export function fireBolt(G, tx, ty, { auto = false } = {}) {
+// ---------- bolt volley (aim-driven; fired by updateWeapons, never by input) ----------
+function boltVolley(G, tx, ty, st) {
   const S = G.S;
-  if (lvl(S, 'bolt') < 1) return;
-  const st = stats(S, 'bolt');
-  if (!auto) {
-    if (G.wt.boltCd > 0) return;
-    G.wt.boltCd = st.cd * S.cdMult;
-  }
   const base = Math.atan2(ty - G.cy, tx - G.cx);
   for (let i = 0; i < st.count; i++) {
     const a = base + (i - (st.count - 1) / 2) * 0.11;
@@ -70,17 +65,21 @@ export function fireShockwave(G, from, to) {
 export function updateWeapons(G, dt) {
   const S = G.S;
   const wt = G.wt;
-  wt.boltCd = Math.max(0, wt.boltCd - dt);
   wt.waveCd = Math.max(0, wt.waveCd - dt);
 
-  // auto-bolt at max level
-  const boltSt = lvl(S, 'bolt') >= 1 ? stats(S, 'bolt') : null;
-  if (boltSt?.auto) {
-    wt.autoBoltT -= dt;
-    if (wt.autoBoltT <= 0) {
-      const e = nearestEnemy(S, G.cx, G.cy);
-      if (e) { fireBolt(G, e.x, e.y, { auto: true }); wt.autoBoltT = boltSt.autoCd * S.cdMult; }
-      else wt.autoBoltT = 0.2;
+  // bolt: auto-fires toward the standing aim; L6 adds a nearest-target volley
+  if (lvl(S, 'bolt') >= 1) {
+    const st = stats(S, 'bolt');
+    wt.boltT -= dt;
+    if (wt.boltT <= 0) {
+      if (S.enemies.some(e => !e.dead)) {
+        if (G.aim) boltVolley(G, G.aim.x, G.aim.y, st);
+        if (st.twin) {
+          const e = nearestEnemy(S, G.cx, G.cy);
+          if (e) boltVolley(G, e.x, e.y, st);
+        }
+        wt.boltT = st.cd * S.cdMult;
+      } else wt.boltT = 0.1;
     }
   }
 
@@ -106,7 +105,8 @@ export function updateWeapons(G, dt) {
           damageEnemy(G, e, st.dmg);
           e.orbHit = S.time + 0.35;
           const d = dist(G.cx, G.cy, e.x, e.y) || 1;
-          e.kbx += ((e.x - G.cx) / d) * 60; e.kby += ((e.y - G.cy) / d) * 60;
+          // modest shove: with frost slow it must never exceed walking speed (core.md frost note)
+          e.kbx += ((e.x - G.cx) / d) * 35; e.kby += ((e.y - G.cy) / d) * 35;
         }
       }
     }

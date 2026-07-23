@@ -6,7 +6,7 @@ import { buy } from '../core/tech.js';
 import { loadMeta, saveMeta } from './meta.js';
 import { makeFx, updateFx, announce } from './fx.js';
 import { setMuted, sfx } from './audio.js';
-import { resetWeapons, fireBolt } from './weapons.js';
+import { resetWeapons } from './weapons.js';
 import { nearestEnemy } from './enemies.js';
 import { resetWaveDirector, updateGame } from './game.js';
 import { initInput, updateInput, clearInput } from './input.js';
@@ -68,13 +68,18 @@ function finishRun() {
   ui.showOnly('over');
 }
 
+function pauseGame() {
+  if (G.mode !== 'play') return;
+  G.mode = 'pause';
+  clearInput(G);
+  ui.renderPause(G);
+  ui.showOnly('pause');
+}
+
 // ---------- ui hooks ----------
 ui.initUI(G, {
   onStart: () => startRun(),
-  onPause: () => {
-    if (G.mode !== 'play') return;
-    G.mode = 'pause'; clearInput(G); ui.showOnly('pause');
-  },
+  onPause: () => pauseGame(),
   onResume: () => { if (G.mode === 'pause') { G.mode = 'play'; ui.showOnly(null); } },
   onAbandon: () => finishRun(),
   onChoice: c => {
@@ -96,9 +101,7 @@ ui.initUI(G, {
 initInput(G, canvas);
 
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden && G.mode === 'play') {
-    G.mode = 'pause'; clearInput(G); ui.showOnly('pause');
-  }
+  if (document.hidden) pauseGame();
 });
 
 // ---------- frame loop ----------
@@ -130,7 +133,7 @@ if (location.search.includes('autostart')) {
       tapT -= 1 / 60;
       if (tapT <= 0) {
         const e = nearestEnemy(G.S, G.cx, G.cy);
-        if (e) { fireBolt(G, e.x, e.y); tapT = 0.2; }
+        if (e) { G.aim = { x: e.x, y: e.y }; tapT = 0.2; }
       }
       const sig = updateGame(G, 1 / 60);
       updateFx(G.fx, 1 / 60);

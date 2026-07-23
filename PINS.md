@@ -2,11 +2,11 @@
 
 Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short version: written immediately when they surface, self-contained enough to be picked up cold, candidates not commitments, deleted on resolution (git history is the archive).
 
-## Balance pass after first real play session
-- **What:** Tune curves/costs against actual human play (overnight tuning is sim-bot-verified only: the node sim in `test/sim.test.mjs` plays competently but not like a person).
-- **Why:** First-run pacing (wave 5–8, ~20–40 shards) is a spec *intent*, not yet a verified fact; shockwave/beam feel is untested on real thumbs.
-- **Where:** `src/core/balance.js`, `src/core/config.js` costs; spec intent in `src/core/core.md` ("Tuning intent").
-- **Context:** Daniel is the playtester. Watch: is wave 1 boring with only tap-bolt? Is the tech tree's first purchase reachable in 1–2 runs? Does beam overheat feel fair on mobile?
+## Balance pass, round 2
+- **What:** Continue tuning against human play. Round 1 (2026-07-23, Daniel's first session) landed: bolt reworked to auto-fire-at-aim (spam-clicking dominated), frost slow capped at 45%, orbital knockback 60→35 (frost+orbit held enemies in place), nova/frost visuals disambiguated.
+- **Why:** Deep-wave pacing, tech-tree cost curve, and beam-overheat feel are still only sim-bot-verified.
+- **Where:** `src/core/balance.js`, `src/core/config.js`; spec intent in `src/core/core.md`.
+- **Context:** Daniel is the playtester. Open questions: does the new bolt cadence (0.34−0.02L s) feel right vs the old spam ceiling? Is the L6 twin-volley worth reaching for? Tech costs vs actual shard income at waves 8+?
 
 ## Haptics + better sound design
 - **What:** `navigator.vibrate` on tower hit / boss spawn; richer synth (noise bursts for explosions, filter sweeps).

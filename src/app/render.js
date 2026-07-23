@@ -64,13 +64,15 @@ function drawField(G) {
     ctx.setLineDash([]);
   }
 
-  // nova rings
+  // nova rings — bright and SOLID; frost stays dim and dashed (app.md legibility note)
   for (const ring of S.rings) {
     const a = clamp(1 - ring.r / ring.max, 0, 1);
-    ctx.strokeStyle = `rgba(77, 232, 255, ${0.5 * a + 0.15})`;
-    ctx.lineWidth = 5;
+    ctx.strokeStyle = `rgba(159, 243, 255, ${0.65 * a + 0.2})`;
+    ctx.lineWidth = 4;
     ctx.beginPath(); ctx.arc(G.cx, G.cy, ring.r, 0, TAU); ctx.stroke();
   }
+
+  drawAim(G);
 
   // shockwave fx
   for (const w of G.waveFx) {
@@ -157,6 +159,29 @@ function drawField(G) {
   drawSwipeTrails(G);
   drawBossBar(G);
   drawHeat(G);
+}
+
+function drawAim(G) {
+  const { ctx, S } = G;
+  if (!G.aim || S.weapons.bolt < 1) return;
+  const st = WEAPONS.bolt.stats(S.weapons.bolt);
+  const base = Math.atan2(G.aim.y - G.cy, G.aim.x - G.cx);
+  ctx.setLineDash([3, 7]);
+  ctx.strokeStyle = 'rgba(159, 243, 255, 0.3)';
+  ctx.lineWidth = 1.5;
+  for (let i = 0; i < st.count; i++) {
+    const a = base + (i - (st.count - 1) / 2) * 0.11;
+    ctx.beginPath();
+    ctx.moveTo(G.cx + Math.cos(a) * 36, G.cy + Math.sin(a) * 36);
+    ctx.lineTo(G.cx + Math.cos(a) * 160, G.cy + Math.sin(a) * 160);
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  // reticle at the aim point
+  ctx.strokeStyle = 'rgba(159, 243, 255, 0.55)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(G.aim.x, G.aim.y, 7, 0, TAU); ctx.stroke();
+  ctx.beginPath(); ctx.arc(G.aim.x, G.aim.y, 1.2, 0, TAU); ctx.stroke();
 }
 
 function drawEnemies(G) {

@@ -1,23 +1,28 @@
 // Pointer events → traces → core gesture classification → weapon triggers.
 // Multi-touch: one hold (beam) at a time; other pointers still tap/swipe.
 import { newTrace, addPoint, shouldEngageHold, classifyRelease } from '../core/gestures.js';
-import { fireBolt, fireShockwave } from './weapons.js';
+import { fireShockwave } from './weapons.js';
 import { initAudio } from './audio.js';
 
 export function initInput(G, canvas) {
   G.traces = new Map();
+
+  const setAim = e => { if (G.mode === 'play' && G.wt) G.aim = { x: e.clientX, y: e.clientY }; };
 
   canvas.addEventListener('pointerdown', e => {
     initAudio();
     if (G.mode !== 'play') return;
     try { canvas.setPointerCapture(e.pointerId); } catch { /* pointer may be gone */ }
     G.traces.set(e.pointerId, newTrace(e.clientX, e.clientY, G.S.time));
+    setAim(e);
     e.preventDefault();
   });
 
   canvas.addEventListener('pointermove', e => {
     const tr = G.traces.get(e.pointerId);
     if (tr) addPoint(tr, e.clientX, e.clientY, G.S.time);
+    // the aim point follows every pointer position — hover included (core.md "The aim point")
+    setAim(e);
   });
 
   const finish = e => {
@@ -27,10 +32,10 @@ export function initInput(G, canvas) {
     if (G.wt.beamOwner === e.pointerId) { G.wt.beamOwner = null; G.wt.beamAim = null; }
     if (G.mode !== 'play') return;
     const g = classifyRelease(tr);
-    if (g.type === 'tap') fireBolt(G, g.x, g.y);
+    if (g.type === 'tap') G.aim = { x: g.x, y: g.y };
     else if (g.type === 'swipe') {
-      // graceful degrade (README pillar 1): no shockwave → bolt at the swipe's end
-      if (!fireShockwave(G, g.from, g.to)) fireBolt(G, g.to.x, g.to.y);
+      // graceful degrade (README pillar 1): no shockwave → the swipe still re-aims
+      if (!fireShockwave(G, g.from, g.to)) G.aim = { x: g.to.x, y: g.to.y };
     }
     // hold: damage already applied while channeling; release just ends it
   };

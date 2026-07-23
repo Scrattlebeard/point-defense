@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { defaultMeta, newRun, levelChoices, applyChoice } from '../src/core/state.js';
 import { makeFx, updateFx } from '../src/app/fx.js';
-import { resetWeapons, fireBolt, fireShockwave } from '../src/app/weapons.js';
+import { resetWeapons, fireShockwave } from '../src/app/weapons.js';
 import { resetWaveDirector, updateGame } from '../src/app/game.js';
 import { nearestEnemy } from '../src/app/enemies.js';
 
@@ -23,7 +23,7 @@ function makeG(towerId = 'bastion', tech = []) {
   return G;
 }
 
-/** Simulate `seconds` of play with a competent robot thumb. Returns end signal. */
+/** Simulate `seconds` of play with a competent robot aimer. Returns end signal. */
 function simulate(G, seconds, { tap = true } = {}) {
   const dt = 1 / 60;
   let tapT = 0;
@@ -32,7 +32,7 @@ function simulate(G, seconds, { tap = true } = {}) {
       tapT -= dt;
       if (tapT <= 0) {
         const e = nearestEnemy(G.S, G.cx, G.cy);
-        if (e) fireBolt(G, e.x, e.y);
+        if (e) G.aim = { x: e.x, y: e.y };
         tapT = 0.2;
       }
     }
@@ -59,8 +59,10 @@ test('90 sim-seconds of bastion play: waves advance, shapes die, levels arrive',
   assert.ok(G.S.lvl > 1, 'never leveled');
 });
 
-test('an undefended Point falls', () => {
+test('a weaponless Point falls', () => {
+  // the bolt now auto-fires even unaimed, so "undefended" means no bolt at all
   const G = makeG();
+  G.S.weapons.bolt = 0;
   const sig = simulate(G, 240, { tap: false });
   assert.equal(sig, 'over');
   assert.ok(G.S.hp <= 0);
@@ -76,6 +78,7 @@ test('every tower survives its opening waves without crashing', () => {
 
 test('shockwave fires along a swipe and respects its cooldown', () => {
   const G = makeG();
+  G.S.weapons.bolt = 0; // isolate the shockwave as the only kill source
   G.S.weapons.shockwave = 1;
   simulate(G, 10, { tap: false });
   const before = G.S.kills;

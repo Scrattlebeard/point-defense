@@ -42,9 +42,9 @@ export const VARIANTS = {
 // stats(l) is only ever called with l >= 1.
 export const WEAPONS = {
   bolt: {
-    name: 'Bolt', kind: 'manual', gesture: 'tap', max: 6, tag: 'TAP',
-    descs: ['Tap to fire a bolt', '+damage', 'Fires 2 bolts', 'Bolts pierce one extra shape', 'Fires 3 bolts', 'MAX: auto-fires at the nearest shape'],
-    stats: l => ({ dmg: 9 + 4 * l, count: l >= 5 ? 3 : l >= 3 ? 2 : 1, pierce: l >= 4 ? 1 : 0, cd: 0.16, auto: l >= 6, autoCd: 0.45 }),
+    name: 'Bolt', kind: 'manual', gesture: 'aim', max: 6, tag: 'AIM',
+    descs: ['Auto-fires toward your aim', '+damage', 'Fires 2 bolts', 'Bolts pierce one extra shape', 'Fires 3 bolts', 'MAX: second volley targets the nearest shape'],
+    stats: l => ({ dmg: 9 + 4 * l, count: l >= 5 ? 3 : l >= 3 ? 2 : 1, pierce: l >= 4 ? 1 : 0, cd: 0.34 - 0.02 * l, twin: l >= 6 }),
   },
   shockwave: {
     name: 'Shockwave', kind: 'manual', gesture: 'swipe', max: 5, tag: 'SWIPE',
@@ -69,7 +69,7 @@ export const WEAPONS = {
   frost: {
     name: 'Frost Aura', kind: 'auto', max: 5, tag: 'AUTO',
     descs: ['An aura that slows shapes', '+radius', '+slow', '+radius', 'MAX: glacial'],
-    stats: l => ({ radius: 100 + 26 * l, slow: [0, 0.28, 0.34, 0.42, 0.48, 0.62][l] }),
+    stats: l => ({ radius: 100 + 26 * l, slow: [0, 0.22, 0.28, 0.33, 0.38, 0.45][l] }),
   },
   tesla: {
     name: 'Tesla Coil', kind: 'auto', max: 5, tag: 'AUTO', techLock: true,

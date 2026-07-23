@@ -32,6 +32,15 @@ gameplay screenshots) and by play; not unit-tested.
   from enemy hues.
 - **Performance guards:** particle and damage-number pools are capped; enemy count is
   soft-capped (~240) by pausing the spawn queue, never by dropping queued spawns.
+- **Aim feedback:** faint dashed aim lines from the Point toward the aim point — one
+  per bolt in the volley, at their true spread angles — plus a small reticle. The
+  bolt's *reach* is unbounded; the lines are direction indicators, not range.
+- **Loadout visibility:** the pause screen shows the full current loadout (weapons +
+  levels + run modifiers); the level-up screen carries a compact one-line strip of
+  the same, so picks are made in context.
+- **Aura vs nova legibility:** frost aura = dim *dashed* standing circle; nova = bright
+  *solid* expanding ring. They must never share a visual register (2026-07-23 playtest:
+  a frost upgrade read as "nova got bigger").
 - **Juice:** deaths burst in the enemy's color, tower hits shake + red vignette,
   level-ups pause the sim (cards are DOM, thumb-sized, stacked vertically on narrow
   screens).

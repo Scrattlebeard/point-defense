@@ -41,13 +41,16 @@ firefox --headless --screenshot .smoke/battle.png --window-size=430,900 "file://
 
 ## Design pillars (the .md-level truths of the game)
 
-1. **Gestures are weapon classes.** Tap = bolt (every tower has it), swipe = shockwave,
-   hold = channeled beam. Swipe/hold weapons are unlocked in-run via level-ups, so the
-   gesture vocabulary teaches itself. A swipe with no shockwave owned degrades gracefully
-   to a bolt at the swipe's end — no gesture is ever a dead input.
-2. **Manual graduates into auto.** Auto weapons (orbitals, nova, seekers, tesla, frost,
-   turrets) are the level-up economy; the tap bolt itself auto-fires at max level. Skill
-   ceiling early, idle power fantasy late — the Vampire Survivors curve.
+1. **Gestures are weapon classes — and the pointer is the aim.** The bolt (every tower
+   has it) auto-fires toward the standing aim point: the live cursor on desktop, the
+   last touch position on mobile. Aim lines show the volley directions. Swipe =
+   shockwave, hold = channeled beam — unlocked in-run via level-ups, so the gesture
+   vocabulary teaches itself. Every tap and swipe also updates the aim — no gesture is
+   ever a dead input. *(v1 fired bolts per tap; replaced after the 2026-07-23 playtest
+   because spam-clicking out-damaged every auto weapon.)*
+2. **Skill is aim, power is auto.** Auto weapons (orbitals, nova, seekers, tesla, frost,
+   turrets) are the level-up economy; the bolt's max level adds a second, self-targeting
+   volley. Attention early, idle power fantasy late — the Vampire Survivors curve.
 3. **Variants are read at a glance.** Enemy difficulty variations are *color/highlight
    grammar* on the same base shapes — outline = armor, white-hot glow = speed, pulsing
    core = volatile, green ring = regenerating, rotating ring = shielded. Shape says
