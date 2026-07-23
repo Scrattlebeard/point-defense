@@ -177,34 +177,35 @@ function drawField(G) {
     }
   }
 
-  drawTeslaCharge(G);
   drawEnemies(G);
   drawTower(G);
+  drawTeslaCharge(G); // above the tower: the crackle lives on the core dot
   drawSwipeTrails(G);
   drawBossBar(G);
   drawHeat(G);
 }
 
-// crackling build-up at the tower rim while the tesla cooldown charges (app.md)
+// crackling build-up around the Point's core dot; state-driven (app.md)
 function drawTeslaCharge(G) {
   const { ctx, S } = G;
-  if (S.weapons.tesla < 1 || !G.wt.teslaCd) return;
-  const charge = clamp(1 - G.wt.teslaT / G.wt.teslaCd, 0, 1);
-  if (charge < 0.1) return;
-  ctx.fillStyle = `rgba(190, 230, 255, ${0.22 * charge})`;
-  ctx.beginPath(); ctx.arc(G.cx, G.cy, 6 + 5 * charge, 0, TAU); ctx.fill();
+  const charge = G.wt.teslaCharge || 0;
+  if (S.weapons.tesla < 1 || charge < 0.05) return;
+  // the core dot glows with the charge
+  ctx.fillStyle = `rgba(190, 230, 255, ${0.5 * charge})`;
+  ctx.beginPath(); ctx.arc(G.cx, G.cy, 3.5 + 3.5 * charge, 0, TAU); ctx.fill();
+  // mini-arcs crackling around the dot, inside the hull's dark inner disc
   const n = Math.round(charge * 5);
-  ctx.strokeStyle = `rgba(190, 230, 255, ${0.3 + 0.5 * charge})`;
-  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = `rgba(190, 230, 255, ${0.35 + 0.55 * charge})`;
+  ctx.lineWidth = 1.2;
   for (let i = 0; i < n; i++) {
     const a = Math.random() * TAU;
-    const r0 = 27, r1 = r0 + 5 + 13 * charge * Math.random();
+    const r0 = 4.5, r1 = r0 + 2 + 7 * charge * Math.random();
     const rm = (r0 + r1) / 2;
     ctx.beginPath();
     ctx.moveTo(G.cx + Math.cos(a) * r0, G.cy + Math.sin(a) * r0);
     ctx.quadraticCurveTo(
-      G.cx + Math.cos(a) * rm + (Math.random() - 0.5) * 7,
-      G.cy + Math.sin(a) * rm + (Math.random() - 0.5) * 7,
+      G.cx + Math.cos(a) * rm + (Math.random() - 0.5) * 5,
+      G.cy + Math.sin(a) * rm + (Math.random() - 0.5) * 5,
       G.cx + Math.cos(a) * r1, G.cy + Math.sin(a) * r1);
     ctx.stroke();
   }

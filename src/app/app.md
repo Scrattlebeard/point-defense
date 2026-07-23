@@ -48,8 +48,12 @@ gameplay screenshots) and by play; not unit-tested.
   level-ups pause the sim (cards are DOM, thumb-sized, stacked vertically on narrow
   screens). The beam is *loud*: layered glow (outer haze / mid sheath / white core)
   with visible surge modulation, fast forward-flowing dashes and a faint counter-flow —
-  energy in motion, unmistakably on. The tesla coil *telegraphs*: crackling sparks
-  build at the tower's rim as its cooldown charges, and each discharge bursts at the
-  tower and the first target with a small shake.
+  energy in motion, unmistakably on. The tesla coil *telegraphs* via an explicit
+  charge state (`wt.teslaCharge` 0→1, maintained by the weapon update — never derived
+  from cooldown fields that don't exist before the first shot): crackling mini-arcs
+  build around the Point's **core dot** (inside the hull, drawn above the tower),
+  visible from the moment the coil is owned and steady-full when charged with no
+  target in range. Each discharge bursts at the tower and the first target with a
+  small shake.
 - **Failure honesty:** if localStorage is unavailable, the game plays with in-memory
   meta and the menu shows "progress won't persist" — never a silent wipe.

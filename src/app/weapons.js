@@ -11,7 +11,7 @@ import { sfx } from './audio.js';
 export function resetWeapons(G) {
   G.wt = {
     boltT: 0.3, waveCd: 0,
-    orbA: 0, novaT: 2.5, teslaT: 1.2, teslaCd: 0, seekT: 1.6, turretT: 0.8,
+    orbA: 0, novaT: 2.5, teslaT: 1.2, teslaReady: false, teslaCharge: 0, seekT: 1.6, turretT: 0.8,
     beamOwner: null, beamAim: null,
   };
   G.aim = { x: G.cx, y: G.cy - 160 }; // standing aim point; input moves it
@@ -134,14 +134,17 @@ export function updateWeapons(G, dt) {
   }
   S.rings = S.rings.filter(r => r.r < r.max);
 
-  // tesla
+  // tesla — explicit charge state for the telegraph (app.md): charging 0→1,
+  // held at full when ready with no target in range
   if (lvl(S, 'tesla') >= 1) {
     const st = stats(S, 'tesla');
+    const cd = st.cd * S.cdMult;
     wt.teslaT -= dt;
     if (wt.teslaT <= 0) {
       const first = nearestEnemy(S, G.cx, G.cy, st.range);
       if (first) {
-        wt.teslaT = wt.teslaCd = st.cd * S.cdMult;
+        wt.teslaT = cd;
+        wt.teslaReady = false;
         const targets = [first];
         while (targets.length < st.chains) {
           const last = targets[targets.length - 1];
@@ -161,8 +164,12 @@ export function updateWeapons(G, dt) {
         burst(G.fx, first.x, first.y, '#bee6ff', 7, 130, 0.25, 2);
         shake(G.fx, 2);
         sfx('zap');
-      } else wt.teslaT = 0.2;
+      } else {
+        wt.teslaT = 0.15; // rescan soon, but display stays "charged"
+        wt.teslaReady = true;
+      }
     }
+    wt.teslaCharge = wt.teslaReady ? 1 : Math.max(0, Math.min(1, 1 - wt.teslaT / cd));
   }
   for (const z of S.zaps) z.t += dt;
   S.zaps = S.zaps.filter(z => z.t < 0.18);
