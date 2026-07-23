@@ -70,6 +70,9 @@ body {
 }
 h2 { letter-spacing: 0.15em; }
 
+/* menu glass is thinner than the shared overlay: the menu-only grid sparks
+   (app.md) live behind it, and 0.88 would strangle them */
+#menu { background: rgba(7, 10, 18, 0.72); }
 #menuStats { color: var(--dim); font-size: 14px; letter-spacing: 0.06em; }
 #menuStats .shards { color: var(--shard); }
 #overStats { color: var(--ink); font-size: 16px; line-height: 1.9; letter-spacing: 0.05em; }

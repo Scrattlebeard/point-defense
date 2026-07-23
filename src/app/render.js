@@ -49,8 +49,10 @@ function drawGrid(G) {
   ctx.stroke();
 
   // grid sparks (app.md): stateless ambient lights crawling the lanes.
-  // OFF by default — &sparks dev hatch; motion read as threat in playtest.
-  if (!SPARKS_ON) return;
+  // Menu-only by default — &sparks re-enables in battle (motion read as threat).
+  const menuMode = G.mode === 'menu';
+  if (!SPARKS_ON && !menuMode) return;
+  const peak = menuMode ? 0.7 : 0.3; // brighter under the menu glass
   // Wall-clock on purpose — the room keeps humming through pause and menus.
   const t = performance.now() / 1000;
   const hash = n => { const s = Math.sin(n) * 43758.5453; return s - Math.floor(s); };
@@ -67,7 +69,7 @@ function drawGrid(G) {
     const dir = h > 0.5 ? 1 : -1;
     const head = dir > 0 ? p * span : (1 - p) * span;
     const tail = head - dir * 34;
-    const a = 0.3 * Math.sin(Math.PI * p) ** 2; // gradual fade in/out across the run
+    const a = peak * Math.sin(Math.PI * p) ** 2; // gradual fade in/out across the run
     const grad = horiz
       ? ctx.createLinearGradient(tail, 0, head, 0)
       : ctx.createLinearGradient(0, tail, 0, head);

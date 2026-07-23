@@ -56,10 +56,12 @@ simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not un
   level — plus a slow-rotating ring of rim crystals on the dashed circle. Stateless
   (derived from `S.time`, no particle arrays) and still *dim*: the legibility rule
   above outranks the juice; frost may sparkle but never bloom like nova.
-- **Grid sparks** (2026-07-23): **OFF by default, behind the `&sparks` dev hatch** —
-  even slowed to a drift, extra motion on the field reads as potential threat in a game
-  where every moving thing is one (same-day playtest verdict: "I like the effect" but
-  confusing; kept intact for a future home — perhaps menu-only). When enabled: faint
+- **Grid sparks** (2026-07-23): **menu-only by default** — the menu overlays a dead
+  field, so ambience there is free; in battle extra motion reads as potential threat in
+  a game where every moving thing is one (playtest verdict same day: "I like the
+  effect" but confusing — the `&sparks` dev hatch re-enables them in-game). Menu mode
+  runs them brighter (and the `#menu` overlay is slightly more transparent than the
+  shared 0.88) so they survive the glass; gameplay values stay dim. The effect: faint
   lights crawl along the background grid lines —
   a handful at a time, each drifting one full lane slowly (~20–40s per crossing)
   with a short gradient tail and a gradual sin² fade-in/out envelope, lanes re-rolled
