@@ -25,10 +25,30 @@ npm run build         # = node scripts/build.mjs
 #   dist/index.html     — standalone single file (open anywhere, share, host)
 #   dist/artifact.html  — same, minus the outer html skeleton (Claude Artifact publishing)
 
-# visual smoke (headless screenshots; ?autostart skips menu, &turbo pre-simulates ~40s):
+# visual smoke (headless screenshots — firefox works on this box; the chromium
+# flatpak cannot run headless):
 firefox --headless --screenshot .smoke/menu.png --window-size=430,900 "file://$PWD/dist/index.html"
 firefox --headless --screenshot .smoke/battle.png --window-size=430,900 "file://$PWD/dist/index.html?autostart&turbo"
 ```
+
+Dev hatches (query params on any build): `?autostart` skips the menu ·
+`&turbo` pre-simulates ~40s with a robot aimer (auto-picks level-ups) ·
+`&warp=N` pre-simulates exactly N seconds with *no* aimer (enemies survive to be
+photographed) · `?bestiary` opens a fully-revealed bestiary, in-memory only.
+
+## Deployment (Claude Artifact)
+
+The phone-playable build is a **Claude Artifact** at
+`https://claude.ai/code/artifact/eb569c08-45a9-45b8-9b71-4d948272e336`.
+
+- Publish `dist/artifact.html` (the body-content flavor), **favicon 🎯 (keep stable)**,
+  short kebab label naming the change (`force-wall`, `difficulty-reshape`, …).
+- **Cross-conversation rule:** a conversation that didn't originally publish this
+  artifact MUST pass the URL above as the `url` parameter when republishing —
+  otherwise a **new** URL is minted and the link on Daniel's phone silently goes
+  stale. (The original publishing conversation was 2026-07-23; any session after
+  that needs the explicit `url`.)
+- Ship loop: `npm test` green → `npm run build` → republish artifact → commit+push.
 
 ## Public seams
 

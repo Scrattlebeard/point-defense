@@ -2,6 +2,12 @@
 
 Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short version: written immediately when they surface, self-contained enough to be picked up cold, candidates not commitments, deleted on resolution (git history is the archive).
 
+## Adopt worktree discipline from here on
+- **What:** Future sessions work via `scripts/worktree <name>` + `scripts/land`, per CLAUDE.md "Branches and worktrees" — stop committing directly on master.
+- **Why:** The first two sessions (overnight build + playtest day, 2026-07-22/23) deliberately worked master: solo bootstrap, then a rapid interactive loop with Daniel ratifying every step in real time — the isolation the rule exists for had no second writer to isolate from. That justification expires now that the repo is established.
+- **Where:** process only; no files.
+- **Context:** 24 commits on master to date, all green at land time. Nothing to untangle — just switch discipline at next session start.
+
 ## Balance pass, round 2
 - **What:** Continue tuning against human play. Round 1 (2026-07-23, Daniel's first session) landed: bolt reworked to auto-fire-at-aim (spam-clicking dominated), frost slow capped at 45%, orbital knockback 60→35 (frost+orbit held enemies in place), nova/frost visuals disambiguated.
 - **Why:** Deep-wave pacing, tech-tree cost curve, and beam-overheat feel are still only sim-bot-verified.
