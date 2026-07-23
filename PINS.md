@@ -24,6 +24,18 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
 - **Context:** Deploy is GitHub Pages since 2026-07-23, so multi-file output is fine.
   Icon could reuse the 🎯 motif; service worker/offline explicitly out of scope until wanted.
 
+## Mastery progression (ADR-0003, PROPOSED — awaiting Daniel's review)
+- **What:** The Lattice (radial tech web, ~50 nodes, escalating rings), per-weapon
+  mastery trees with use-earned XP + behavior-changing aspects, per-tower identity
+  paths, Mines + Mortar. Full design: `adr/0003-mastery-progression.md` — that file
+  is the truth, this is a pointer.
+- **Why:** Daniel's ambitious-overnight ask 2026-07-24; the meta-game becomes the
+  long game.
+- **Where:** staged in the ADR (3 overnight-sized stages, each independently
+  shippable). Stage 1 = Lattice + `scripts/calibrate` + save migration.
+- **Context:** Blocked only on ADR review — the .md diff IS the review surface.
+  Open questions listed at ADR bottom; none block stage 1.
+
 ## Co-op multiplayer (second-playtester request; the biggest fork since birth)
 - **What:** Two-player co-op. Design direction (Daniel's, 2026-07-24, over the wife's
   "two points to defend"): **one Point, two separate weapon loadouts** — separate
