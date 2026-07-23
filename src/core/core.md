@@ -116,24 +116,29 @@ ARMORED"*. A name you've beaten coming back changed is the lategame's escalation
 
 ## Weapons (`config.js: WEAPONS`)
 
+*Balance round 2 (2026-07-23, playtest-driven): every weapon EXCEPT bolt and frost
+buffed ~10% — bolt is the always-on carry and was already winning the damage race;
+frost's power is control, not damage, and its 45% slow cap is a hard ceiling (see
+variant row note). Frost got visual oomph instead (app.md render.js).*
+
 Manual (gesture) weapons:
 
 | id | gesture | max | levels |
 |----|---------|-----|--------|
 | bolt | aim | 6 | auto-fires toward the aim point every 0.34−0.02L s (needs a live enemy); dmg 9+4L; L3: 2 bolts, L5: 3 bolts (small spread); L4: pierce 1; **L6: adds an independent second volley at the nearest shape *inside the arena walls*** — bullets die at the wall, so a target beyond it would eat the whole volley for nothing (2026-07-23) |
-| wall | swipe | 5 | **Force Wall** (reworked twice, 2026-07-23): the swipe conjures a stationary wall **anchored at the gesture's start** (length 150+40L; longer swipes trimmed toward the start — overshooting the tail must not move the wall). The wall is *siegeable*: it has **70+35L HP** that degens passively over ~5s, and shapes in contact **attack it** (their dmg every 0.9s) while being pushed along its tower-away normal at (100+25L)÷mass px/s and taking 4+2L dmg per 0.4s tick. Wall dies at 0 HP, whichever clock runs out first. Active walls: **1 until max level, 2 at L5**; swiping past the cap replaces the oldest; cd 0.4s |
-| beam | hold | 5 | ticks **per-target every 0.25s** at dps 30+18L (damage = dps×0.25 per tick) — so a shield loses one charge per *tick*, never per frame (playtest 2026-07-23: frame-rate ticking erased shields on touch); **per-target damage ramp** ×1→×2.5 over 2s of continuous exposure, decaying back over ~1.5s once out of the beam — sustained tracking is rewarded, field-flicking isn't; heat 0→1 in ~3.5s, forced cooldown at 1; L3: slower heat; **L5: no overheat and always-on — channels toward the standing aim point with no hold needed** (a no-overheat beam that still demanded holding would just be a finger tax) |
+| wall | swipe | 5 | **Force Wall** (reworked twice, 2026-07-23): the swipe conjures a stationary wall **anchored at the gesture's start** (length 150+40L; longer swipes trimmed toward the start — overshooting the tail must not move the wall). The wall is *siegeable*: it has **80+40L HP** that degens passively over ~5s, and shapes in contact **attack it** (their dmg every 0.9s) while being pushed along its tower-away normal at (100+25L)÷mass px/s and taking 5+2L dmg per 0.4s tick. Wall dies at 0 HP, whichever clock runs out first. Active walls: **1 until max level, 2 at L5**; swiping past the cap replaces the oldest; cd 0.4s |
+| beam | hold | 5 | ticks **per-target every 0.25s** at dps 34+20L (damage = dps×0.25 per tick) — so a shield loses one charge per *tick*, never per frame (playtest 2026-07-23: frame-rate ticking erased shields on touch); **per-target damage ramp** ×1→×2.5 over 2s of continuous exposure, decaying back over ~1.5s once out of the beam — sustained tracking is rewarded, field-flicking isn't; heat 0→1 in ~3.5s, forced cooldown at 1; L3: slower heat; **L5: no overheat and always-on — channels toward the standing aim point with no hold needed** (a no-overheat beam that still demanded holding would just be a finger tax) |
 
 Auto weapons (level-up pool):
 
 | id | max | behavior |
 |----|-----|----------|
-| orbit | 5 | blades orbiting the Point — count 1/2/2/3/5, dmg 9+5L, per-enemy hit cooldown 0.35s |
-| nova | 5 | expanding ring every 5.2−0.6L s (floor 1.8), dmg 14+7L, radius 120+26L |
+| orbit | 5 | blades orbiting the Point — count 1/2/2/3/5, dmg 10+6L, per-enemy hit cooldown 0.35s |
+| nova | 5 | expanding ring every 5.0−0.6L s (floor 1.7), dmg 16+8L, radius 120+26L |
 | frost | 5 | slow aura, radius 100+26L, slow 22/28/33/38/45% *(was …62%; capped after the 2026-07-23 playtest — max slow + orbital knockback held enemies in place indefinitely)* |
-| tesla | 5 | chain lightning every 2.3−0.22L s: 2/3/3/4/6 chains, dmg 11+6L, falloff 0.8/jump — **tech-locked** |
-| seek | 5 | homing missiles: 1/1/2/2/3 per volley every 2.6−0.3L s, dmg 18+9L, small AoE — **tech-locked**. **Trajectory re-acquisition:** when a missile's target dies *or falls behind its heading*, it locks onto the best-aligned shape ahead of it instead (falling back to nearest if nothing's ahead) — a whiff curves into new prey rather than orbiting a lost cause (2026-07-23 playtest: limited turn rate made misses ineffective) |
-| turret | 5 | orbiting mini-turrets 1/1/2/2/3 shooting nearest, dmg 7+3.5L, cd 1.0−0.09L — **tech-locked** |
+| tesla | 5 | chain lightning every 2.3−0.22L s: 2/3/3/4/6 chains, dmg 12+7L, falloff 0.8/jump — **tech-locked** |
+| seek | 5 | homing missiles: 1/1/2/2/3 per volley every 2.6−0.3L s, dmg 20+10L, small AoE — **tech-locked**. **Trajectory re-acquisition:** when a missile's target dies *or falls behind its heading*, it locks onto the best-aligned shape ahead of it instead (falling back to nearest if nothing's ahead) — a whiff curves into new prey rather than orbiting a lost cause (2026-07-23 playtest: limited turn rate made misses ineffective) |
+| turret | 5 | orbiting mini-turrets 1/1/2/2/3 shooting nearest, dmg 8+4L, cd 1.0−0.09L — **tech-locked** |
 
 Generic cards (always in pool): **Repair** (restore 40% max hp; only offered when
 below 70%), **Bulkhead** (+25 max hp, heals the same), **Overclock** (+10% damage,

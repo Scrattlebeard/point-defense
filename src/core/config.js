@@ -51,25 +51,25 @@ export const WEAPONS = {
   wall: {
     name: 'Force Wall', kind: 'manual', gesture: 'swipe', max: 5, tag: 'SWIPE',
     descs: ['Swipe a wall into being — shapes must break through it', '+length & wall HP', '+push & damage', '+wall HP & length', 'MAX: two walls'],
-    stats: l => ({ len: 150 + 40 * l, hp: 70 + 35 * l, dur: 5, push: 100 + 25 * l, dmg: 4 + 2 * l, tick: 0.4, maxWalls: l >= 5 ? 2 : 1, cd: 0.4 }),
+    stats: l => ({ len: 150 + 40 * l, hp: 80 + 40 * l, dur: 5, push: 100 + 25 * l, dmg: 5 + 2 * l, tick: 0.4, maxWalls: l >= 5 ? 2 : 1, cd: 0.4 }),
   },
   beam: {
     name: 'Lance Beam', kind: 'manual', gesture: 'hold', max: 5, tag: 'HOLD',
     descs: ['Hold to channel a beam — damage ramps as it cooks a target', '+damage', '+width, runs cooler', '+damage', 'MAX: always on, aims itself at your reticle'],
     stats: l => ({
-      dps: 30 + 18 * l, width: 9 + 2.5 * l, heatRate: l >= 5 ? 0 : (l >= 3 ? 0.22 : 0.29), alwaysOn: l >= 5,
+      dps: 34 + 20 * l, width: 9 + 2.5 * l, heatRate: l >= 5 ? 0 : (l >= 3 ? 0.22 : 0.29), alwaysOn: l >= 5,
       tick: 0.25, rampMax: 2.5, rampUp: 2.0, rampDown: 1.5,
     }),
   },
   orbit: {
     name: 'Orbitals', kind: 'auto', max: 5, tag: 'AUTO',
     descs: ['A blade orbits the Point', '+1 blade', '+damage & radius', '+1 blade', 'MAX: 5 blades'],
-    stats: l => ({ n: [0, 1, 2, 2, 3, 5][l], dmg: 9 + 5 * l, radius: 64 + 8 * l, speed: 2.3 + 0.18 * l }),
+    stats: l => ({ n: [0, 1, 2, 2, 3, 5][l], dmg: 10 + 6 * l, radius: 64 + 8 * l, speed: 2.3 + 0.18 * l }),
   },
   nova: {
     name: 'Nova', kind: 'auto', max: 5, tag: 'AUTO',
     descs: ['The Point pulses a damaging ring', '+damage', 'Faster pulse', '+range & damage', 'MAX: fast and huge'],
-    stats: l => ({ dmg: 14 + 7 * l, cd: Math.max(1.8, 5.2 - 0.6 * l), radius: 120 + 26 * l }),
+    stats: l => ({ dmg: 16 + 8 * l, cd: Math.max(1.7, 5.0 - 0.6 * l), radius: 120 + 26 * l }),
   },
   frost: {
     name: 'Frost Aura', kind: 'auto', max: 5, tag: 'AUTO',
@@ -79,17 +79,17 @@ export const WEAPONS = {
   tesla: {
     name: 'Tesla Coil', kind: 'auto', max: 5, tag: 'AUTO', techLock: true,
     descs: ['Lightning chains between shapes', '+1 chain', '+damage', '+chain & range', 'MAX: 6 chains'],
-    stats: l => ({ chains: [0, 2, 3, 3, 4, 6][l], dmg: 11 + 6 * l, cd: Math.max(0.9, 2.3 - 0.22 * l), range: 170 + 18 * l }),
+    stats: l => ({ chains: [0, 2, 3, 3, 4, 6][l], dmg: 12 + 7 * l, cd: Math.max(0.9, 2.3 - 0.22 * l), range: 170 + 18 * l }),
   },
   seek: {
     name: 'Seekers', kind: 'auto', max: 5, tag: 'AUTO', techLock: true,
     descs: ['Homing missiles with a small blast', '+damage', '+1 seeker', 'Faster volleys', 'MAX: 3 seekers'],
-    stats: l => ({ n: [0, 1, 1, 2, 2, 3][l], dmg: 18 + 9 * l, cd: Math.max(0.9, 2.6 - 0.3 * l), blast: 40, speed: 260 }),
+    stats: l => ({ n: [0, 1, 1, 2, 2, 3][l], dmg: 20 + 10 * l, cd: Math.max(0.9, 2.6 - 0.3 * l), blast: 40, speed: 260 }),
   },
   turret: {
     name: 'Turrets', kind: 'auto', max: 5, tag: 'AUTO', techLock: true,
     descs: ['A mini-turret orbits and shoots', 'Faster fire', '+1 turret', '+damage', 'MAX: 3 turrets'],
-    stats: l => ({ n: [0, 1, 1, 2, 2, 3][l], dmg: 7 + 3.5 * l, cd: Math.max(0.35, 1.0 - 0.09 * l), range: 260 }),
+    stats: l => ({ n: [0, 1, 1, 2, 2, 3][l], dmg: 8 + 4 * l, cd: Math.max(0.35, 1.0 - 0.09 * l), range: 260 }),
   },
 };
 

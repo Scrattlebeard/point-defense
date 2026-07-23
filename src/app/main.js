@@ -3,6 +3,7 @@
 // happen here — no other module changes G.mode.
 import { newRun, levelChoices, applyChoice, payout, defaultMeta, addScore, evalAchievements } from '../core/state.js';
 import { buy } from '../core/tech.js';
+import { WEAPONS } from '../core/config.js';
 import { loadMeta, saveMeta } from './meta.js';
 import { makeFx, updateFx, announce } from './fx.js';
 import { setMuted, sfx } from './audio.js';
@@ -167,6 +168,12 @@ if (location.search.includes('bestiary')) {
 const warpMatch = location.search.match(/warp=(\d+)/);
 if (location.search.includes('autostart')) {
   startRun();
+  // &gear=frost:4,orbit:2 — grant weapon levels for visual dev (README dev hatches)
+  const gearMatch = location.search.match(/gear=([\w:,]+)/);
+  if (gearMatch) for (const kv of gearMatch[1].split(',')) {
+    const [id, l] = kv.split(':');
+    if (WEAPONS[id]) G.S.weapons[id] = Math.min(WEAPONS[id].max, Number(l) || 1);
+  }
   if (location.search.includes('turbo') || warpMatch) {
     let tapT = 0;
     const bot = location.search.includes('turbo'); // warp alone = time passes, nobody aims

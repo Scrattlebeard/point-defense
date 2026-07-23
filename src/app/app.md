@@ -51,6 +51,11 @@ simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not un
 - **Aura vs nova legibility:** frost aura = dim *dashed* standing circle; nova = bright
   *solid* expanding ring. They must never share a visual register (2026-07-23 playtest:
   a frost upgrade read as "nova got bigger").
+- **Frost oomph** (2026-07-23, in lieu of a balance buff): inside the aura, procedural
+  ice motes — small diamond crystals drifting slowly inward, density scaling with aura
+  level — plus a slow-rotating ring of rim crystals on the dashed circle. Stateless
+  (derived from `S.time`, no particle arrays) and still *dim*: the legibility rule
+  above outranks the juice; frost may sparkle but never bloom like nova.
 - **Juice:** deaths burst in the enemy's color, tower hits shake + red vignette,
   level-ups pause the sim (cards are DOM, thumb-sized, stacked vertically on narrow
   screens). The beam is *loud*: layered glow (outer haze / mid sheath / white core)
