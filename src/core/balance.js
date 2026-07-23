@@ -8,7 +8,8 @@ export const enemySpeedMult = w => Math.min(1.6, 1 + (w - 1) * 0.012);
 export const waveBudget = w => 8 + 4 * w + 0.35 * w * w;
 export const spawnInterval = w => clamp(1.4 - 0.05 * w, 0.22, 1.4);
 export const xpForLevel = l => Math.round(10 + 8 * (l - 1) + 1.2 * (l - 1) * (l - 1));
-export const bossHp = w => 500 * (1 + 0.3 * (w - 5));
+// Tripled 2026-07-23: boss radius means full multi-bolt connects; see core.md.
+export const bossHp = w => 1500 * (1 + 0.3 * (w - 5));
 
 /** Chance that a non-boss spawn rolls a variant. Zero early, capped so lategame stays readable. */
 export const variantChance = w => (w <= 5 ? 0 : Math.min(0.35, 0.015 * (w - 5)));

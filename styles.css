@@ -21,7 +21,7 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-#field { position: fixed; inset: 0; touch-action: none; display: block; }
+#field { position: fixed; inset: 0; touch-action: none; display: block; cursor: none; }
 
 .hidden { display: none !important; }
 

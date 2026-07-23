@@ -17,7 +17,7 @@ gameplay screenshots) and by play; not unit-tested.
 | `game.js` | Per-frame simulation orchestration: wave director timing, spawning from the core's spawn plan, tower regen, wave-clear/game-over transitions |
 | `enemies.js` | Enemy entity update: movement (slow/knockback), contact resolution, damage/death side-effects (splits, volatile explosions, shields), XP award |
 | `weapons.js` | All weapon executors (manual + auto) + projectiles; reads levels/stats from core config, never defines them |
-| `input.js` | Pointer events → traces → `core/gestures` classification → weapon triggers; swipe-trail capture; hold ownership |
+| `input.js` | Pointer events → traces → `core/gestures` classification → weapon triggers; swipe-trail capture; hold ownership. **All pointer coords map through the canvas bounding rect** (origin + scale corrected), never raw `clientX` — embedding pages (the Claude Artifact viewer) may offset or scale the canvas, which desynced the reticle from the host cursor (2026-07-23). The OS cursor is hidden over the field: the reticle is the cursor |
 | `render.js` | Canvas drawing: field grid, entities (shape + variant highlight grammar), tower, beams/lightning/rings, HUD elements drawn on canvas (hp arc, boss bar) |
 | `fx.js` | Particles, floating damage numbers, announcements, screen shake, hit flashes — capped pools, purely cosmetic. Announcements (wave / debut / boss name) anchor **top-left under the HUD** and linger ~3s — the screen center stays clear for combat (2026-07-23 playtest) |
 | `audio.js` | WebAudio synth one-shots (fire, death, nova, levelup, hurt, gameover); lazy AudioContext on first gesture; mute persisted via meta |

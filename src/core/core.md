@@ -30,7 +30,9 @@ prereqs enforced), not exact constants, so tuning stays cheap.
 - `waveBudget(w) = 8 + 4w + 0.35w²` — strictly increasing.
 - `spawnInterval(w) = clamp(1.4 − 0.05w, 0.22, 1.4)` seconds between spawns.
 - `xpForLevel(l) = round(10 + 8(l−1) + 1.2(l−1)²)` — XP needed to go from level l to l+1.
-- `bossHp(w) = 500 * (1 + 0.3*(w−5))` for boss waves (w = 5, 10, 15…).
+- `bossHp(w) = 1500 * (1 + 0.3*(w−5))` for boss waves (w = 5, 10, 15…). *(Tripled
+  2026-07-23: a boss's radius means multi-bolt volleys connect in full, so effective
+  TTK was near a tank's — bosses must outlast the trash by an order of feel.)*
 - `shardPayout(wave, kills, bossKills) = round(3*wave + kills/10 + 8*bossKills)`,
   minimum 1 — **losing must always buy something** (pillar 4). Salvage tech multiplies.
 - `enemyMass(age) = 1 + min(2, age/15)` — **shapes gain inertia with age** (1 at spawn,
