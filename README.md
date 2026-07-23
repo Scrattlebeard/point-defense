@@ -55,9 +55,11 @@ The phone-playable build is **GitHub Pages** at
 - Pages serves `dist/index.html` — the **full standalone document**, so the game owns
   its `<head>` (viewport meta, `user-scalable=no`) with no wrapper between the
   browser and the canvas. This is why Pages is canonical: the Claude Artifact viewer
-  wraps `dist/artifact.html` in its own skeleton + mobile chrome, which caused
-  unfixable-from-here mobile misbehaviour (2026-07-23) — same class as the
-  cursor-desync the viewer caused a day earlier.
+  wraps `dist/artifact.html` in its own skeleton + mobile chrome — an opaque layer we
+  can't inspect or control. (Correction 2026-07-23: the mobile upper-left-quadrant bug
+  originally blamed on the viewer was OURS — canvas replaced-element sizing, fixed in
+  `styles.css` `#field`. The viewer's real strike is the cursor-desync plus being
+  undebuggable from here; the wrongly-convicted bug is not part of the case.)
 - Ship loop: `npm test` green → commit+push. (Build + deploy happen in CI;
   `npm run build` locally only for smoke-testing `dist/`.)
 

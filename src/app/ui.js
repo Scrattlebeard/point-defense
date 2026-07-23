@@ -233,8 +233,51 @@ function loadoutHTML(S) {
   return items.join('') + (mods.length ? `<span class="lmods">${mods.join(' · ')}</span>` : '');
 }
 
+// Live per-weapon stat readout, computed from the same WEAPONS.stats tables the
+// sim uses — hand-written numbers drift, these can't (app.md "Loadout visibility").
+function statLine(id, l) {
+  const st = WEAPONS[id].stats(l);
+  switch (id) {
+    case 'bolt':   return `DMG ${st.dmg}${st.auto ? ` +${st.auto} auto` : ''}${st.pierce ? ' · pierce' : ''} · ${st.cd.toFixed(2)}s`;
+    case 'wall':   return `HP ${st.hp} · DMG ${st.dmg} · LEN ${st.len}${st.maxWalls > 1 ? ' · ×2' : ''}`;
+    case 'beam':   return `DPS ${st.dps}${st.alwaysOn ? ' · always on' : ''}`;
+    case 'orbit':  return `${st.n} blade${st.n > 1 ? 's' : ''} · DMG ${st.dmg}`;
+    case 'nova':   return `DMG ${st.dmg} · R ${st.radius} · ${st.cd.toFixed(1)}s`;
+    case 'frost':  return `SLOW ${Math.round(st.slow * 100)}% · R ${st.radius}`;
+    case 'tesla':  return `${st.chains} chains · DMG ${st.dmg} · ${st.cd.toFixed(1)}s`;
+    case 'seek':   return `${st.n}× DMG ${st.dmg} · ${st.cd.toFixed(1)}s`;
+    case 'turret': return `${st.n}× DMG ${st.dmg} · ${st.cd.toFixed(2)}s`;
+    default: return '';
+  }
+}
+
+const pips = (l, max) =>
+  `<span class="pips">${'●'.repeat(l)}${'○'.repeat(max - l)}</span>`;
+
+function statsHTML(S) {
+  const rows = [];
+  for (const [id, l] of Object.entries(S.weapons)) {
+    if (l < 1) continue;
+    const w = WEAPONS[id];
+    rows.push(
+      `<div class="srow"><span class="sname">${w.name}</span>${pips(l, w.max)}` +
+      `<span class="sstat">${l >= w.max ? '<span class="lmax">MAX</span> · ' : ''}${statLine(id, l)}</span></div>`);
+  }
+  const mods = [];
+  if (Math.abs(S.dmgMult - 1) > 1e-9) mods.push(`DMG ×${S.dmgMult.toFixed(2)}`);
+  if (Math.abs(S.cdMult - 1) > 1e-9) mods.push(`CD ×${S.cdMult.toFixed(2)}`);
+  if (S.critChance > 0) mods.push(`CRIT ${Math.round(S.critChance * 100)}%`);
+  if (S.regen > 0) mods.push(`REGEN ${S.regen.toFixed(1)}/s`);
+  if (mods.length) rows.push(`<div class="srow mods">${mods.join(' · ')}</div>`);
+  return rows.join('');
+}
+
 export function renderPause(G) {
-  $('pauseLoadout').innerHTML = loadoutHTML(G.S);
+  const S = G.S;
+  const mm = Math.floor(S.time / 60), ss = String(Math.floor(S.time % 60)).padStart(2, '0');
+  $('pauseRun').textContent =
+    `Wave ${S.wave} · ${S.kills} kills · ${mm}:${ss} · HP ${Math.ceil(S.hp)}/${S.maxHp}`;
+  $('pauseLoadout').innerHTML = statsHTML(S);
 }
 
 export function renderLevelUp(G, choices) {
@@ -250,15 +293,17 @@ export function renderLevelUp(G, choices) {
     if (c.type === 'weapon') {
       const w = WEAPONS[c.id];
       const isNew = c.lvl === 0;
+      // chip = control scheme, always — newness lives in the level line (core.md
+      // level-up choices: NEW-as-chip hid how the weapon fires on first pick)
       el.innerHTML =
-        `<span class="chead"><span class="chip ${isNew ? 'NEW' : w.tag}">${isNew ? 'NEW' : w.tag}</span>` +
+        `<span class="chead"><span class="chip ${w.tag}">${w.tag}</span>` +
         `<span class="cname">${w.name}</span></span>` +
-        `<span class="clvl">${isNew ? 'Level 1' : `Lv ${c.lvl} → ${c.lvl + 1}`}</span>` +
+        `<span class="clvl">${isNew ? '<b class="newmark">NEW</b> — Level 1' : `Lv ${c.lvl} → ${c.lvl + 1}`}</span>` +
         `<span class="cdesc">${w.descs[c.lvl]}</span>`;
     } else {
       const g = GENERICS[c.id];
       el.innerHTML =
-        `<span class="chead"><span class="chip GEN">BOOST</span>` +
+        `<span class="chead"><span class="chip PASSIVE">PASSIVE</span>` +
         `<span class="cname">${g.name}</span></span>` +
         `<span class="cdesc">${g.desc}</span>`;
     }
@@ -284,6 +329,8 @@ export function updateHUD(G) {
   const c = G.hudCache;
   const xpPct = Math.round((S.xp / S.xpNext) * 100);
   if (c.xp !== xpPct) { $('xpfill').style.width = xpPct + '%'; c.xp = xpPct; }
+  const hot = xpPct >= 85; // near-full glow (app.md "XP bar prominence")
+  if (c.hot !== hot) { $('xpbar').classList.toggle('hot', hot); c.hot = hot; }
   if (c.wave !== S.wave) { $('waveTxt').textContent = 'Wave ' + S.wave; c.wave = S.wave; }
   if (c.lvl !== S.lvl) { $('lvlTxt').textContent = 'Lv ' + S.lvl; c.lvl = S.lvl; }
 }

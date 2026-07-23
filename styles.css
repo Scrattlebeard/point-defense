@@ -33,8 +33,21 @@ body {
   padding: calc(4px + env(safe-area-inset-top)) 10px 0;
   pointer-events: none;
 }
-#xpbar { height: 5px; background: #1b2438; border-radius: 3px; overflow: hidden; }
-#xpfill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), #9ff3ff); }
+/* thick enough to read mid-fight; glows as level-up approaches (app.md) */
+#xpbar {
+  height: 9px; background: #1b2438; border: 1px solid #26324a;
+  border-radius: 5px; overflow: hidden;
+}
+#xpfill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--accent), #9ff3ff);
+  box-shadow: 0 0 8px var(--accent);
+}
+#xpbar.hot #xpfill { animation: xppulse 0.8s ease-in-out infinite alternate; }
+@keyframes xppulse {
+  from { filter: brightness(1); }
+  to { filter: brightness(1.7); box-shadow: 0 0 14px var(--accent); }
+}
 #hudrow {
   display: flex; align-items: center; gap: 14px;
   padding: 6px 2px; font-size: 14px; letter-spacing: 0.08em;
@@ -130,8 +143,8 @@ button:active { transform: translateY(1px); }
 }
 .chip.AIM, .chip.TAP, .chip.SWIPE, .chip.HOLD { color: var(--accent); }
 .chip.AUTO { color: #59ff9c; }
-.chip.NEW { color: var(--accent-warm); }
-.chip.GEN { color: var(--dim); }
+.chip.PASSIVE { color: var(--dim); }
+.card .newmark { color: var(--accent-warm); letter-spacing: 0.1em; }
 @media (max-width: 620px) {
   #cardRow { flex-direction: column; align-items: stretch; }
   .card { max-width: none; }
@@ -154,6 +167,23 @@ button:active { transform: translateY(1px); }
 }
 .loadout.compact { font-size: 11.5px; }
 .loadout.compact .litem { padding: 2px 7px; }
+
+/* ---------- Pause stats panel (app.md "Loadout visibility") ---------- */
+.runline { color: var(--accent); font-size: 14px; letter-spacing: 0.06em; }
+.statpanel {
+  display: flex; flex-direction: column; gap: 6px;
+  width: min(440px, 92vw); font-size: 13px;
+}
+.statpanel .srow {
+  display: flex; align-items: baseline; gap: 10px;
+  background: var(--panel); border: 1px solid var(--panel-edge);
+  border-radius: 8px; padding: 6px 12px;
+}
+.statpanel .sname { font-weight: 700; flex: 0 0 84px; }
+.statpanel .pips { color: var(--accent); font-size: 9px; letter-spacing: 2px; }
+.statpanel .sstat { color: var(--dim); margin-left: auto; text-align: right; font-variant-numeric: tabular-nums; }
+.statpanel .lmax { color: #59ff9c; letter-spacing: 0.08em; }
+.statpanel .mods { justify-content: center; color: var(--accent); font-size: 12px; letter-spacing: 0.06em; }
 
 /* ---------- Tech tree ---------- */
 #tech { justify-content: flex-start; padding-top: calc(18px + env(safe-area-inset-top)); }

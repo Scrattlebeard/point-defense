@@ -6,7 +6,7 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
 - **What:** Continue tuning against human play. Round 1 (2026-07-23, Daniel's first session) landed: bolt reworked to auto-fire-at-aim (spam-clicking dominated), frost slow capped at 45%, orbital knockback 60→35 (frost+orbit held enemies in place), nova/frost visuals disambiguated.
 - **Why:** Deep-wave pacing, tech-tree cost curve, and beam-overheat feel are still only sim-bot-verified.
 - **Where:** `src/core/balance.js`, `src/core/config.js`; spec intent in `src/core/core.md`.
-- **Context:** Daniel is the playtester. Open questions: does the new bolt cadence (0.34−0.02L s) feel right vs the old spam ceiling? Is the L6 twin-volley worth reaching for? Tech costs vs actual shard income at waves 8+?
+- **Context:** Daniel + second playtester (2026-07-23) are the balance authority. Round 2.5 (second-playtester feedback, same day) reshaped bolt again: aimed bolt is always single/true, extras are auto-aimed (L3/L5/L6 = +1/+2/+4) — the twin-volley question is obsolete; new question is whether the auto pack makes bolt *too* much of a fire-and-forget carry at L6 (old L6 ~6 spread bolts with misses vs new 5 near-guaranteed hits). Also still open: deep-wave pacing, tech-tree cost curve vs shard income at waves 8+, beam cadence now that overheat is legible (heat gauge with re-arm notch shipped — if beam still "feels wonky" after that, the problem is mechanics, not display).
 
 ## PWA-ify: manifest + fullscreen button (the honest route to orientation control)
 - **What:** Web app manifest (installable to home screen, standalone display, icon) + an
