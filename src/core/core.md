@@ -79,7 +79,7 @@ Shape encodes species; highlight encodes the variation (pillar 3).
 | armored | thick steel outline | hp ×2.5, speed ×0.8 | 1.6 | 11 |
 | regen | green pulsing ring | heals 3% max hp / s | 1.5 | 17 |
 | shielded | rotating ring segments | absorbs first 3 damage instances (ring depletes visibly) | 1.6 | 21 |
-| volatile | pulsing orange core | on death: explosion r=70 — damages *other enemies* (2× its dmg) and the Point if in range | 1.4 | 23 |
+| volatile | pulsing orange core | on death: burst r=70 — **heals nearby shapes 30% of their max hp** and damages the Point if in range (reworked 2026-07-23: friendly fire made popping them a free win; a medic-bomb makes target priority a real decision) | 1.4 | 23 |
 
 Roll: from wave 6, each non-boss spawn has `min(0.35, 0.015*(w−5))` chance of one
 variant chosen uniformly **from those whose `from wave` has arrived** — the pool
@@ -100,7 +100,7 @@ Manual (gesture) weapons:
 | id | gesture | max | levels |
 |----|---------|-----|--------|
 | bolt | aim | 6 | auto-fires toward the aim point every 0.34−0.02L s (needs a live enemy); dmg 9+4L; L3: 2 bolts, L5: 3 bolts (small spread); L4: pierce 1; **L6: adds an independent second volley at the nearest shape** |
-| wall | swipe | 5 | **Force Wall** (reworked from the one-shot shockwave, 2026-07-23 playtest): the swipe conjures a stationary wall (length 150+40L, longer swipes trimmed around their midpoint) lasting 2.4s; shapes touching it are pushed along the wall's tower-away normal at (100+25L)÷mass px/s and take 5+3L dmg per 0.4s tick; active walls capped at 1/1/2/2/3 — swiping past the cap replaces the oldest; cd 0.4s |
+| wall | swipe | 5 | **Force Wall** (reworked twice, 2026-07-23): the swipe conjures a stationary wall **anchored at the gesture's start** (length 150+40L; longer swipes trimmed toward the start — overshooting the tail must not move the wall). The wall is *siegeable*: it has **70+35L HP** that degens passively over ~5s, and shapes in contact **attack it** (their dmg every 0.9s) while being pushed along its tower-away normal at (100+25L)÷mass px/s and taking 4+2L dmg per 0.4s tick. Wall dies at 0 HP, whichever clock runs out first. Active walls: **1 until max level, 2 at L5**; swiping past the cap replaces the oldest; cd 0.4s |
 | beam | hold | 5 | ticks **per-target every 0.25s** at dps 30+18L (damage = dps×0.25 per tick) — so a shield loses one charge per *tick*, never per frame (playtest 2026-07-23: frame-rate ticking erased shields on touch); **per-target damage ramp** ×1→×2.5 over 2s of continuous exposure, decaying back over ~1.5s once out of the beam — sustained tracking is rewarded, field-flicking isn't; heat 0→1 in ~3.5s, forced cooldown at 1; L3: slower heat; **L5: no overheat and always-on — channels toward the standing aim point with no hold needed** (a no-overheat beam that still demanded holding would just be a finger tax) |
 
 Auto weapons (level-up pool):

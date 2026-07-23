@@ -1,7 +1,7 @@
 // All canvas drawing. Reads state, never changes it (except cheap cached paths).
 // Visual grammar (app.md): enemy species = hue, variant = highlight; player
 // effects stay cyan/white; single dark neon theme.
-import { TOWERS, WEAPONS } from '../core/config.js';
+import { TOWERS, WEAPONS, VARIANTS } from '../core/config.js';
 import { TAU, clamp } from '../core/geom.js';
 
 const TOWER_R = 24;
@@ -74,9 +74,9 @@ function drawField(G) {
 
   drawAim(G);
 
-  // force walls — glowing barrier + outward push ticks
+  // force walls — glowing barrier + outward push ticks; brightness = remaining HP
   for (const w of G.walls) {
-    const a = clamp(w.life / w.maxLife, 0, 1);
+    const a = clamp(w.hp / w.maxHp, 0, 1);
     const shimmer = 0.7 + 0.3 * Math.sin(S.time * 10 + w.ax);
     ctx.lineCap = 'round';
     ctx.strokeStyle = `rgba(77, 232, 255, ${0.2 * a})`;
@@ -98,6 +98,12 @@ function drawField(G) {
       ctx.lineTo(px + w.nx * (4 + ext), py + w.ny * (4 + ext));
       ctx.stroke();
     }
+    // hp sliver at the wall's midpoint
+    const wmx = (w.ax + w.bx) / 2, wmy = (w.ay + w.by) / 2;
+    ctx.fillStyle = 'rgba(10, 13, 21, 0.75)';
+    ctx.fillRect(wmx - 16, wmy - w.ny * 12 - 2, 32, 4);
+    ctx.fillStyle = '#4de8ff';
+    ctx.fillRect(wmx - 16, wmy - w.ny * 12 - 2, 32 * a, 4);
   }
 
   // beam — LOUD: layered glow + surge modulation + counter-flowing dashes (app.md juice)
@@ -380,6 +386,35 @@ function drawHeat(G) {
   ctx.fillRect(x, y, bw * S.heat, 5);
 }
 
+// mini wireframe specimen for banners: shape + variant highlight grammar at r≈9
+function drawMiniSpecimen(ctx, x, y, icon) {
+  const r = 9;
+  const v = icon.variant ? VARIANTS[icon.variant] : null;
+  if (icon.variant === 'swift') { ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 8; }
+  ctx.lineWidth = 1.8;
+  ctx.strokeStyle = icon.color;
+  poly(ctx, x, y, r, icon.sides, -Math.PI / 2);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  if (!v) return;
+  if (icon.variant === 'armored') {
+    ctx.strokeStyle = v.color; ctx.lineWidth = 2.2;
+    poly(ctx, x, y, r + 3, icon.sides, -Math.PI / 2); ctx.stroke();
+  } else if (icon.variant === 'volatile') {
+    ctx.fillStyle = v.color;
+    ctx.beginPath(); ctx.arc(x, y, r * 0.4, 0, TAU); ctx.fill();
+  } else if (icon.variant === 'regen') {
+    ctx.strokeStyle = v.color; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.arc(x, y, r + 3.5, 0, TAU); ctx.stroke();
+  } else if (icon.variant === 'shielded') {
+    ctx.strokeStyle = v.color; ctx.lineWidth = 1.6;
+    for (let s = 0; s < 3; s++) {
+      const a0 = 0.4 + (s * TAU) / 3;
+      ctx.beginPath(); ctx.arc(x, y, r + 3.5, a0, a0 + TAU / 4.2); ctx.stroke();
+    }
+  }
+}
+
 function drawFx(G) {
   const { ctx, fx, W, H } = G;
   if (!fx) return;
@@ -401,13 +436,15 @@ function drawFx(G) {
       const scale = 1 + 0.05 * Math.min(1, t.t * 6);
       ctx.save();
       ctx.translate(14, bannerY);
-      bannerY += t.sub ? 44 : 28;
+      bannerY += t.sub ? 48 : 30;
       ctx.scale(scale, scale);
-      ctx.fillText(t.str, 0, 0);
+      const tx = t.icon ? 32 : 0; // leave room for the specimen icon
+      if (t.icon) drawMiniSpecimen(ctx, 12, t.sub ? 2 : -6, t.icon);
+      ctx.fillText(t.str, tx, 0);
       if (t.sub) {
         ctx.font = `500 12px system-ui, sans-serif`;
         ctx.fillStyle = 'rgba(223, 231, 247, 0.8)';
-        ctx.fillText(t.sub, 1, 17);
+        ctx.fillText(t.sub, tx + 1, 17);
       }
       ctx.restore();
     } else {

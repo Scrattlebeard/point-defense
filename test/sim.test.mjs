@@ -8,7 +8,7 @@ import { defaultMeta, newRun, levelChoices, applyChoice } from '../src/core/stat
 import { makeFx, updateFx } from '../src/app/fx.js';
 import { resetWeapons, fireWall } from '../src/app/weapons.js';
 import { resetWaveDirector, updateGame } from '../src/app/game.js';
-import { nearestEnemy, spawnEnemy } from '../src/app/enemies.js';
+import { nearestEnemy, spawnEnemy, damageEnemy } from '../src/app/enemies.js';
 
 function makeG(towerId = 'bastion', tech = []) {
   const meta = { ...defaultMeta(), tech };
@@ -87,6 +87,37 @@ test('force wall: pushes shapes away from the Point and ticks damage', () => {
   assert.equal(G.walls.length, 1);
   for (let i = 0; i < 30; i++) updateGame(G, 1 / 60); // 0.5s of contact
   assert.ok(e.dead || e.y < y0, `wall neither pushed nor killed the grunt (y ${y0} -> ${e.y})`);
+});
+
+test('force wall: anchored at the gesture start when the swipe overshoots', () => {
+  const G = makeG();
+  G.S.weapons.wall = 1; // len 190 at L1
+  fireWall(G, { x: 50, y: 400 }, { x: 900, y: 400 }); // wildly overshot swipe
+  const w = G.walls[0];
+  assert.equal(Math.round(w.ax), 50, 'wall must start where the gesture started');
+  assert.ok(Math.abs(w.bx - w.ax) <= 191, 'wall exceeded its max length');
+});
+
+test('force wall is siegeable: shapes chew through its HP', () => {
+  const G = makeG();
+  G.S.weapons.bolt = 0;
+  G.S.weapons.wall = 1;
+  fireWall(G, { x: G.cx - 80, y: G.cy - 160 }, { x: G.cx + 80, y: G.cy - 160 });
+  for (let i = 0; i < 3; i++) spawnEnemy(G, 'tank', null, G.cx - 40 + i * 40, G.cy - 150);
+  for (let i = 0; i < 150 && G.walls.length; i++) updateGame(G, 1 / 60); // ≤2.5s
+  assert.equal(G.walls.length, 0, 'three tanks failed to break a fresh L1 wall well before natural decay');
+});
+
+test('volatile bursts heal nearby shapes and never harm them', () => {
+  const G = makeG();
+  const friend = spawnEnemy(G, 'tank', null, G.cx + 100, G.cy);
+  friend.hp = friend.maxHp * 0.4;
+  const bomber = spawnEnemy(G, 'grunt', 'volatile', G.cx + 130, G.cy);
+  const before = friend.hp;
+  damageEnemy(G, bomber, 99999);
+  assert.ok(bomber.dead);
+  assert.ok(friend.hp > before, 'burst did not heal the nearby shape');
+  assert.ok(!friend.dead, 'burst harmed a friend');
 });
 
 test('force wall: active-wall cap replaces the oldest', () => {

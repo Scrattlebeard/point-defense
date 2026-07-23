@@ -45,7 +45,8 @@ function directWaves(G, dt) {
         announce(G.fx,
           bv ? `${name}, THE ${VARIANTS[bv].name.toUpperCase()}` : name,
           '#ff3df0',
-          bv ? VARIANTS[bv].desc : 'approaches');
+          bv ? VARIANTS[bv].desc : 'approaches',
+          { sides: 9, color: '#ff3df0', variant: bv });
         G.bossIdx++;
         sfx('boss');
       } else {

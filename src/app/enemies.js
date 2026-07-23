@@ -34,7 +34,7 @@ export function spawnEnemy(G, kind, variantId = null, x = null, y = null) {
     rotSpd: (Math.random() < 0.5 ? -1 : 1) * (0.5 + Math.random() * 1.2),
     variant: variantId, vdef: v,
     shield: v?.shield || 0,
-    kbx: 0, kby: 0, contactCd: 0, flash: 0, orbHit: 0, age: 0,
+    kbx: 0, kby: 0, contactCd: 0, flash: 0, orbHit: 0, age: 0, wallAtk: 0,
     beamHeat: 0, beamTick: 0,
     boss: isBoss, dead: false,
   };
@@ -52,14 +52,16 @@ export function spawnEnemy(G, kind, variantId = null, x = null, y = null) {
     if (!intro.enemies.has(kind)) {
       intro.enemies.add(kind);
       if (!isBoss) {
-        announce(G.fx, `NEW SHAPE: ${def.name.toUpperCase()}`, def.color, def.intro);
+        announce(G.fx, `NEW SHAPE: ${def.name.toUpperCase()}`, def.color, def.intro,
+          { sides: def.sides, color: def.color, variant: null });
         e.introduce = 3;
         sfx('discover');
       }
     }
     if (variantId && !intro.variants.has(variantId)) {
       intro.variants.add(variantId);
-      announce(G.fx, `NEW SPECIMEN: ${v.name.toUpperCase()}`, v.color, v.desc);
+      announce(G.fx, `NEW SPECIMEN: ${v.name.toUpperCase()}`, v.color, v.desc,
+        { sides: def.sides, color: def.color, variant: variantId });
       e.introduce = 3;
       sfx('discover');
     }
@@ -108,12 +110,16 @@ function killEnemy(G, e) {
     }
   }
   if (e.vdef?.explode) {
-    const { r, dmgMult } = e.vdef.explode;
+    // medic-bomb (core.md volatile): the burst heals its own kind, harms only the Point
+    const { r, healPct } = e.vdef.explode;
     burst(G.fx, e.x, e.y, e.vdef.color, 22, 220);
     sfx('boom');
     for (const o of S.enemies) {
       if (o.dead || o === e) continue;
-      if (dist(e.x, e.y, o.x, o.y) <= r + o.r) damageEnemy(G, o, e.dmg * dmgMult, { noMult: true });
+      if (dist(e.x, e.y, o.x, o.y) <= r + o.r && o.hp < o.maxHp) {
+        o.hp = Math.min(o.maxHp, o.hp + o.maxHp * healPct);
+        burst(G.fx, o.x, o.y, '#4dff88', 5, 80, 0.35, 2);
+      }
     }
     if (dist(e.x, e.y, G.cx, G.cy) <= r + TOWER_R) hitTower(G, e.dmg);
   }

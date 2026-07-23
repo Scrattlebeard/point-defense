@@ -27,8 +27,8 @@ export function dmgText(fx, x, y, v, { crit = false, color = '#aab6cc' } = {}) {
   });
 }
 
-export function announce(fx, str, color = '#9fd8ff', sub = '') {
-  fx.texts.push({ x: -1, y: -1, t: 0, life: 3.2, str, sub, size: 19, color, vy: 0, center: true });
+export function announce(fx, str, color = '#9fd8ff', sub = '', icon = null) {
+  fx.texts.push({ x: -1, y: -1, t: 0, life: 5.5, str, sub, icon, size: 19, color, vy: 0, center: true });
 }
 
 export function shake(fx, amount) { fx.shake = Math.min(14, fx.shake + amount); }
