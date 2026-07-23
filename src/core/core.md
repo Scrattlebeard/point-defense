@@ -25,10 +25,16 @@ prereqs enforced), not exact constants, so tuning stays cheap.
 
 ## Balance formulas (`balance.js`)
 
-- `enemyHpMult(w) = 1 + 0.22(w−1) + 0.012(w−1)²` — exactly 1 at wave 1, strictly increasing.
+- `enemyHpMult(w) = 1 + 0.185(w−1) + 0.0105(w−1)²` — exactly 1 at wave 1, strictly
+  increasing. *(Reshaped 2026-07-23 with the base-hp table ×1.15: stronger opening,
+  trimmed slope, re-converging with the old total-hp curve ≈ wave 35 and running
+  slightly under it beyond 40. Contact damage deliberately untouched — the harder
+  floor is volume and durability, not spikier punishment.)*
 - `enemySpeedMult(w) = min(1.6, 1 + (w-1)*0.012)` — capped so lategame stays readable.
-- `waveBudget(w) = 8 + 4w + 0.35w²` — strictly increasing.
-- `spawnInterval(w) = clamp(1.4 − 0.05w, 0.22, 1.4)` seconds between spawns.
+- `waveBudget(w) = 14 + 5w + 0.316w²` — strictly increasing. *(Reshaped 2026-07-23:
+  ~55% more bodies at wave 1, converging with the old budget ≈ wave 35.)*
+- `spawnInterval(w) = clamp(1.3 − 0.05w, 0.22, 1.3)` seconds between spawns (pacing
+  tightened alongside the bigger early waves).
 - `xpForLevel(l) = round(10 + 8(l−1) + 1.2(l−1)²)` — XP needed to go from level l to l+1.
 - `bossHp(w) = 1500 * (1 + 0.3*(w−5))` for boss waves (w = 5, 10, 15…). *(Tripled
   2026-07-23: a boss's radius means multi-bolt volleys connect in full, so effective
@@ -52,11 +58,11 @@ the boss, which rams, knocks itself back, and comes again.
 
 | id | shape | hp | speed | radius | dmg | xp | cost | from wave | color |
 |----|-------|----|-------|--------|-----|----|------|-----------|-------|
-| grunt | circle | 12 | 40 | 12 | 8 | 2 | 1 | 1 | red |
-| dart | triangle | 8 | 88 | 10 | 6 | 2 | 1.5 | 2 | amber |
-| tank | square | 48 | 26 | 15 | 16 | 5 | 3 | 4 | violet |
-| splitter | pentagon | 34 | 34 | 14 | 10 | 6 | 4 | 8 | green — splits into 2 darts (60% dart hp) on death |
-| elite | hexagon | 110 | 30 | 18 | 20 | 12 | 8 | 14 | blue |
+| grunt | circle | 14 | 40 | 12 | 8 | 2 | 1 | 1 | red |
+| dart | triangle | 9 | 88 | 10 | 6 | 2 | 1.5 | 2 | amber |
+| tank | square | 55 | 26 | 15 | 16 | 5 | 3 | 4 | violet |
+| splitter | pentagon | 39 | 34 | 14 | 10 | 6 | 4 | 8 | green — splits into 2 darts (60% dart hp) on death |
+| elite | hexagon | 126 | 30 | 18 | 20 | 12 | 8 | 14 | blue |
 | boss | nonagon | `bossHp(w)` | 22 | 34 | 26 | 80 | — | every 5th wave | magenta |
 
 **Introductions (2026-07-23 playtest):** content is deliberately drip-fed — roughly one

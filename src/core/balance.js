@@ -3,10 +3,12 @@
 // exact constants are tuning and may change freely.
 import { clamp } from './geom.js';
 
-export const enemyHpMult = w => 1 + 0.22 * (w - 1) + 0.012 * (w - 1) * (w - 1);
+// hp/budget curves reshaped 2026-07-23: higher floor, trimmed slope, re-converging
+// with the previous totals ≈ wave 35 (core.md Balance formulas).
+export const enemyHpMult = w => 1 + 0.185 * (w - 1) + 0.0105 * (w - 1) * (w - 1);
 export const enemySpeedMult = w => Math.min(1.6, 1 + (w - 1) * 0.012);
-export const waveBudget = w => 8 + 4 * w + 0.35 * w * w;
-export const spawnInterval = w => clamp(1.4 - 0.05 * w, 0.22, 1.4);
+export const waveBudget = w => 14 + 5 * w + 0.316 * w * w;
+export const spawnInterval = w => clamp(1.3 - 0.05 * w, 0.22, 1.3);
 export const xpForLevel = l => Math.round(10 + 8 * (l - 1) + 1.2 * (l - 1) * (l - 1));
 // Tripled 2026-07-23: boss radius means full multi-bolt connects; see core.md.
 export const bossHp = w => 1500 * (1 + 0.3 * (w - 5));
