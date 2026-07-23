@@ -110,7 +110,7 @@ export function updateWeapons(G, dt) {
       if (S.enemies.some(e => !e.dead)) {
         if (G.aim) boltVolley(G, G.aim.x, G.aim.y, st);
         if (st.twin) {
-          const e = nearestEnemy(S, G.cx, G.cy);
+          const e = nearestEnemy(S, G.cx, G.cy, Infinity, { W: G.W, H: G.H });
           if (e) boltVolley(G, e.x, e.y, st);
         }
         wt.boltT = st.cd * S.cdMult;

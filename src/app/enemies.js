@@ -3,7 +3,7 @@
 import { ENEMIES, VARIANTS, SPLIT } from '../core/config.js';
 import { enemyHpMult, enemySpeedMult, bossHp, enemyMass } from '../core/balance.js';
 import { addXp } from '../core/state.js';
-import { dist } from '../core/geom.js';
+import { dist, edgeSpawn } from '../core/geom.js';
 import { burst, dmgText, shake, flash, announce } from './fx.js';
 import { sfx } from './audio.js';
 
@@ -17,17 +17,18 @@ export function spawnEnemy(G, kind, variantId = null, x = null, y = null) {
   const isBoss = kind === 'boss';
   const baseHp = isBoss ? bossHp(S.wave) : def.hp * enemyHpMult(S.wave);
   const hp = baseHp * (v?.hpMult || 1);
+  // Wave spawns: on the wall, speed normalized so time-to-Point is constant
+  // (core.md "Spawn geometry"). Splits pass explicit x,y and stay unscaled.
+  let laneMult = 1;
   if (x === null) {
-    const a = Math.random() * Math.PI * 2;
-    const rad = Math.max(G.W, G.H) * 0.5 + 60;
-    x = G.cx + Math.cos(a) * rad;
-    y = G.cy + Math.sin(a) * rad;
+    const s = edgeSpawn(Math.random(), G.W, G.H, def.r + 6);
+    x = s.x; y = s.y; laneMult = s.spdMult;
   }
   const e = {
     kind, def, sides: def.sides, color: def.color,
     x, y, r: def.r,
     hp, maxHp: hp,
-    spd: def.spd * enemySpeedMult(S.wave) * (v?.spdMult || 1),
+    spd: def.spd * enemySpeedMult(S.wave) * (v?.spdMult || 1) * laneMult,
     dmg: def.dmg,
     xp: Math.round(def.xp * (v?.xpMult || 1)),
     rot: Math.random() * Math.PI * 2,
@@ -69,10 +70,13 @@ export function spawnEnemy(G, kind, variantId = null, x = null, y = null) {
   return e;
 }
 
-export function nearestEnemy(S, x, y, maxR = Infinity) {
+export function nearestEnemy(S, x, y, maxR = Infinity, bounds = null) {
   let best = null, bestD = maxR;
   for (const e of S.enemies) {
     if (e.dead) continue;
+    // bounds: only shapes inside the arena walls — bullets die at the wall
+    // (core.md bolt L6), so an outside target can't be damaged
+    if (bounds && (e.x < 0 || e.x > bounds.W || e.y < 0 || e.y > bounds.H)) continue;
     const d = dist(x, y, e.x, e.y);
     if (d < bestD) { bestD = d; best = e; }
   }

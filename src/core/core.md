@@ -56,6 +56,21 @@ prereqs enforced), not exact constants, so tuning stays cheap.
 Base shapes; contact with the Point deals `dmg` and the enemy dies (kamikaze), except
 the boss, which rams, knocks itself back, and comes again.
 
+**Spawn geometry — time-to-Point is the invariant, not speed** (`geom.edgeSpawn`,
+2026-07-23). Wave spawns appear ON the arena wall (uniform over the perimeter, offset
+outward by radius + 6 so the first visible frame is at the wall) with base speed scaled
+by `distToPoint / (max(W,H)/2 + pad)`: every shape's wall-to-Point run takes the same
+time regardless of screen aspect or spawn side. Short-axis shapes move visibly slower,
+long-axis shapes at full speed — the reaction window a player gets is a *time* budget,
+and it must not depend on which edge fate picked or whether the screen is a phone or an
+ultrawide. The reference matches the old spawn circle (`max(W,H)/2 + 60`), so wave
+pacing is balance-neutral vs. the 2026-07-23 playtest baseline. Before this, spawns sat
+equidistant on that circle: total time was already uniform, but long-axis shapes walked
+most of it off-screen and popped in with a fraction of the visible warning (the
+widescreen top/bottom ambush, reported same day). Split/volatile children (explicit
+spawn position) are unscaled — they were born inside, not at the gate. Variant speed
+multipliers (swift ×1.7) stack on top: a swift is still a swift *relative to its lane*.
+
 | id | shape | hp | speed | radius | dmg | xp | cost | from wave | color |
 |----|-------|----|-------|--------|-----|----|------|-----------|-------|
 | grunt | circle | 14 | 40 | 12 | 8 | 2 | 1 | 1 | red |
@@ -105,7 +120,7 @@ Manual (gesture) weapons:
 
 | id | gesture | max | levels |
 |----|---------|-----|--------|
-| bolt | aim | 6 | auto-fires toward the aim point every 0.34−0.02L s (needs a live enemy); dmg 9+4L; L3: 2 bolts, L5: 3 bolts (small spread); L4: pierce 1; **L6: adds an independent second volley at the nearest shape** |
+| bolt | aim | 6 | auto-fires toward the aim point every 0.34−0.02L s (needs a live enemy); dmg 9+4L; L3: 2 bolts, L5: 3 bolts (small spread); L4: pierce 1; **L6: adds an independent second volley at the nearest shape *inside the arena walls*** — bullets die at the wall, so a target beyond it would eat the whole volley for nothing (2026-07-23) |
 | wall | swipe | 5 | **Force Wall** (reworked twice, 2026-07-23): the swipe conjures a stationary wall **anchored at the gesture's start** (length 150+40L; longer swipes trimmed toward the start — overshooting the tail must not move the wall). The wall is *siegeable*: it has **70+35L HP** that degens passively over ~5s, and shapes in contact **attack it** (their dmg every 0.9s) while being pushed along its tower-away normal at (100+25L)÷mass px/s and taking 4+2L dmg per 0.4s tick. Wall dies at 0 HP, whichever clock runs out first. Active walls: **1 until max level, 2 at L5**; swiping past the cap replaces the oldest; cd 0.4s |
 | beam | hold | 5 | ticks **per-target every 0.25s** at dps 30+18L (damage = dps×0.25 per tick) — so a shield loses one charge per *tick*, never per frame (playtest 2026-07-23: frame-rate ticking erased shields on touch); **per-target damage ramp** ×1→×2.5 over 2s of continuous exposure, decaying back over ~1.5s once out of the beam — sustained tracking is rewarded, field-flicking isn't; heat 0→1 in ~3.5s, forced cooldown at 1; L3: slower heat; **L5: no overheat and always-on — channels toward the standing aim point with no hold needed** (a no-overheat beam that still demanded holding would just be a finger tax) |
 
