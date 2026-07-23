@@ -6,7 +6,7 @@ import { TAU, clamp } from '../core/geom.js';
 
 const TOWER_R = 24;
 
-function poly(ctx, x, y, r, sides, rot) {
+export function poly(ctx, x, y, r, sides, rot) {
   ctx.beginPath();
   if (sides === 0) { ctx.arc(x, y, r, 0, TAU); return; }
   for (let i = 0; i < sides; i++) {

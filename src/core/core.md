@@ -156,4 +156,9 @@ Wave-clear heals 4% max hp. `payout(state, meta)` computes shards (with salvage)
 returns the new meta (shards added, best wave maxed, no other mutation).
 
 Meta shape (persisted by the shell, versioned key `pointdefense.meta.v1`):
-`{ shards, best, tech: [nodeIds], tower: lastSelectedId, sound: bool }`.
+`{ shards, best, tech: [nodeIds], tower: lastSelectedId, sound: bool,
+seen: { enemies: [kinds], variants: [ids] } }`. `seen` is the **bestiary's discovery
+record**: a kind/variant is recorded the first time one spawns in a run (sighting, not
+kill); undiscovered entries render as "?" cards. Old saves without `seen` inherit the
+empty default on load. Enemy/variant tables in `config.js` carry `lore` + display
+`desc` strings for the bestiary — content, single home.

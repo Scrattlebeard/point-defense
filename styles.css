@@ -182,6 +182,31 @@ button:active { transform: translateY(1px); }
 .node.locked { opacity: 0.4; }
 .node.poor { opacity: 0.65; }
 
+/* ---------- Bestiary ---------- */
+#bestiary { justify-content: flex-start; padding-top: calc(18px + env(safe-area-inset-top)); }
+#bestGrid {
+  display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+  width: 100%; max-width: 860px;
+}
+#bestGrid h3 {
+  width: 100%; font-size: 12px; letter-spacing: 0.18em; color: var(--dim);
+  font-weight: 600; text-align: left; max-width: 860px;
+  border-bottom: 1px solid var(--panel-edge); padding-bottom: 3px; margin-top: 8px;
+}
+.bcard {
+  width: 158px; padding: 10px; border-radius: 12px; text-align: left;
+  background: var(--panel); border: 1px solid var(--panel-edge);
+  display: flex; flex-direction: column; gap: 5px; align-items: flex-start;
+}
+.bcard .bhead { display: flex; align-items: center; gap: 8px; }
+.bcard canvas { width: 40px; height: 40px; }
+.bcard .bname { font-weight: 700; font-size: 13px; letter-spacing: 0.05em; }
+.bcard .bstats { font-size: 11px; color: var(--accent); letter-spacing: 0.04em; font-variant-numeric: tabular-nums; }
+.bcard .blore { font-size: 11px; color: var(--dim); line-height: 1.45; font-style: italic; }
+.bcard.unknown { opacity: 0.45; align-items: center; justify-content: center; min-height: 108px; }
+.bcard.unknown .bq { font-size: 26px; color: var(--dim); }
+.bcard.unknown .blore { font-style: normal; }
+
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }

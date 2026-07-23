@@ -5,7 +5,10 @@ import { effectsOf } from './tech.js';
 import { xpForLevel, shardPayout } from './balance.js';
 
 export function defaultMeta() {
-  return { shards: 0, best: 0, tech: [], tower: 'bastion', sound: true };
+  return {
+    shards: 0, best: 0, tech: [], tower: 'bastion', sound: true,
+    seen: { enemies: [], variants: [] }, // bestiary discovery record (core.md)
+  };
 }
 
 export function towerUnlocked(meta, towerId) {

@@ -57,6 +57,7 @@ test('90 sim-seconds of bastion play: waves advance, shapes die, levels arrive',
   assert.ok(G.S.wave >= 3, `only reached wave ${G.S.wave}`);
   assert.ok(G.S.kills > 10, `only ${G.S.kills} kills`);
   assert.ok(G.S.lvl > 1, 'never leveled');
+  assert.ok(G.meta.seen.enemies.includes('grunt'), 'sighting not recorded in meta');
 });
 
 test('a weaponless Point falls', () => {

@@ -21,7 +21,7 @@ gameplay screenshots) and by play; not unit-tested.
 | `render.js` | Canvas drawing: field grid, entities (shape + variant highlight grammar), tower, beams/lightning/rings, HUD elements drawn on canvas (hp arc, boss bar) |
 | `fx.js` | Particles, floating damage numbers, wave announcements, screen shake, hit flashes — capped pools, purely cosmetic |
 | `audio.js` | WebAudio synth one-shots (fire, death, nova, levelup, hurt, gameover); lazy AudioContext on first gesture; mute persisted via meta |
-| `ui.js` | DOM overlays: menu, tower select, tech tree (branch columns, node states: owned/available/locked), level-up cards, pause, game-over payout |
+| `ui.js` | DOM overlays: menu, tower select, tech tree (branch columns, node states: owned/available/locked), **bestiary** (discovered enemies/variants with wireframe icon canvases; "?" cards for the unmet), level-up cards, pause, game-over payout |
 
 ## Shell-level behaviors (presentation truths)
 

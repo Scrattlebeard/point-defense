@@ -38,6 +38,12 @@ export function spawnEnemy(G, kind, variantId = null, x = null, y = null) {
     boss: isBoss, dead: false,
   };
   S.enemies.push(e);
+  // bestiary sighting record (core.md meta.seen) — persisted with the next meta save
+  const seen = G.meta?.seen;
+  if (seen) {
+    if (!seen.enemies.includes(kind)) seen.enemies.push(kind);
+    if (variantId && !seen.variants.includes(variantId)) seen.variants.push(variantId);
+  }
   return e;
 }
 

@@ -1,12 +1,13 @@
 // DOM overlays + HUD. Reads core tables directly; all game actions go through
 // hooks injected by main.js (no circular imports, no rules in here).
-import { TOWERS, TECH, WEAPONS, GENERICS } from '../core/config.js';
+import { TOWERS, TECH, WEAPONS, GENERICS, ENEMIES, VARIANTS } from '../core/config.js';
 import { towerUnlocked } from '../core/state.js';
 import { canBuy } from '../core/tech.js';
 import { storageOk } from './meta.js';
+import { poly } from './render.js';
 
 const $ = id => document.getElementById(id);
-const OVERLAYS = ['menu', 'tech', 'levelup', 'pause', 'over'];
+const OVERLAYS = ['menu', 'tech', 'bestiary', 'levelup', 'pause', 'over'];
 const BRANCHES = ['Hull', 'Arms', 'Mind', 'Arsenal', 'Towers'];
 
 let H = null; // hooks
@@ -15,6 +16,8 @@ export function initUI(G, hooks) {
   H = hooks;
   $('startBtn').addEventListener('click', () => H.onStart());
   $('techBtn').addEventListener('click', () => { renderTech(G); showOnly('tech'); });
+  $('bestBtn').addEventListener('click', () => { renderBestiary(G); showOnly('bestiary'); });
+  $('bestBack').addEventListener('click', () => { renderMenu(G); showOnly('menu'); });
   $('techBack').addEventListener('click', () => { renderMenu(G); showOnly(G.returnTo || 'menu'); if (G.returnTo === 'over') renderGameOver(G, G.lastEarned); });
   $('muteBtn').addEventListener('click', () => H.onMute());
   $('pauseBtn').addEventListener('click', () => H.onPause());
@@ -83,6 +86,76 @@ export function renderTech(G) {
     }
     grid.appendChild(col);
   }
+}
+
+// ---------- bestiary ----------
+function drawSpecimen(cv, sides, color, variantId) {
+  const ctx = cv.getContext('2d');
+  const c = 24, r = 13;
+  ctx.clearRect(0, 0, 48, 48);
+  const v = variantId ? VARIANTS[variantId] : null;
+  if (variantId === 'swift') { ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 10; }
+  ctx.lineWidth = 2.2;
+  ctx.strokeStyle = color;
+  poly(ctx, c, c, r, sides, -Math.PI / 2);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  if (variantId === 'armored') {
+    ctx.strokeStyle = v.color; ctx.lineWidth = 3;
+    poly(ctx, c, c, r + 4, sides, -Math.PI / 2); ctx.stroke();
+  }
+  if (variantId === 'volatile') {
+    ctx.fillStyle = v.color;
+    ctx.beginPath(); ctx.arc(c, c, r * 0.4, 0, Math.PI * 2); ctx.fill();
+  }
+  if (variantId === 'regen') {
+    ctx.strokeStyle = v.color; ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.arc(c, c, r + 5, 0, Math.PI * 2); ctx.stroke();
+  }
+  if (variantId === 'shielded') {
+    ctx.strokeStyle = v.color; ctx.lineWidth = 2;
+    for (let s = 0; s < 3; s++) {
+      const a0 = 0.4 + (s * Math.PI * 2) / 3;
+      ctx.beginPath(); ctx.arc(c, c, r + 5, a0, a0 + Math.PI * 2 / 4.2); ctx.stroke();
+    }
+  }
+}
+
+function bestiaryCard(known, iconArgs, name, stats, lore, color) {
+  const el = document.createElement('div');
+  if (!known) {
+    el.className = 'bcard unknown';
+    el.innerHTML = `<span class="bq">?</span><span class="blore">undiscovered</span>`;
+    return el;
+  }
+  el.className = 'bcard';
+  el.innerHTML =
+    `<span class="bhead"><canvas width="48" height="48"></canvas>` +
+    `<span class="bname" style="color:${color}">${name}</span></span>` +
+    `<span class="bstats">${stats}</span>` +
+    `<span class="blore">${lore}</span>`;
+  drawSpecimen(el.querySelector('canvas'), ...iconArgs);
+  return el;
+}
+
+export function renderBestiary(G) {
+  const seen = G.meta.seen;
+  const grid = $('bestGrid');
+  grid.innerHTML = '';
+  const hs = document.createElement('h3'); hs.textContent = 'SHAPES'; grid.appendChild(hs);
+  for (const [id, e] of Object.entries(ENEMIES)) {
+    const known = seen.enemies.includes(id);
+    grid.appendChild(bestiaryCard(known, [e.sides, e.color, null], e.name,
+      `HP ${e.hp} · SPD ${e.spd} · DMG ${e.dmg} · XP ${e.xp}`, e.lore, e.color));
+  }
+  const hv = document.createElement('h3'); hv.textContent = 'VARIANTS'; grid.appendChild(hv);
+  for (const [id, v] of Object.entries(VARIANTS)) {
+    const known = seen.variants.includes(id);
+    grid.appendChild(bestiaryCard(known, [0, ENEMIES.grunt.color, id], v.name, v.desc, v.lore, v.color));
+  }
+  $('bestCount').textContent =
+    `${seen.enemies.length}/${Object.keys(ENEMIES).length} shapes · ` +
+    `${seen.variants.length}/${Object.keys(VARIANTS).length} variants`;
 }
 
 function loadoutHTML(S) {

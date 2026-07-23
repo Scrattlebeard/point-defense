@@ -126,6 +126,14 @@ function loop(now) {
 
 ui.renderMenu(G);
 ui.showOnly('menu');
+// Dev/smoke hatch: ?bestiary opens a fully-revealed bestiary (in-memory only).
+if (location.search.includes('bestiary')) {
+  import('../core/config.js').then(({ ENEMIES, VARIANTS }) => {
+    G.meta.seen = { enemies: Object.keys(ENEMIES), variants: Object.keys(VARIANTS) };
+    ui.renderBestiary(G);
+    ui.showOnly('bestiary');
+  });
+}
 // Dev/smoke-test hatches: ?autostart skips the menu; ?turbo pre-simulates ~40s
 // (auto-picking level-ups) so a headless screenshot lands mid-battle; ?warp=N
 // pre-simulates exactly N seconds instead.

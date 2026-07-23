@@ -104,6 +104,17 @@ test('applyChoice: weapon levels up, generics do what they say', () => {
   assert.ok(Math.abs(S.hp - (10 + 0.4 * S.maxHp)) < 1e-9);
 });
 
+test('meta tracks sightings: empty by default, preserved through payout', () => {
+  const m = defaultMeta();
+  assert.deepEqual(m.seen, { enemies: [], variants: [] });
+  const S = newRun(m, 'bastion');
+  m.seen.enemies.push('grunt');
+  m.seen.variants.push('swift');
+  const { meta } = payout(S, m);
+  assert.ok(meta.seen.enemies.includes('grunt'));
+  assert.ok(meta.seen.variants.includes('swift'));
+});
+
 test('payout adds shards, tracks best wave, applies salvage, never pays zero', () => {
   const S = newRun(defaultMeta(), 'bastion');
   S.wave = 10; S.kills = 100; S.bossKills = 2;
