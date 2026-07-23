@@ -9,15 +9,9 @@ root="$(git rev-parse --show-toplevel)"
 trees="$root/.worktrees"
 
 mkdir -p "$trees"
-git -C "$root" worktree add -b "$name" "$trees/$name" main
+git -C "$root" worktree add -b "$name" "$trees/$name" master
 
-# --- build-state wiring: ADAPT PER STACK, then delete this comment -------
-# The goal: a fresh worktree is ready to run tests in seconds, not minutes.
-# Examples:
-#   pnpm     : nothing to do — the shared store makes `pnpm install` cheap
-#   npm      : (cd "$trees/$name" && npm ci --prefer-offline)
-#   cargo    : nothing to do — target dir can be shared via CARGO_TARGET_DIR
-#   python   : (cd "$trees/$name" && uv sync)  # uv's cache makes this fast
-# --------------------------------------------------------------------------
+# Tests are dep-free, but `npm run build` needs esbuild; offline install is fast.
+(cd "$trees/$name" && npm ci --prefer-offline --no-audit --no-fund >/dev/null)
 
 echo "worktree ready: $trees/$name"

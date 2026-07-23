@@ -11,15 +11,14 @@ tree="$root/.worktrees/$name"
 
 [ -d "$tree" ] || { echo "no such worktree: $tree" >&2; exit 1; }
 
-# Landing strip must be clean and on main.
-[ "$(git -C "$root" branch --show-current)" = "main" ] || { echo "main checkout is not on main" >&2; exit 1; }
+# Landing strip must be clean and on master.
+[ "$(git -C "$root" branch --show-current)" = "master" ] || { echo "main checkout is not on master" >&2; exit 1; }
 git -C "$root" diff --quiet && git -C "$root" diff --cached --quiet || { echo "main's tree is dirty — landing strip must be clean" >&2; exit 1; }
 
-git -C "$tree" rebase main
+git -C "$tree" rebase master
 
-# --- run the loop green post-rebase: ADAPT PER STACK, then delete comment --
-# e.g. (cd "$tree" && make test)
-# --------------------------------------------------------------------------
+# Run the loop green post-rebase before touching the landing strip.
+(cd "$tree" && npm test)
 
 git -C "$root" merge --ff-only "$name"
 git -C "$root" worktree remove "$tree"
