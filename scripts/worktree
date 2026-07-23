@@ -5,7 +5,9 @@
 set -euo pipefail
 
 name="${1:?usage: scripts/worktree <branch-name>}"
-root="$(git rev-parse --show-toplevel)"
+# common-dir, not toplevel: run from inside a worktree, toplevel would nest
+# .worktrees inside the worktree (see scripts/land for the same fix)
+root="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")"
 trees="$root/.worktrees"
 
 mkdir -p "$trees"

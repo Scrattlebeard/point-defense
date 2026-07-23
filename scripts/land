@@ -6,7 +6,9 @@
 set -euo pipefail
 
 name="${1:?usage: scripts/land <branch-name>}"
-root="$(git rev-parse --show-toplevel)"
+# common-dir, not toplevel: resolves to the MAIN tree even when run from inside
+# a worktree (toplevel would point at the worktree and nothing would resolve)
+root="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")"
 tree="$root/.worktrees/$name"
 
 [ -d "$tree" ] || { echo "no such worktree: $tree" >&2; exit 1; }
