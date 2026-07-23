@@ -42,7 +42,13 @@ Dev hatches (query params on any build): `?autostart` skips the menu ·
 photographed) · `&gear=frost:4,orbit:2` grants weapon levels after autostart (visual
 dev — capped at each weapon's max) · `&sparks` enables the ambient grid sparks
 in-battle (menu has them by default — app.md "Grid sparks") · `?bestiary` opens a fully-revealed bestiary,
-in-memory only.
+in-memory only · `?lattice&shards=N` opens the Lattice with a faked balance
+(in-memory only — node states photographable).
+
+Balance tooling: `node scripts/calibrate.mjs [trials]` runs fresh no-tech robot
+runs to death and checks the median against the onboarding band (ADR-0003
+guardrail: re-run before landing early-difficulty or player-power changes; exits
+non-zero when out of band).
 
 ## Deployment (GitHub Pages — canonical)
 

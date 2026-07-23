@@ -1,6 +1,6 @@
 # ADR-0003: Mastery progression — the web, weapon trees, tower paths
 
-**Status:** PROPOSED (draft for Daniel's review, 2026-07-24 night)
+**Status:** ACCEPTED 2026-07-24 (Daniel), with amendments — see Addendum below
 **Deciders:** Daniel (design authority), Zephyr (drafting)
 **Context:** Daniel's ask, verbatim shape: more weapons; a generic tech tree that
 *looks like an actual tree or web* with many more options and escalating costs;
@@ -143,11 +143,22 @@ points — the game is never mid-surgery between nights.
   scrolling and accessibility for free, and every other overlay is DOM already.
   Rejected.
 
-## Open questions (Daniel's call, none block stage 1)
+## Open questions — ANSWERED (Daniel, 2026-07-24)
 
-1. Aspect switching: free between runs (drafted) or a small shard fee as a
-   commitment nudge?
-2. Should weapon XP be visible in-run (a subtle per-weapon bar in the pause
-   stats panel) or only on the mastery screen? Drafted: pause panel, subtle.
-3. Mines/Mortar in stage 3 (drafted) or promoted to stage 1 to freshen the
-   pool sooner?
+1. Aspect switching: **free** between runs.
+2. Weapon XP visibility: **post-game screen and mastery/tree screens only** —
+   supersedes the drafted pause-panel placement; combat and pause stay clean.
+3. Mines/Mortar: **promoted to stage 1.**
+
+## Addendum — the mega-lattice amendment (Daniel, 2026-07-24)
+
+Stage 1 builds **one large, deep lattice now**, accepting that parts will later
+migrate into the diverged weapon/tower trees of stages 2–3. Priorities, in
+order: (1) **layout and presentation** that make players want to keep playing;
+(2) **depth** — enough rings and escalating costs to generate a real felt sense
+of progression pacing, *even if early content is mostly stat nodes*; (3)
+interesting behavior-changers arrive afterwards, on rails the mega-lattice
+establishes. Consequence: keystones largely defer to later stages; stage 1's
+node population is deliberately stat-heavy; the shard payout curve gains a
+superlinear term (core.md) and is explicitly provisional — feeling out the
+economy is a stage-1 goal, not a risk.

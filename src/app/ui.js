@@ -1,14 +1,13 @@
 // DOM overlays + HUD. Reads core tables directly; all game actions go through
 // hooks injected by main.js (no circular imports, no rules in here).
-import { TOWERS, TECH, WEAPONS, GENERICS, ENEMIES, VARIANTS, ACHIEVEMENTS } from '../core/config.js';
+import { TOWERS, WEAPONS, GENERICS, ENEMIES, VARIANTS, ACHIEVEMENTS } from '../core/config.js';
 import { towerUnlocked } from '../core/state.js';
-import { canBuy } from '../core/tech.js';
 import { storageOk } from './meta.js';
 import { poly } from './render.js';
+import { renderLattice } from './lattice.js';
 
 const $ = id => document.getElementById(id);
 const OVERLAYS = ['menu', 'tech', 'bestiary', 'records', 'levelup', 'pause', 'over'];
-const BRANCHES = ['Hull', 'Arms', 'Mind', 'Arsenal', 'Towers'];
 
 let H = null; // hooks
 
@@ -78,31 +77,9 @@ export function renderMenu(G) {
 }
 
 export function renderTech(G) {
-  const m = G.meta;
-  $('techShards').textContent = `◆ ${m.shards}`;
-  const grid = $('techGrid');
-  grid.innerHTML = '';
-  for (const branch of BRANCHES) {
-    const col = document.createElement('div');
-    col.className = 'branch';
-    col.innerHTML = `<h3>${branch.toUpperCase()}</h3>`;
-    for (const n of TECH.filter(n => n.branch === branch)) {
-      const owned = m.tech.includes(n.id);
-      const buyable = canBuy(n.id, m.tech, m.shards);
-      const reqsMet = n.req.every(r => m.tech.includes(r));
-      const el = document.createElement('button');
-      el.className = 'node ' + (owned ? 'owned' : buyable ? 'avail' : reqsMet ? 'poor' : 'locked');
-      const reqNames = n.req.filter(r => !m.tech.includes(r))
-        .map(r => TECH.find(x => x.id === r)?.name).join(', ');
-      el.innerHTML =
-        `<span class="nname">${n.name}</span>` +
-        `<span class="ndesc">${n.desc}</span>` +
-        `<span class="ncost">${owned ? 'OWNED' : reqsMet ? `◆ ${n.cost}` : `needs ${reqNames}`}</span>`;
-      if (buyable) el.addEventListener('click', () => { H.onBuy(n.id); renderTech(G); });
-      col.appendChild(el);
-    }
-    grid.appendChild(col);
-  }
+  $('techShards').textContent = `◆ ${G.meta.shards}`;
+  // the Lattice view owns the graph; purchases route back through H (app.md)
+  renderLattice(G, { onBuy: id => { H.onBuy(id); renderTech(G); } });
 }
 
 // ---------- bestiary ----------
@@ -251,6 +228,8 @@ function statLine(id, l) {
     case 'tesla':  return `${st.chains} chains · DMG ${st.dmg} · ${st.cd.toFixed(1)}s`;
     case 'seek':   return `${st.n}× DMG ${st.dmg} · ${st.cd.toFixed(1)}s`;
     case 'turret': return `${st.n}× DMG ${st.dmg} · ${st.cd.toFixed(2)}s`;
+    case 'mine':   return `${st.cap} mines · DMG ${st.dmg} · R ${st.blast}`;
+    case 'mortar': return `DMG ${st.dmg}${st.shells > 1 ? ' ×2' : ''} · R ${st.blast} · ${st.cd.toFixed(1)}s`;
     default: return '';
   }
 }

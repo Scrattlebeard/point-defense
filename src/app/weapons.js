@@ -17,6 +17,7 @@ export function resetWeapons(G) {
   G.wt = {
     boltT: 0.3, wallCd: 0,
     orbA: 0, novaT: 2.5, teslaT: 1.2, teslaReady: false, teslaCharge: 0, seekT: 1.6, turretT: 0.8,
+    mineT: 1.0, mortT: 1.5,
     beamOwner: null, beamAim: null,
   };
   G.aim = { x: G.cx, y: G.cy - 160 }; // standing aim point; input moves it
@@ -286,6 +287,79 @@ export function updateWeapons(G, dt) {
       wt.turretT = st.cd * S.cdMult;
     }
   }
+
+  // mines: seed random field spots up to the live cap; armed mines trigger on
+  // proximity (core.md mine row)
+  if (lvl(S, 'mine') >= 1) {
+    const st = stats(S, 'mine');
+    wt.mineT -= dt;
+    if (wt.mineT <= 0) {
+      wt.mineT = st.cd * S.cdMult;
+      if (S.mines.length < st.cap) {
+        const a = Math.random() * TAU;
+        const rr = 120 + Math.random() * Math.max(40, Math.min(G.W, G.H) / 2 - 160);
+        S.mines.push({
+          x: G.cx + Math.cos(a) * rr, y: G.cy + Math.sin(a) * rr,
+          arm: st.arm, dmg: st.dmg, blast: st.blast, trigger: st.trigger,
+        });
+      }
+    }
+    for (const m of S.mines) {
+      if (m.arm > 0) { m.arm -= dt; continue; }
+      for (const e of S.enemies) {
+        if (e.dead) continue;
+        if (dist(m.x, m.y, e.x, e.y) <= m.trigger + e.r) {
+          m.dead = true;
+          burst(G.fx, m.x, m.y, '#9ff3ff', 16, 230, 0.4, 2.5);
+          burst(G.fx, m.x, m.y, '#e8fbff', 8, 90, 0.25, 1.5);
+          shake(G.fx, 2);
+          for (const t2 of S.enemies) {
+            if (!t2.dead && dist(m.x, m.y, t2.x, t2.y) <= m.blast + t2.r) damageEnemy(G, t2, m.dmg);
+          }
+          sfx('nova');
+          break;
+        }
+      }
+    }
+    S.mines = S.mines.filter(m => !m.dead);
+  }
+
+  // mortar: lob arcing shells at random living shapes; shells arc OVER the
+  // arena wall by design (core.md mortar row)
+  if (lvl(S, 'mortar') >= 1) {
+    const st = stats(S, 'mortar');
+    wt.mortT -= dt;
+    if (wt.mortT <= 0) {
+      const live = S.enemies.filter(e => !e.dead);
+      if (live.length) {
+        wt.mortT = st.cd * S.cdMult;
+        for (let i = 0; i < st.shells; i++) {
+          const e = live[Math.floor(Math.random() * live.length)];
+          S.shells.push({
+            x0: G.cx, y0: G.cy,
+            tx: e.x + (Math.random() * 2 - 1) * st.scatter,
+            ty: e.y + (Math.random() * 2 - 1) * st.scatter,
+            t: 0, flight: st.flight, dmg: st.dmg, blast: st.blast,
+          });
+        }
+        sfx('seek');
+      } else wt.mortT = 0.2;
+    }
+  }
+  for (const sh of S.shells) {
+    sh.t += dt;
+    if (sh.t >= sh.flight) {
+      sh.dead = true;
+      burst(G.fx, sh.tx, sh.ty, '#ffd24d', 18, 240, 0.45, 3);
+      burst(G.fx, sh.tx, sh.ty, '#fff3d0', 8, 100, 0.25, 1.5);
+      shake(G.fx, 2);
+      for (const e of S.enemies) {
+        if (!e.dead && dist(sh.tx, sh.ty, e.x, e.y) <= sh.blast + e.r) damageEnemy(G, e, sh.dmg);
+      }
+      sfx('nova');
+    }
+  }
+  S.shells = S.shells.filter(sh => !sh.dead);
 
   // bullets (bolt + turret)
   const EDGE = 4; // arena wall inset (app.md "the play area is walled")

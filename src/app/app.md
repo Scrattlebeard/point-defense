@@ -21,7 +21,8 @@ simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not un
 | `render.js` | Canvas drawing: field grid, entities (shape + variant highlight grammar), tower, beams/lightning/rings, HUD elements drawn on canvas (hp arc, boss bar) |
 | `fx.js` | Particles, floating damage numbers, announcements, screen shake, hit flashes — capped pools, purely cosmetic. Announcements (wave / debut / boss name) anchor **top-left under the HUD**, linger **15s**, and debut/boss banners carry a **mini specimen icon** (the wireframe shape with its variant highlight) so the banner teaches what to look for (2026-07-23 playtest) |
 | `audio.js` | WebAudio synth one-shots (fire, death, nova, levelup, hurt, gameover); lazy AudioContext on first gesture; mute persisted via meta |
-| `ui.js` | DOM overlays: menu, tower select, tech tree (branch columns, node states: owned/available/locked), **bestiary** (discovered enemies/variants with wireframe icon canvases; "?" cards for the unmet), **records** (top-10 high scores + achievement grid, locked entries dimmed), level-up cards, pause, game-over payout (with high-score rank when placed), **achievement toasts** (DOM, bottom-center, queued — they must work over any overlay, including menus) |
+| `ui.js` | DOM overlays: menu, tower select, **bestiary** (discovered enemies/variants with wireframe icon canvases; "?" cards for the unmet), **records** (top-10 high scores + achievement grid, locked entries dimmed), level-up cards, pause, game-over payout (with high-score rank when placed), **achievement toasts** (DOM, bottom-center, queued — they must work over any overlay, including menus) |
+| `lattice.js` | **The Lattice view** (ADR-0003 stage 1): renders `LATTICE` as a radial SVG web inside the tech overlay — the Point at center, six color-coded sectors, ring guides at each cost tier, edges lit by ownership (dashed for `reqMode:'any'` cross-links). **Pan by drag, pinch/wheel zoom** — the web is bigger than any phone screen on purpose; exploring it is part of the pitch. **Tap a node → detail card** (bottom sheet: name, desc, cost, unmet prereqs, BUY) — tap-to-inspect then confirm, never tap-to-spend, because ring-4/5 nodes cost hundreds of shards and thumbs slip. Node states: owned (filled sector color), affordable (bright ring, slow pulse), reachable-but-poor (dim ring), locked (faded). Layout is computed, not hand-placed: sector wedge angle + ring radius + even spread within (sector, ring) — content changes never require repositioning work |
 
 ## Shell-level behaviors (presentation truths)
 
@@ -99,6 +100,16 @@ simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not un
   the frost motes) and deliberately *ambient*: they keep crawling through pause and
   menus (they're the room, not the sim) and must stay below every gameplay signal —
   dimmer than frost, unreadable as projectiles.
+- **Mines & mortar** (ADR-0003 stage 1): mines are small cyan diamonds with a
+  blinking core once armed (player allegiance = solid fill law holds — they're the
+  player's); triggering fires a radial **double-burst** (fast wide + tight bright).
+  Deliberately NOT a ring: expanding rings are nova's register (see aura-vs-nova
+  bullet) and a third ring source would blur it. Mortar shells render as an arcing
+  dot with fake height (sin-lofted) over a ground telegraph — a shadow dot plus a
+  **growing blast-radius outline**, both warm gold: field-positioned and
+  warm-family, so it cannot be mistaken for nova's cyan tower-centered rings;
+  impact is a warm double-burst matching the shell. Both are plain entities in `S` arrays (mines/shells),
+  sim-updated in weapons.js like every other projectile.
 - **Juice:** deaths burst in the enemy's color, tower hits shake + red vignette,
   level-ups pause the sim (cards are DOM, thumb-sized, stacked vertically on narrow
   screens). The beam is *loud*: layered glow (outer haze / mid sheath / white core)

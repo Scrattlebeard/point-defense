@@ -63,8 +63,12 @@ prereqs enforced), not exact constants, so tuning stays cheap.
 - `bossHp(w) = 1500 * (1 + 0.3*(w−5))` for boss waves (w = 5, 10, 15…). *(Tripled
   2026-07-23: a boss's radius means multi-bolt volleys connect in full, so effective
   TTK was near a tank's — bosses must outlast the trash by an order of feel.)*
-- `shardPayout(wave, kills, bossKills) = round(3*wave + kills/10 + 8*bossKills)`,
-  minimum 1 — **losing must always buy something** (pillar 4). Salvage tech multiplies.
+- `shardPayout(wave, kills, bossKills) = round(2.5*wave + kills/9 + 9*bossKills +
+  0.18*wave²)`, minimum 1 — **losing must always buy something** (pillar 4). Salvage
+  tech multiplies. *(Superlinear term added with the Lattice, ADR-0003 stage 1: the
+  web's deep rings cost 250–600, so deep runs must pay deep — a wave-20 run now
+  yields ~250 base instead of ~140. Provisional by design: the whole point of the
+  mega-lattice is to feel out progression pacing; expect this curve to move.)*
 - `enemyMass(age) = 1 + min(2, age/15)` — **shapes gain inertia with age** (1 at spawn,
   capped ×3 from 30s on). Knockback impulses, wall push and aura slow are divided by
   mass, so crowd-control decays against anything that survives long enough — an old
@@ -175,6 +179,8 @@ Auto weapons (level-up pool):
 | tesla | 5 | chain lightning every 2.3−0.22L s: 2/3/3/4/6 chains, dmg 12+7L, falloff 0.8/jump — **tech-locked** |
 | seek | 5 | homing missiles: 1/1/2/2/3 per volley every 2.6−0.3L s, dmg 20+10L, small AoE — **tech-locked**. **Trajectory re-acquisition:** when a missile's target dies *or falls behind its heading*, it locks onto the best-aligned shape ahead of it instead (falling back to nearest if nothing's ahead) — a whiff curves into new prey rather than orbiting a lost cause (2026-07-23 playtest: limited turn rate made misses ineffective) |
 | turret | 5 | orbiting mini-turrets 1/1/2/2/3 shooting nearest, dmg 8+4L, cd 1.0−0.09L — **tech-locked** |
+| mine | 5 | proximity mines seeded at random field positions (ring 120..min(W,H)/2−40 from the Point) every 2.6−0.25L s (floor 1.2); armed after 0.5s; trigger radius 44, blast 62+6L, dmg 24+12L; live cap 2/3/4/5/6, seeding pauses at cap — **tech-locked** (ADR-0003: the area-denial tool; new 2026-07-24) |
+| mortar | 5 | arcing shells lobbed at a random living shape (±30px scatter) every 3.4−0.3L s (floor 1.6); 1.1s flight, then AoE: blast 68+8L, dmg 30+14L; **L5: twin shells** per volley — **tech-locked**. **Shells arc OVER the arena wall**: the mortar is deliberately the one weapon that can strike shapes still outside the walls — bullets die at the wall because they travel *through* the field; a shell was never in it (ADR-0003: the anti-cluster tool, new 2026-07-24) |
 
 Generic cards (always in pool): **Repair** (restore 40% max hp; only offered when
 below 70%), **Bulkhead** (+25 max hp, heals the same), **Overclock** (+10% damage,
@@ -200,13 +206,31 @@ Every tower taps bolt (pillar 1). Identity = stat profile + extra starting weapo
 | warden | Warden | tech | 130 | ×0.9 | ×1.0 | bolt L1 + nova L1 |
 | lance | Lance | tech | 85 | ×1.1 | ×1.0 | bolt L1 + beam L1 |
 
-## Tech tree (`config.js: TECH`, logic in `tech.js`)
+## The Lattice (`config.js: LATTICE`, logic in `tech.js`) — ADR-0003 stage 1
 
-Nodes: `{id, branch, name, desc, cost, req: [nodeIds], effect}`. `canBuy` requires:
-not owned, all `req` owned, shards ≥ cost. Effects aggregate in `effectsOf(owned)`:
-additive within a stat (`hpBonus`, `dmgMult`, `xpMult`, `regen`, `dmgTakenMult`,
-`cdMult`, `critChance`, `salvageMult`, `startLevel`), plus set-valued
-`unlockWeapons` / `unlockTowers`.
+The meta tech system is a **radial web centered on the Point**: ~60 nodes in six
+sectors (**Hull, Arms, Mind, Salvage, Arsenal, Towers**) across five rings, ring =
+cost band (~15 / 40 / 100 / 250 / 600 — deep lattice is weeks of play). Rendered as
+an actual graph (app.md "Lattice view"), not columns. This is the deliberate
+**mega-lattice**: large and deep first, mostly stat nodes for now; parts migrate to
+diverged weapon-mastery and tower trees in ADR-0003 stages 2–3, and the interesting
+behavior-changers land there. What stage 1 must nail is layout, presentation, and a
+cost curve worth feeling out.
+
+Nodes: `{id, sector, ring, name, desc, cost, req: [nodeIds], reqMode?, effect}`.
+`canBuy` requires: not owned, prereqs satisfied, shards ≥ cost. **`reqMode: 'any'`
+makes a node a web cross-link** — satisfied by ANY listed prereq (default: all);
+cross-links sit at sector borders and let hybrid builds route sideways instead of
+grinding a second trunk. Effects aggregate in `effectsOf(owned)`: additive within a
+stat (`hpBonus`, `dmgMult`, `xpMult`, `regen`, `dmgTakenMult`, `cdMult`,
+`critChance`, `salvageMult`, `startLevel`), plus set-valued `unlockWeapons` /
+`unlockTowers` — stage 1 adds **no new effect keys**; depth comes from chains and
+costs, which is exactly what keeps the sim untouched by the lattice.
+
+Node ids from the pre-lattice tree are preserved verbatim (`vit1`, `tesla`,
+`tower_lance`…) so existing saves keep their purchases; the v1 storage key and the
+shallow default-merge in `meta.js` cover stage 1 migration (a real deep-merge +
+schema version lands with stage 2's nested fields — recorded in ADR-0003).
 
 | branch | nodes (cost◆, req) |
 |--------|--------------------|

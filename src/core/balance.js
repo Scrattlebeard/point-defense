@@ -16,9 +16,10 @@ export const bossHp = w => 1500 * (1 + 0.3 * (w - 5));
 /** Chance that a non-boss spawn rolls a variant. Zero early, capped so lategame stays readable. */
 export const variantChance = w => (w <= 5 ? 0 : Math.min(0.35, 0.015 * (w - 5)));
 
-/** Losing must always buy something (README pillar 4). */
+/** Losing must always buy something (README pillar 4). Superlinear wave term
+ *  added with the Lattice (ADR-0003): deep rings cost 250-600, deep runs pay deep. */
 export const shardPayout = (wave, kills, bossKills) =>
-  Math.max(1, Math.round(3 * wave + kills / 10 + 8 * bossKills));
+  Math.max(1, Math.round(2.5 * wave + kills / 9 + 9 * bossKills + 0.18 * wave * wave));
 
 /** Shapes gain inertia with age: knockback and aura slow divide by this (core.md). */
 export const enemyMass = age => 1 + Math.min(2, age / 15);

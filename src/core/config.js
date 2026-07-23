@@ -95,6 +95,16 @@ export const WEAPONS = {
     descs: ['A mini-turret orbits and shoots', 'Faster fire', '+1 turret', '+damage', 'MAX: 3 turrets'],
     stats: l => ({ n: [0, 1, 1, 2, 2, 3][l], dmg: 8 + 4 * l, cd: Math.max(0.35, 1.0 - 0.09 * l), range: 260 }),
   },
+  mine: {
+    name: 'Mines', kind: 'auto', max: 5, tag: 'AUTO', techLock: true,
+    descs: ['Seeds proximity mines around the Point', '+1 mine & damage', '+blast radius', '+1 mine, faster seeding', 'MAX: 6 mines'],
+    stats: l => ({ cap: [0, 2, 3, 4, 5, 6][l], dmg: 24 + 12 * l, blast: 62 + 6 * l, trigger: 44, cd: Math.max(1.2, 2.6 - 0.25 * l), arm: 0.5 }),
+  },
+  mortar: {
+    name: 'Mortar', kind: 'auto', max: 5, tag: 'AUTO', techLock: true,
+    descs: ['Lobs arcing shells at distant shapes', '+damage', '+blast, faster volleys', '+damage', 'MAX: twin shells'],
+    stats: l => ({ dmg: 30 + 14 * l, blast: 68 + 8 * l, cd: Math.max(1.6, 3.4 - 0.3 * l), shells: l >= 5 ? 2 : 1, flight: 1.1, scatter: 30 }),
+  },
 };
 
 // Generic level-up cards (always eligible; repair gated by hp in state.js).
@@ -150,36 +160,73 @@ export const TOWERS = {
   },
 };
 
-// ---------- Tech tree ----------
-// Explicit reqs; structure pinned by test/tech.test.mjs.
-export const TECH = [
-  // Hull
-  { id: 'vit1',   branch: 'Hull', name: 'Vitality I',   desc: '+20 max HP',        cost: 15,  req: [],          effect: { hpBonus: 20 } },
-  { id: 'vit2',   branch: 'Hull', name: 'Vitality II',  desc: '+20 max HP',        cost: 30,  req: ['vit1'],    effect: { hpBonus: 20 } },
-  { id: 'vit3',   branch: 'Hull', name: 'Vitality III', desc: '+20 max HP',        cost: 60,  req: ['vit2'],    effect: { hpBonus: 20 } },
-  { id: 'plate1', branch: 'Hull', name: 'Plating I',    desc: '−8% damage taken',  cost: 40,  req: ['vit1'],    effect: { dmgTakenAdd: -0.08 } },
-  { id: 'plate2', branch: 'Hull', name: 'Plating II',   desc: '−8% damage taken',  cost: 80,  req: ['plate1'],  effect: { dmgTakenAdd: -0.08 } },
-  { id: 'nano1',  branch: 'Hull', name: 'Nanites I',    desc: '+0.5 HP/s regen',   cost: 35,  req: ['vit1'],    effect: { regen: 0.5 } },
-  { id: 'nano2',  branch: 'Hull', name: 'Nanites II',   desc: '+0.5 HP/s regen',   cost: 70,  req: ['nano1'],   effect: { regen: 0.5 } },
-  // Arms
-  { id: 'over1',  branch: 'Arms', name: 'Overcharge I',   desc: '+8% damage',      cost: 15,  req: [],          effect: { dmgAdd: 0.08 } },
-  { id: 'over2',  branch: 'Arms', name: 'Overcharge II',  desc: '+8% damage',      cost: 30,  req: ['over1'],   effect: { dmgAdd: 0.08 } },
-  { id: 'over3',  branch: 'Arms', name: 'Overcharge III', desc: '+8% damage',      cost: 60,  req: ['over2'],   effect: { dmgAdd: 0.08 } },
-  { id: 'prec',   branch: 'Arms', name: 'Precision',      desc: '10% crit chance (×2)', cost: 50, req: ['over2'], effect: { critChance: 0.1 } },
-  { id: 'haste1', branch: 'Arms', name: 'Haste I',        desc: '−6% cooldowns',   cost: 40,  req: ['over1'],   effect: { cdAdd: -0.06 } },
-  { id: 'haste2', branch: 'Arms', name: 'Haste II',       desc: '−6% cooldowns',   cost: 80,  req: ['haste1'],  effect: { cdAdd: -0.06 } },
-  // Mind
-  { id: 'study1', branch: 'Mind', name: 'Quick Study I',  desc: '+10% XP',         cost: 15,  req: [],          effect: { xpAdd: 0.1 } },
-  { id: 'study2', branch: 'Mind', name: 'Quick Study II', desc: '+10% XP',         cost: 35,  req: ['study1'],  effect: { xpAdd: 0.1 } },
-  { id: 'head',   branch: 'Mind', name: 'Head Start',     desc: 'Start at level 2 with a free pick', cost: 45, req: ['study1'], effect: { startLevelAdd: 1 } },
-  { id: 'salv1',  branch: 'Mind', name: 'Salvage I',      desc: '+20% shards',     cost: 30,  req: ['study1'],  effect: { salvageAdd: 0.2 } },
-  { id: 'salv2',  branch: 'Mind', name: 'Salvage II',     desc: '+20% shards',     cost: 60,  req: ['salv1'],   effect: { salvageAdd: 0.2 } },
-  // Arsenal
-  { id: 'tesla',  branch: 'Arsenal', name: 'Tesla Coil', desc: 'Adds Tesla Coil to the level-up pool', cost: 25, req: [],        effect: { unlockWeapon: 'tesla' } },
-  { id: 'seek',   branch: 'Arsenal', name: 'Seekers',    desc: 'Adds Seekers to the level-up pool',    cost: 45, req: ['tesla'], effect: { unlockWeapon: 'seek' } },
-  { id: 'turret', branch: 'Arsenal', name: 'Turrets',    desc: 'Adds Turrets to the level-up pool',    cost: 70, req: ['seek'],  effect: { unlockWeapon: 'turret' } },
-  // Towers
-  { id: 'tower_tempest', branch: 'Towers', name: 'Tempest', desc: 'Unlock the Tempest tower', cost: 40,  req: [],                effect: { unlockTower: 'tempest' } },
-  { id: 'tower_warden',  branch: 'Towers', name: 'Warden',  desc: 'Unlock the Warden tower',  cost: 75,  req: ['tower_tempest'], effect: { unlockTower: 'warden' } },
-  { id: 'tower_lance',   branch: 'Towers', name: 'Lance',   desc: 'Unlock the Lance tower',   cost: 120, req: ['tower_warden'],  effect: { unlockTower: 'lance' } },
+// ---------- The Lattice (ADR-0003 stage 1) ----------
+// Radial web: six sectors × five rings, ring = cost band (core.md "The Lattice").
+// Legacy ids preserved verbatim so pre-lattice saves keep purchases. reqMode:'any'
+// marks web cross-links. Structure pinned by test/tech.test.mjs; content = tuning.
+export const LATTICE = [
+  // ---- Hull (survival) ----
+  { id: 'vit1',       sector: 'Hull', ring: 1, name: 'Vitality I',    desc: '+20 max HP',       cost: 15,  req: [],           effect: { hpBonus: 20 } },
+  { id: 'vit2',       sector: 'Hull', ring: 2, name: 'Vitality II',   desc: '+20 max HP',       cost: 40,  req: ['vit1'],     effect: { hpBonus: 20 } },
+  { id: 'vit3',       sector: 'Hull', ring: 3, name: 'Vitality III',  desc: '+25 max HP',       cost: 100, req: ['vit2'],     effect: { hpBonus: 25 } },
+  { id: 'vit4',       sector: 'Hull', ring: 4, name: 'Vitality IV',   desc: '+30 max HP',       cost: 250, req: ['vit3'],     effect: { hpBonus: 30 } },
+  { id: 'plate1',     sector: 'Hull', ring: 2, name: 'Plating I',     desc: '−8% damage taken', cost: 40,  req: ['vit1'],     effect: { dmgTakenAdd: -0.08 } },
+  { id: 'plate2',     sector: 'Hull', ring: 3, name: 'Plating II',    desc: '−8% damage taken', cost: 100, req: ['plate1'],   effect: { dmgTakenAdd: -0.08 } },
+  { id: 'plate3',     sector: 'Hull', ring: 4, name: 'Plating III',   desc: '−8% damage taken', cost: 250, req: ['plate2'],   effect: { dmgTakenAdd: -0.08 } },
+  { id: 'nano1',      sector: 'Hull', ring: 2, name: 'Nanites I',     desc: '+0.5 HP/s regen',  cost: 40,  req: ['vit1'],     effect: { regen: 0.5 } },
+  { id: 'nano2',      sector: 'Hull', ring: 3, name: 'Nanites II',    desc: '+0.5 HP/s regen',  cost: 100, req: ['nano1'],    effect: { regen: 0.5 } },
+  { id: 'nano3',      sector: 'Hull', ring: 4, name: 'Nanites III',   desc: '+0.8 HP/s regen',  cost: 250, req: ['nano2'],    effect: { regen: 0.8 } },
+  { id: 'bulwark',    sector: 'Hull', ring: 5, name: 'Bulwark Core',  desc: '+80 max HP',       cost: 600, req: ['vit4'],     effect: { hpBonus: 80 } },
+  { id: 'aegis',      sector: 'Hull', ring: 5, name: 'Aegis Field',   desc: '−12% damage taken', cost: 600, req: ['plate3'],  effect: { dmgTakenAdd: -0.12 } },
+  { id: 'lifespring', sector: 'Hull', ring: 5, name: 'Lifespring',    desc: '+1.2 HP/s regen',  cost: 600, req: ['nano3'],    effect: { regen: 1.2 } },
+  // ---- Arms (offense) ----
+  { id: 'over1',      sector: 'Arms', ring: 1, name: 'Overcharge I',   desc: '+8% damage',      cost: 15,  req: [],           effect: { dmgAdd: 0.08 } },
+  { id: 'over2',      sector: 'Arms', ring: 2, name: 'Overcharge II',  desc: '+8% damage',      cost: 40,  req: ['over1'],    effect: { dmgAdd: 0.08 } },
+  { id: 'over3',      sector: 'Arms', ring: 3, name: 'Overcharge III', desc: '+8% damage',      cost: 100, req: ['over2'],    effect: { dmgAdd: 0.08 } },
+  { id: 'over4',      sector: 'Arms', ring: 4, name: 'Overcharge IV',  desc: '+10% damage',     cost: 250, req: ['over3'],    effect: { dmgAdd: 0.10 } },
+  { id: 'prec',       sector: 'Arms', ring: 2, name: 'Precision',      desc: '10% crit chance (×2)', cost: 50, req: ['over1'], effect: { critChance: 0.1 } },
+  { id: 'prec2',      sector: 'Arms', ring: 3, name: 'Precision II',   desc: '+10% crit chance', cost: 110, req: ['prec'],    effect: { critChance: 0.1 } },
+  { id: 'deadeye',    sector: 'Arms', ring: 4, name: 'Deadeye',        desc: '+10% crit chance', cost: 260, req: ['prec2'],   effect: { critChance: 0.1 } },
+  { id: 'haste1',     sector: 'Arms', ring: 2, name: 'Haste I',        desc: '−6% cooldowns',   cost: 40,  req: ['over1'],    effect: { cdAdd: -0.06 } },
+  { id: 'haste2',     sector: 'Arms', ring: 3, name: 'Haste II',       desc: '−6% cooldowns',   cost: 100, req: ['haste1'],   effect: { cdAdd: -0.06 } },
+  { id: 'haste3',     sector: 'Arms', ring: 4, name: 'Haste III',      desc: '−6% cooldowns',   cost: 250, req: ['haste2'],   effect: { cdAdd: -0.06 } },
+  { id: 'annihilator', sector: 'Arms', ring: 5, name: 'Annihilator',   desc: '+15% damage',     cost: 600, req: ['over4'],    effect: { dmgAdd: 0.15 } },
+  { id: 'flashstep',  sector: 'Arms', ring: 5, name: 'Flashstep',      desc: '−10% cooldowns',  cost: 600, req: ['haste3'],   effect: { cdAdd: -0.10 } },
+  // ---- Mind (experience) ----
+  { id: 'study1',     sector: 'Mind', ring: 1, name: 'Quick Study I',   desc: '+10% XP',        cost: 15,  req: [],           effect: { xpAdd: 0.1 } },
+  { id: 'study2',     sector: 'Mind', ring: 2, name: 'Quick Study II',  desc: '+10% XP',        cost: 40,  req: ['study1'],   effect: { xpAdd: 0.1 } },
+  { id: 'study3',     sector: 'Mind', ring: 3, name: 'Quick Study III', desc: '+10% XP',        cost: 100, req: ['study2'],   effect: { xpAdd: 0.1 } },
+  { id: 'study4',     sector: 'Mind', ring: 4, name: 'Quick Study IV',  desc: '+12% XP',        cost: 250, req: ['study3'],   effect: { xpAdd: 0.12 } },
+  { id: 'head',       sector: 'Mind', ring: 2, name: 'Head Start',      desc: 'Start at level 2 with a free pick', cost: 45,  req: ['study1'], effect: { startLevelAdd: 1 } },
+  { id: 'head2',      sector: 'Mind', ring: 4, name: 'Running Start',   desc: 'Start one level higher again',      cost: 250, req: ['head'],   effect: { startLevelAdd: 1 } },
+  { id: 'enlighten',  sector: 'Mind', ring: 5, name: 'Enlightenment',   desc: '+20% XP',        cost: 600, req: ['study4'],   effect: { xpAdd: 0.2 } },
+  // ---- Salvage (economy; split out of Mind — ADR-0003) ----
+  { id: 'salv1',      sector: 'Salvage', ring: 1, name: 'Salvage I',    desc: '+20% shards',    cost: 15,  req: [],           effect: { salvageAdd: 0.2 } },
+  { id: 'salv2',      sector: 'Salvage', ring: 2, name: 'Salvage II',   desc: '+20% shards',    cost: 40,  req: ['salv1'],    effect: { salvageAdd: 0.2 } },
+  { id: 'salv3',      sector: 'Salvage', ring: 3, name: 'Salvage III',  desc: '+20% shards',    cost: 100, req: ['salv2'],    effect: { salvageAdd: 0.2 } },
+  { id: 'salv4',      sector: 'Salvage', ring: 4, name: 'Salvage IV',   desc: '+25% shards',    cost: 250, req: ['salv3'],    effect: { salvageAdd: 0.25 } },
+  { id: 'goldrush',   sector: 'Salvage', ring: 5, name: 'Gold Rush',    desc: '+35% shards',    cost: 600, req: ['salv4'],    effect: { salvageAdd: 0.35 } },
+  // ---- Arsenal (weapon unlocks + munitions) ----
+  { id: 'tesla',      sector: 'Arsenal', ring: 1, name: 'Tesla Coil',  desc: 'Adds Tesla Coil to the level-up pool', cost: 25, req: [],        effect: { unlockWeapon: 'tesla' } },
+  { id: 'seek',       sector: 'Arsenal', ring: 2, name: 'Seekers',     desc: 'Adds Seekers to the level-up pool',    cost: 45, req: ['tesla'], effect: { unlockWeapon: 'seek' } },
+  { id: 'turret',     sector: 'Arsenal', ring: 3, name: 'Turrets',     desc: 'Adds Turrets to the level-up pool',    cost: 100, req: ['seek'], effect: { unlockWeapon: 'turret' } },
+  { id: 'mine',       sector: 'Arsenal', ring: 1, name: 'Mines',       desc: 'Adds Mines to the level-up pool',      cost: 30, req: [],        effect: { unlockWeapon: 'mine' } },
+  { id: 'mortar',     sector: 'Arsenal', ring: 2, name: 'Mortar',      desc: 'Adds the Mortar to the level-up pool', cost: 65, req: ['mine'],  effect: { unlockWeapon: 'mortar' } },
+  { id: 'mun1',       sector: 'Arsenal', ring: 3, name: 'Munitions I',  desc: '+5% damage',     cost: 100, req: ['seek', 'mortar'], reqMode: 'any', effect: { dmgAdd: 0.05 } },
+  { id: 'mun2',       sector: 'Arsenal', ring: 4, name: 'Munitions II', desc: '+6% damage',     cost: 250, req: ['mun1'],     effect: { dmgAdd: 0.06 } },
+  { id: 'arsmaster',  sector: 'Arsenal', ring: 5, name: 'Arsenal Master', desc: '+10% damage & −4% cooldowns', cost: 600, req: ['turret', 'mun2'], effect: { dmgAdd: 0.10, cdAdd: -0.04 } },
+  // ---- Towers (unlocks + keel) ----
+  { id: 'tower_tempest', sector: 'Towers', ring: 2, name: 'Tempest', desc: 'Unlock the Tempest tower', cost: 40,  req: [],                effect: { unlockTower: 'tempest' } },
+  { id: 'tower_warden',  sector: 'Towers', ring: 3, name: 'Warden',  desc: 'Unlock the Warden tower',  cost: 75,  req: ['tower_tempest'], effect: { unlockTower: 'warden' } },
+  { id: 'tower_lance',   sector: 'Towers', ring: 4, name: 'Lance',   desc: 'Unlock the Lance tower',   cost: 200, req: ['tower_warden'],  effect: { unlockTower: 'lance' } },
+  { id: 'keel1',      sector: 'Towers', ring: 3, name: 'Reinforced Keel',  desc: '+15 max HP',  cost: 100, req: ['tower_tempest'], effect: { hpBonus: 15 } },
+  { id: 'keel2',      sector: 'Towers', ring: 4, name: 'Resonant Core',    desc: '+5% damage',  cost: 250, req: ['keel1'],    effect: { dmgAdd: 0.05 } },
+  { id: 'towermaster', sector: 'Towers', ring: 5, name: 'Master of Points', desc: '+40 max HP & +5% damage', cost: 600, req: ['tower_lance', 'keel2'], effect: { hpBonus: 40, dmgAdd: 0.05 } },
+  // ---- Cross-links (reqMode any — the web strands between sectors) ----
+  { id: 'fieldkit',   sector: 'Hull',    ring: 2, name: 'Field Kit',      desc: '+0.3 HP/s regen', cost: 40,  req: ['nano1', 'salv1'],          reqMode: 'any', effect: { regen: 0.3 } },
+  { id: 'warchest',   sector: 'Salvage', ring: 3, name: 'War Chest',      desc: '+8% damage',      cost: 100, req: ['over2', 'salv2'],          reqMode: 'any', effect: { dmgAdd: 0.08 } },
+  { id: 'scholarsoldier', sector: 'Mind', ring: 3, name: 'Scholar-Soldier', desc: '+8% XP',        cost: 100, req: ['study2', 'over2'],         reqMode: 'any', effect: { xpAdd: 0.08 } },
+  { id: 'overseer',   sector: 'Towers',  ring: 3, name: 'Overseer',       desc: '−4% cooldowns',   cost: 100, req: ['head', 'tower_tempest'],   reqMode: 'any', effect: { cdAdd: -0.04 } },
+  { id: 'quartermaster', sector: 'Salvage', ring: 4, name: 'Quartermaster', desc: '+15% shards',   cost: 250, req: ['salv3', 'mun1'],           reqMode: 'any', effect: { salvageAdd: 0.15 } },
+  { id: 'reinforcedgrid', sector: 'Hull', ring: 4, name: 'Reinforced Grid', desc: '+25 max HP',    cost: 250, req: ['vit3', 'keel1'],           reqMode: 'any', effect: { hpBonus: 25 } },
 ];

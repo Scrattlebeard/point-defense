@@ -154,6 +154,14 @@ function loop(now) {
 
 ui.renderMenu(G);
 ui.showOnly('menu');
+// Dev/smoke hatch: ?lattice opens the Lattice directly; &shards=N fakes a
+// balance (in-memory only) so node states are photographable.
+if (location.search.includes('lattice')) {
+  const sm = location.search.match(/shards=(\d+)/);
+  if (sm) G.meta.shards = Number(sm[1]);
+  ui.renderTech(G);
+  ui.showOnly('tech');
+}
 // Dev/smoke hatch: ?bestiary opens a fully-revealed bestiary (in-memory only).
 if (location.search.includes('bestiary')) {
   import('../core/config.js').then(({ ENEMIES, VARIANTS }) => {

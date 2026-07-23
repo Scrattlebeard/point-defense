@@ -1,14 +1,21 @@
-// Tech tree logic. Nodes live in config.js; meta is never mutated, always replaced.
-import { TECH } from './config.js';
+// Lattice logic (core.md "The Lattice"). Nodes live in config.js; meta is never
+// mutated, always replaced.
+import { LATTICE } from './config.js';
 
-const byId = new Map(TECH.map(n => [n.id, n]));
+const byId = new Map(LATTICE.map(n => [n.id, n]));
+
+/** Prereqs satisfied? reqMode 'any' = web cross-link, ANY listed req suffices. */
+export function reqsMet(n, owned) {
+  if (n.req.length === 0) return true;
+  return n.reqMode === 'any' ? n.req.some(r => owned.has(r)) : n.req.every(r => owned.has(r));
+}
 
 export function canBuy(id, ownedIds, shards) {
   const n = byId.get(id);
   if (!n) return false;
   const owned = new Set(ownedIds);
   if (owned.has(id)) return false;
-  if (!n.req.every(r => owned.has(r))) return false;
+  if (!reqsMet(n, owned)) return false;
   return shards >= n.cost;
 }
 

@@ -47,7 +47,7 @@ export function newRun(meta, towerId) {
     // run-scoped introduction record — banners repeat each run (core.md Introductions)
     introduced: { enemies: new Set(), variants: new Set() },
     // sim entity arrays, owned here so a run is one object; the shell fills them
-    enemies: [], bullets: [], missiles: [], rings: [], zaps: [],
+    enemies: [], bullets: [], missiles: [], rings: [], zaps: [], mines: [], shells: [],
     heat: 0, overheated: false,
   };
   for (let i = 1; i < fx.startLevel; i++) {

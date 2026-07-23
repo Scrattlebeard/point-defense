@@ -131,6 +131,38 @@ function drawField(G) {
     }
   }
 
+  // mines — small solid cyan diamonds (player allegiance = fill), blinking core
+  // once armed (app.md "Mines & mortar")
+  for (const m of S.mines) {
+    const armed = m.arm <= 0;
+    ctx.fillStyle = armed ? 'rgba(159, 243, 255, 0.85)' : 'rgba(159, 243, 255, 0.35)';
+    ctx.beginPath();
+    ctx.moveTo(m.x, m.y - 6); ctx.lineTo(m.x + 4.5, m.y);
+    ctx.lineTo(m.x, m.y + 6); ctx.lineTo(m.x - 4.5, m.y);
+    ctx.fill();
+    if (armed && Math.sin(S.time * 6) > 0) {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(m.x - 1, m.y - 1, 2, 2);
+    }
+  }
+
+  // mortar shells — arcing dot with fake height over a ground-shadow telegraph
+  for (const sh of S.shells) {
+    const p = Math.min(1, sh.t / sh.flight);
+    const px = sh.x0 + (sh.tx - sh.x0) * p;
+    const py = sh.y0 + (sh.ty - sh.y0) * p;
+    const h = Math.sin(Math.PI * p) * 110;
+    // shadow marks the true impact point as the shell closes in
+    ctx.fillStyle = `rgba(255, 210, 77, ${0.10 + 0.25 * p})`;
+    ctx.beginPath(); ctx.arc(sh.tx, sh.ty, 7 - 3 * p, 0, TAU); ctx.fill();
+    ctx.strokeStyle = `rgba(255, 210, 77, ${0.2 + 0.3 * p})`;
+    ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.arc(sh.tx, sh.ty, sh.blast * p, 0, TAU); ctx.stroke();
+    // the shell itself, lofted
+    ctx.fillStyle = '#ffd24d';
+    ctx.beginPath(); ctx.arc(px, py - h, 3 + 1.5 * Math.sin(Math.PI * p), 0, TAU); ctx.fill();
+  }
+
   // nova rings — bright and SOLID; frost stays dim and dashed (app.md legibility note)
   for (const ring of S.rings) {
     const a = clamp(1 - ring.r / ring.max, 0, 1);

@@ -50,6 +50,9 @@ test('shardPayout: losing always buys something, and deeper runs pay more', () =
   assert.ok(B.shardPayout(0, 0, 0) >= 1);
   assert.ok(B.shardPayout(1, 0, 0) >= 1);
   assert.ok(B.shardPayout(10, 100, 2) > B.shardPayout(3, 20, 0));
+  // superlinear in wave (ADR-0003: deep lattice rings need deep runs to pay)
+  const w10 = B.shardPayout(10, 0, 0), w20 = B.shardPayout(20, 0, 0), w30 = B.shardPayout(30, 0, 0);
+  assert.ok(w30 - w20 > w20 - w10, 'payout must accelerate with wave');
 });
 
 test('variantChance: none before wave 6, capped at 0.35, non-decreasing', () => {
