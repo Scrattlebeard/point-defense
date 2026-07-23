@@ -24,6 +24,38 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
 - **Context:** Deploy is GitHub Pages since 2026-07-23, so multi-file output is fine.
   Icon could reuse the 🎯 motif; service worker/offline explicitly out of scope until wanted.
 
+## Co-op multiplayer (second-playtester request; the biggest fork since birth)
+- **What:** Two-player co-op. Design direction (Daniel's, 2026-07-24, over the wife's
+  "two points to defend"): **one Point, two separate weapon loadouts** — separate
+  level-up picks, separately-colored fire; ownership without forking the geometry.
+  Two Points recorded as considered-and-rejected-for-now: it forks enemy targeting,
+  defeat conditions, every radial weapon's anchor, and the spawn-geometry invariant.
+- **Why:** She wants to play *with* him, not after him. Also the first feature that
+  tests whether the pure-sim architecture pays rent beyond testing.
+- **Plan (sequenced, cheapest falsification first):**
+  1. **Couch spike, zero networking:** `?coop` hatch — two simultaneous pointers on
+     one screen (input layer already tracks multi-touch), pointer A = loadout 1,
+     pointer B = loadout 2, shared XP, alternating picks. If it's not fun on one
+     screen, stop; netcode can't rescue a design.
+  2. **View extraction:** pure `renderView(S)` → flat serializable draw-state (S
+     holds Sets + object refs, can't ship raw). Useful solo too (replays, debugging).
+  3. **Netplay, host-authoritative:** host phone runs the sim; guest sends inputs
+     (aim/gestures normalized to arena fractions), receives ~20Hz snapshots with
+     interpolation. **No lockstep determinism** — that's the hell version; the sim
+     already runs headless (sim.test.mjs), a remote player is just a second input
+     source. WebRTC DataChannel; signaling via PeerJS free cloud broker (host gets
+     room code, guest types it); fallback = ~100-line stateless Cloudflare Worker
+     (free tier). Works phone+phone AND desktop+desktop on the same LAN (browsers
+     mask local IPs behind mDNS `.local` candidates — fine on home networks, can
+     need STUN fallback where multicast is blocked). Target scenario is same-WiFi;
+     internet play is a non-goal until proven wanted. Bandwidth at entity cap
+     ~100KB/s — trivial on LAN.
+- **Where:** promotes to an ADR before implementation (this pin is the draft's
+  skeleton). Touches `src/app/input.js`, `main.js`, new `net.js`; core sim stays
+  untouched by design.
+- **Context:** GitHub Pages hosting stays static throughout — no server of ours at
+  any step. Discussed 2026-07-24 (chat); Daniel: "put a pin in it."
+
 ## Haptics + better sound design
 - **What:** `navigator.vibrate` on tower hit / boss spawn; richer synth (noise bursts for explosions, filter sweeps).
 - **Why:** Phone-first game, big cheap juice win.
