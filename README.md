@@ -36,19 +36,31 @@ Dev hatches (query params on any build): `?autostart` skips the menu ·
 `&warp=N` pre-simulates exactly N seconds with *no* aimer (enemies survive to be
 photographed) · `?bestiary` opens a fully-revealed bestiary, in-memory only.
 
-## Deployment (Claude Artifact)
+## Deployment (GitHub Pages — canonical)
 
-The phone-playable build is a **Claude Artifact** at
-`https://claude.ai/code/artifact/eb569c08-45a9-45b8-9b71-4d948272e336`.
+The phone-playable build is **GitHub Pages** at
+`https://scrattlebeard.github.io/point-defense/`.
 
-- Publish `dist/artifact.html` (the body-content flavor), **favicon 🎯 (keep stable)**,
-  short kebab label naming the change (`force-wall`, `difficulty-reshape`, …).
-- **Cross-conversation rule:** a conversation that didn't originally publish this
-  artifact MUST pass the URL above as the `url` parameter when republishing —
-  otherwise a **new** URL is minted and the link on Daniel's phone silently goes
-  stale. (The original publishing conversation was 2026-07-23; any session after
-  that needs the explicit `url`.)
-- Ship loop: `npm test` green → `npm run build` → republish artifact → commit+push.
+- `.github/workflows/pages.yml` deploys on every push to `master`: `npm ci` →
+  `npm test` → `npm run build` → publish `dist/`. A red test blocks the deploy —
+  the pipeline enforces the ship loop, not convention.
+- Pages serves `dist/index.html` — the **full standalone document**, so the game owns
+  its `<head>` (viewport meta, `user-scalable=no`) with no wrapper between the
+  browser and the canvas. This is why Pages is canonical: the Claude Artifact viewer
+  wraps `dist/artifact.html` in its own skeleton + mobile chrome, which caused
+  unfixable-from-here mobile misbehaviour (2026-07-23) — same class as the
+  cursor-desync the viewer caused a day earlier.
+- Ship loop: `npm test` green → commit+push. (Build + deploy happen in CI;
+  `npm run build` locally only for smoke-testing `dist/`.)
+
+### Claude Artifact (legacy, secondary)
+
+The original artifact lives at
+`https://claude.ai/code/artifact/eb569c08-45a9-45b8-9b71-4d948272e336`. Not updated
+by default — republish only on explicit request. If republishing: use
+`dist/artifact.html`, favicon 🎯 (keep stable), short kebab label, and — from any
+conversation other than the 2026-07-23 original — pass the URL above as the `url`
+parameter, or a new URL is silently minted and the old link goes stale.
 
 ## Public seams
 
