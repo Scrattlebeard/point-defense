@@ -5,7 +5,7 @@ import { clamp } from './geom.js';
 
 // hp/budget curves reshaped 2026-07-23: higher floor, trimmed slope, re-converging
 // with the previous totals ≈ wave 35 (core.md Balance formulas).
-export const enemyHpMult = w => 1 + 0.46 * (w - 1) + 0.004 * (w - 1) * (w - 1);
+export const enemyHpMult = w => 1 + 0.58 * (w - 1) + 0.003 * (w - 1) * (w - 1);
 export const enemySpeedMult = w => Math.min(1.6, 1 + (w - 1) * 0.012);
 export const waveBudget = w => 22 + 7 * w + 0.21 * w * w;
 export const spawnInterval = w => clamp(1.1 - 0.05 * w, 0.22, 1.1);

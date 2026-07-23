@@ -25,7 +25,7 @@ prereqs enforced), not exact constants, so tuning stays cheap.
 
 ## Balance formulas (`balance.js`)
 
-- `enemyHpMult(w) = 1 + 0.46(w−1) + 0.004(w−1)²` — exactly 1 at wave 1, strictly
+- `enemyHpMult(w) = 1 + 0.58(w−1) + 0.003(w−1)²` — exactly 1 at wave 1, strictly
   increasing. *(Re-reshaped 2026-07-24 — the onboarding curve: playtest verdict "we
   start out too easy"; a new player's first death should arrive within player levels
   ~5–10 so the first tech-tree visit is minutes away, not a quarter-hour. Front-loaded
@@ -45,7 +45,12 @@ prereqs enforced), not exact constants, so tuning stays cheap.
   the notch in `waveBudget` and made runs LONGER (median 17) — bodies are XP; the
   budget-as-difficulty mistake is now twice-confirmed, durability is the only
   early-difficulty lever that doesn't feed the player. Result: median 10, range
-  5–20; no-nova runs eat the full ~+20% early HP. Durability was the
+  5–20; no-nova runs eat the full ~+20% early HP. **Round 5 ("MOAR early enemy
+  hp!!", same day):** linear 0.34→0.46→**0.58**, quad 0.003 — pure HP notch, no
+  offsetting buffs. 16-trial spike: median 9, range 4–20, and the shape shifted —
+  ~45% of fresh runs now end at the *first* boss (lvl 6–8, ~3 min), most of the
+  rest at the wave-10 noble. The first shop visit is nearly guaranteed inside
+  Daniel's 5–10-level onboarding band. Durability was the
   lever because volume feeds back: more bodies = more XP, and the player scales with
   the wave; tried first, moved the median barely. Contact damage stays untouched.)*
 - `enemySpeedMult(w) = min(1.6, 1 + (w-1)*0.012)` — capped so lategame stays readable.
