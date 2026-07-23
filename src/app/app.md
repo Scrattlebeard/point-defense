@@ -5,14 +5,14 @@ rendering, pointer events, DOM overlays, audio synthesis, and localStorage. Cont
 no tuning numbers and no game rules — if a change here alters balance or behavior
 rather than presentation/plumbing, it belongs in `src/core` instead.
 
-Verified by headless-Chromium smoke test (`npm run build` renders menu + autostarted
-gameplay screenshots) and by play; not unit-tested.
+Verified by headless-Firefox smoke screenshots (menu + autostarted gameplay, plus a
+simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not unit-tested.
 
 ## Modules
 
 | File | Purpose |
 |------|---------|
-| `main.js` | Entry point: boot, mode state machine (`menu / play / levelup / pause / over`), rAF loop with clamped dt, visibility auto-pause |
+| `main.js` | Entry point: boot, mode state machine (`menu / play / levelup / pause / over`), rAF loop with clamped dt, visibility auto-pause. **Canvas sizing invariant:** game coordinates are CSS pixels (`G.W/G.H = innerWidth/innerHeight`); the backing store is `×dpr` (capped at 2) with a matching `ctx.setTransform`; and the canvas's *displayed* size must be pinned to the viewport in CSS (`#field { width/height: 100% }`) — a canvas is a replaced element, so `inset: 0` alone does NOT stretch it; `width: auto` resolves to the intrinsic (backing-store) size, which on dpr>1 screens showed only the upper-left `1/dpr²` of the field (2026-07-23, first phone run off the artifact wrapper). Re-syncs on `resize` (covers orientation change and mobile URL-bar show/hide) |
 | `meta.js` | Load/save/versioning of the persistent meta at `pointdefense.meta.v1`; storage failures degrade to in-memory |
 | `game.js` | Per-frame simulation orchestration: wave director timing, spawning from the core's spawn plan, tower regen, wave-clear/game-over transitions |
 | `enemies.js` | Enemy entity update: movement (slow/knockback), contact resolution, damage/death side-effects (splits, volatile explosions, shields), XP award |

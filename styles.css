@@ -21,7 +21,9 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-#field { position: fixed; inset: 0; touch-action: none; display: block; cursor: none; }
+/* width/height are load-bearing: canvas is a replaced element, so inset:0 alone
+   leaves it at intrinsic (backing-store) size — dpr× too big. See app.md main.js. */
+#field { position: fixed; inset: 0; width: 100%; height: 100%; touch-action: none; display: block; cursor: none; }
 
 .hidden { display: none !important; }
 

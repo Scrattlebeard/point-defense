@@ -29,6 +29,11 @@ npm run build         # = node scripts/build.mjs
 # flatpak cannot run headless):
 firefox --headless --screenshot .smoke/menu.png --window-size=430,900 "file://$PWD/dist/index.html"
 firefox --headless --screenshot .smoke/battle.png --window-size=430,900 "file://$PWD/dist/index.html?autostart&turbo"
+
+# phone-shaped smoke (simulated dpr 2 — catches CSS-vs-backing-store sizing bugs;
+# use ?autostart: the menu is DOM and renders fine even when the canvas doesn't):
+mkdir -p /tmp/ffdpr2 && echo 'user_pref("layout.css.devPixelsPerPx", "2");' > /tmp/ffdpr2/user.js
+firefox --headless --profile /tmp/ffdpr2 --screenshot .smoke/dpr2.png --window-size=430,900 "file://$PWD/dist/index.html?autostart&warp=10"
 ```
 
 Dev hatches (query params on any build): `?autostart` skips the menu ·
