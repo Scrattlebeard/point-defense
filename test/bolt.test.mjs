@@ -1,8 +1,8 @@
-// Bolt volley shape (core.md bolt row, 2026-07-23 rework): the aimed bolt is
-// ALWAYS exactly one bolt on the exact aim line — extra bolts are auto-aimed at
-// the nearest distinct in-bounds shapes (L3 +1, L5 +2, L6 +4). This is the
-// enforceable form of "you hit where you aim": no spread ever straddles the
-// aim point again.
+// Bolt: two streams, center-true fan volleys (core.md bolt row, 2026-07-24).
+// Manual stream fires at the aim point; from L3 an auto stream fires at the
+// nearest in-bounds shape. A fan of n = one bolt EXACTLY on the target line +
+// flanks at ±0.11 — the enforceable form of "you hit where you aim", kept
+// through the 2026-07-24 rebalance (independent auto-aims were overpowered).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { defaultMeta, newRun } from '../src/core/state.js';
@@ -40,58 +40,64 @@ function angErr(G, b, x, y) {
   return Math.min(d, 2 * Math.PI - d);
 }
 
-test('the aimed bolt flies exactly along the aim line at every level', () => {
+const onLine = (G, shots, x, y) => shots.filter(b => angErr(G, b, x, y) < 1e-9);
+// fan membership: exactly on the line to (x,y) or within the ±0.11 flank spread
+const inFan = (G, shots, x, y) => shots.filter(b => angErr(G, b, x, y) < 0.111);
+
+test('volley sizes across the ladder: 1 / 1+1 / 2+2 / 3+3', () => {
+  const expect = { 1: 1, 2: 1, 3: 2, 4: 2, 5: 4, 6: 6 };
+  for (const [l, n] of Object.entries(expect)) {
+    const G = makeG(Number(l));
+    spawnEnemy(G, 'grunt', null, 650, 300);
+    G.aim = { x: 200, y: 120 };
+    const shots = fireOnce(G);
+    assert.equal(shots.length, n, `L${l}: wrong volley size`);
+  }
+});
+
+test('every fan is center-true: exactly one bolt on each target line', () => {
   for (const l of [1, 3, 5, 6]) {
     const G = makeG(l);
     spawnEnemy(G, 'grunt', null, 650, 300);
-    spawnEnemy(G, 'grunt', null, 400, 100);
-    spawnEnemy(G, 'grunt', null, 150, 450);
-    spawnEnemy(G, 'grunt', null, 650, 500);
-    G.aim = { x: 200, y: 120 }; // deliberately NOT at any enemy
+    G.aim = { x: 200, y: 120 }; // deliberately NOT at the enemy
     const shots = fireOnce(G);
-    assert.ok(shots.length >= 1, `L${l}: no bolts fired`);
-    const onAim = shots.filter(b => angErr(G, b, 200, 120) < 1e-9);
-    assert.equal(onAim.length, 1,
-      `L${l}: expected exactly 1 bolt on the aim line, got ${onAim.length} of ${shots.length}`);
-  }
-});
-
-test('auto bolts: +1 at L3, +2 at L5, +4 at L6, each at a distinct nearest shape', () => {
-  const expect = { 1: 0, 2: 0, 3: 1, 4: 1, 5: 2, 6: 4 };
-  for (const [l, autos] of Object.entries(expect)) {
-    const G = makeG(Number(l));
-    const spots = [[650, 300], [400, 100], [150, 450], [650, 500], [100, 100]];
-    for (const [x, y] of spots) spawnEnemy(G, 'grunt', null, x, y);
-    G.aim = { x: 200, y: 120 };
-    const shots = fireOnce(G);
-    assert.equal(shots.length, 1 + autos, `L${l}: wrong volley size`);
-    // every auto bolt points at a distinct enemy position
-    const auto = shots.filter(b => angErr(G, b, 200, 120) >= 1e-9);
-    const claimed = new Set();
-    for (const b of auto) {
-      const hit = spots.findIndex(([x, y]) => angErr(G, b, x, y) < 1e-9);
-      assert.ok(hit >= 0, `L${l}: auto bolt aimed at no enemy`);
-      assert.ok(!claimed.has(hit), `L${l}: two auto bolts share a target`);
-      claimed.add(hit);
+    assert.equal(onLine(G, shots, 200, 120).length, 1,
+      `L${l}: expected exactly 1 bolt on the aim line`);
+    if (l >= 3) {
+      assert.equal(onLine(G, shots, 650, 300).length, 1,
+        `L${l}: expected exactly 1 bolt on the auto-target line`);
     }
+    // no strays: every bolt belongs to one of the two fans
+    const strays = shots.filter(b =>
+      angErr(G, b, 200, 120) >= 0.111 && angErr(G, b, 650, 300) >= 0.111);
+    assert.equal(strays.length, 0, `L${l}: bolts outside both fans`);
   }
 });
 
-test('auto bolts ignore shapes outside the arena walls', () => {
+test('at L6 the streams split 3+3 between aim and auto target', () => {
+  const G = makeG(6);
+  spawnEnemy(G, 'grunt', null, 400, 80); // straight up from center
+  G.aim = { x: 200, y: 500 };            // down-left — fans well separated
+  const shots = fireOnce(G);
+  assert.equal(inFan(G, shots, 200, 500).length, 3, 'manual fan size');
+  assert.equal(inFan(G, shots, 400, 80).length, 3, 'auto fan size');
+});
+
+test('auto stream ignores shapes outside the arena walls', () => {
   const G = makeG(3);
   spawnEnemy(G, 'grunt', null, -40, 300);  // outside — nearest, but unhittable
   spawnEnemy(G, 'grunt', null, 650, 300);  // inside
   G.aim = { x: 200, y: 120 };
   const shots = fireOnce(G);
-  const auto = shots.filter(b => angErr(G, b, 200, 120) >= 1e-9);
-  assert.equal(auto.length, 1);
-  assert.ok(angErr(G, auto[0], 650, 300) < 1e-9, 'auto bolt chased an out-of-bounds shape');
+  assert.equal(onLine(G, shots, 650, 300).length, 1, 'auto fan skipped the in-bounds shape');
+  assert.equal(onLine(G, shots, -40, 300).length, 0, 'auto fan chased an out-of-bounds shape');
 });
 
-test('scarce targets shrink the volley — the aimed bolt still fires', () => {
+test('no in-bounds target: the auto stream holds fire, the manual stream fires', () => {
   const G = makeG(6);
-  spawnEnemy(G, 'grunt', null, 650, 300); // one target, would-be 4 autos
+  spawnEnemy(G, 'grunt', null, -40, 300); // only an out-of-bounds shape alive
   G.aim = { x: 200, y: 120 };
   const shots = fireOnce(G);
-  assert.equal(shots.length, 2, 'expected 1 aimed + 1 auto with a single live target');
+  assert.equal(shots.length, 3, 'expected the 3-bolt manual fan alone');
+  assert.equal(onLine(G, shots, 200, 120).length, 1);
 });

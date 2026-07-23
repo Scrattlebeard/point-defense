@@ -28,15 +28,19 @@ const lvl = (S, id) => S.weapons[id];
 const stats = (S, id) => WEAPONS[id].stats(S.weapons[id]);
 
 // ---------- bolt (aim-driven; fired by updateWeapons, never by input) ----------
-// One bolt EXACTLY on the aim line + st.auto bolts at nearest distinct in-bounds
-// shapes — aim fidelity is the weapon's identity (core.md bolt row, 2026-07-23).
-function fireBolt(G, tx, ty, st) {
-  const a = Math.atan2(ty - G.cy, tx - G.cx);
-  G.S.bullets.push({
-    // life is a safety net only — the arena wall is the real range (app.md)
-    x: G.cx, y: G.cy, vx: Math.cos(a) * 540, vy: Math.sin(a) * 540,
-    dmg: st.dmg, pierce: st.pierce, r: 3.5, life: 6, color: '#9ff3ff', hit: new Set(),
-  });
+// Center-true fan: one bolt EXACTLY on the target line + flanks at ±0.11 —
+// aim fidelity is the weapon's identity (core.md bolt row, 2026-07-24).
+const FAN_OFFSETS = [[0], [0, 0.11], [0, 0.11, -0.11]];
+function fireFan(G, tx, ty, st) {
+  const base = Math.atan2(ty - G.cy, tx - G.cx);
+  for (const off of FAN_OFFSETS[st.volley - 1]) {
+    const a = base + off;
+    G.S.bullets.push({
+      // life is a safety net only — the arena wall is the real range (app.md)
+      x: G.cx, y: G.cy, vx: Math.cos(a) * 540, vy: Math.sin(a) * 540,
+      dmg: st.dmg, pierce: st.pierce, r: 3.5, life: 6, color: '#9ff3ff', hit: new Set(),
+    });
+  }
 }
 
 // ---------- manual: force wall (swipe) ----------
@@ -109,9 +113,9 @@ export function updateWeapons(G, dt) {
     wt.boltT -= dt;
     if (wt.boltT <= 0) {
       if (S.enemies.some(e => !e.dead)) {
-        if (G.aim) fireBolt(G, G.aim.x, G.aim.y, st);
+        if (G.aim) fireFan(G, G.aim.x, G.aim.y, st);
         for (const e of nearestEnemies(S, G.cx, G.cy, st.auto, { W: G.W, H: G.H })) {
-          fireBolt(G, e.x, e.y, st);
+          fireFan(G, e.x, e.y, st);
         }
         sfx('shoot');
         wt.boltT = st.cd * S.cdMult;

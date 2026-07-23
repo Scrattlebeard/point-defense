@@ -36,9 +36,10 @@ simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not un
 - **Performance guards:** particle and damage-number pools are capped; enemy count is
   soft-capped (~240) by pausing the spawn queue, never by dropping queued spawns.
 - **Aim feedback:** a single faint dashed aim line from the Point toward the aim
-  point, plus a small reticle. One line because the aimed bolt is always exactly one
-  bolt on that line (core.md bolt row); auto-aimed extras pick their own targets and
-  drawing their lines would be noise pretending to be information.
+  point, plus a small reticle. One line because fans are center-true (core.md bolt
+  row) — exactly one bolt flies the line you see; flank bolts are bonuses and the
+  auto stream picks its own targets, so drawing their lines would be noise
+  pretending to be information.
 - **The play area is walled** (2026-07-23): player projectiles die against the
   viewport boundary with a force-field *flare* — a streak of light along the unseen
   wall — instead of silently vanishing; the beam clips at the boundary and blooms

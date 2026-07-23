@@ -238,7 +238,7 @@ function loadoutHTML(S) {
 function statLine(id, l) {
   const st = WEAPONS[id].stats(l);
   switch (id) {
-    case 'bolt':   return `DMG ${st.dmg}${st.auto ? ` +${st.auto} auto` : ''}${st.pierce ? ' · pierce' : ''} · ${st.cd.toFixed(2)}s`;
+    case 'bolt':   return `DMG ${st.dmg} · ${st.volley * (1 + st.auto)} bolt${st.volley * (1 + st.auto) > 1 ? 's' : ''}${st.auto ? ' (2 streams)' : ''}${st.pierce ? ' · pierce' : ''} · ${st.cd.toFixed(2)}s`;
     case 'wall':   return `HP ${st.hp} · DMG ${st.dmg} · LEN ${st.len}${st.maxWalls > 1 ? ' · ×2' : ''}`;
     case 'beam':   return `DPS ${st.dps}${st.alwaysOn ? ' · always on' : ''}`;
     case 'orbit':  return `${st.n} blade${st.n > 1 ? 's' : ''} · DMG ${st.dmg}`;

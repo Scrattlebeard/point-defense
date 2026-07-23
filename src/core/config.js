@@ -45,9 +45,10 @@ export const VARIANTS = {
 export const WEAPONS = {
   bolt: {
     name: 'Bolt', kind: 'manual', gesture: 'aim', max: 6, tag: 'AIM',
-    descs: ['Auto-fires toward your aim', '+damage', 'A second bolt picks its own target', 'Bolts pierce one extra shape', 'A third bolt joins the hunt', 'MAX: five bolts — the pack hunts'],
-    // aimed bolt is always exactly 1; `auto` extras self-target (core.md bolt row)
-    stats: l => ({ dmg: 9 + 4 * l, auto: [0, 0, 0, 1, 1, 2, 4][l], pierce: l >= 4 ? 1 : 0, cd: 0.34 - 0.02 * l }),
+    descs: ['Auto-fires toward your aim', '+damage', 'A second bolt picks its own target', 'Bolts pierce one extra shape', 'Both bolts fire twin fans', 'MAX: triple fans'],
+    // two streams (manual + auto), each firing a center-true fan of `volley`
+    // bolts (core.md bolt row, 2026-07-24)
+    stats: l => ({ dmg: 9 + 4 * l, volley: l >= 6 ? 3 : l >= 5 ? 2 : 1, auto: l >= 3 ? 1 : 0, pierce: l >= 4 ? 1 : 0, cd: 0.34 - 0.02 * l }),
   },
   wall: {
     name: 'Force Wall', kind: 'manual', gesture: 'swipe', max: 5, tag: 'SWIPE',
@@ -64,13 +65,14 @@ export const WEAPONS = {
   },
   orbit: {
     name: 'Orbitals', kind: 'auto', max: 5, tag: 'AUTO',
-    descs: ['A blade circles the Point, grinding shapes it touches', '+1 blade', '+damage & radius', '+1 blade', 'MAX: 5 blades'],
-    stats: l => ({ n: [0, 1, 2, 2, 3, 5][l], dmg: 10 + 6 * l, radius: 64 + 8 * l, speed: 2.3 + 0.18 * l }),
+    descs: ['Two blades circle the Point, grinding shapes they touch', '+1 blade', '+damage & radius', '+1 blade', 'MAX: 5 blades'],
+    stats: l => ({ n: [0, 2, 3, 3, 4, 5][l], dmg: 10 + 6 * l, radius: 64 + 8 * l, speed: 2.3 + 0.18 * l }),
   },
   nova: {
     name: 'Nova', kind: 'auto', max: 5, tag: 'AUTO',
     descs: ['The Point pulses a damaging ring', '+damage', 'Faster pulse', '+range & damage', 'MAX: fast and huge'],
-    stats: l => ({ dmg: 16 + 8 * l, cd: Math.max(1.7, 5.0 - 0.6 * l), radius: 120 + 26 * l }),
+    // radius re-sloped 2026-07-24: bigger first pulse, same max (core.md nova row)
+    stats: l => ({ dmg: 16 + 8 * l, cd: Math.max(1.7, 5.0 - 0.6 * l), radius: 160 + 18 * l }),
   },
   frost: {
     name: 'Frost Aura', kind: 'auto', max: 5, tag: 'AUTO',
