@@ -1,0 +1,38 @@
+<!-- @dsCard group="Style" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Palette — Point Defense</title>
+<link rel="stylesheet" href="../../../styles.css">
+<style>
+  body { padding: 24px; }
+  h3 { font-size: 12px; letter-spacing: 0.18em; color: var(--dim); font-weight: 600;
+       border-bottom: 1px solid var(--panel-edge); padding-bottom: 3px; margin: 14px 0 8px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .sw { width: 108px; background: var(--panel); border: 1px solid var(--panel-edge);
+        border-radius: 10px; padding: 6px; }
+  .sw i { display: block; height: 34px; border-radius: 6px; }
+  .sw b { display: block; font-size: 10.5px; font-weight: 600; margin-top: 5px; letter-spacing: 0.04em; }
+  .sw span { font-size: 10px; color: var(--dim); font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<h3>CHROME</h3><div class="row" data-tokens="bg panel panel-edge ink dim accent accent-warm danger shard gold auto"></div>
+<h3>ENEMY SPECIES — HUE = SPECIES</h3><div class="row" data-tokens="enemy-grunt enemy-dart enemy-tank enemy-splitter enemy-elite enemy-boss"></div>
+<h3>VARIANT HIGHLIGHTS</h3><div class="row" data-tokens="variant-swift variant-armored variant-regen variant-shielded variant-volatile"></div>
+<h3>TOWERS</h3><div class="row" data-tokens="tower-bastion tower-tempest tower-warden tower-lance"></div>
+<script>
+  const cs = getComputedStyle(document.documentElement);
+  for (const row of document.querySelectorAll('.row')) {
+    for (const name of row.dataset.tokens.split(' ')) {
+      const v = cs.getPropertyValue('--' + name).trim();
+      const d = document.createElement('div');
+      d.className = 'sw';
+      d.innerHTML = `<i style="background:${v}"></i><b>--${name}</b><span>${v}</span>`;
+      row.appendChild(d);
+    }
+  }
+</script>
+</body>
+</html>

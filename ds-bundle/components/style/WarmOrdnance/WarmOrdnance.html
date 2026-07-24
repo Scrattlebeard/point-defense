@@ -1,0 +1,65 @@
+<!-- @dsCard group="Style" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Warm Ordnance — Point Defense</title>
+<link rel="stylesheet" href="../../../styles.css">
+<style>
+  body { padding: 24px; }
+  canvas { width: 560px; max-width: 100%; border: 1px solid var(--panel-edge); border-radius: 12px; }
+</style>
+</head>
+<body>
+<div class="tagline" style="margin-bottom:10px">The warm family: area danger. Mortar telegraph, burning ground, meteor charge. Rings stay reserved — these are outlines, patches and previews.</div>
+<canvas id="c" width="1120" height="480"></canvas>
+<script>
+  const cs = getComputedStyle(document.documentElement);
+  const warm = cs.getPropertyValue('--accent-warm').trim();
+  const ctx = document.getElementById('c').getContext('2d');
+  ctx.scale(2, 2);
+  ctx.strokeStyle = 'rgba(77,232,255,0.06)'; ctx.lineWidth = 1;
+  for (let x = 0; x <= 560; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 240); ctx.stroke(); }
+  for (let y = 0; y <= 240; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(560, y); ctx.stroke(); }
+  const label = (x, y, t) => { ctx.fillStyle = 'rgba(139,151,176,0.9)'; ctx.font = '600 10px system-ui'; ctx.textAlign = 'center'; ctx.fillText(t, x, y); };
+
+  // 1 — mortar telegraph: shadow dot + growing blast-radius outline, warm gold
+  ctx.strokeStyle = warm; ctx.globalAlpha = 0.7; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(100, 110, 34, 0, Math.PI * 2); ctx.stroke();
+  ctx.globalAlpha = 1; ctx.fillStyle = warm;
+  ctx.beginPath(); ctx.arc(100, 110, 4, 0, Math.PI * 2); ctx.fill();
+  // the lofted shell above it
+  ctx.beginPath(); ctx.arc(112, 62, 5, 0, Math.PI * 2); ctx.fill();
+  label(100, 165, 'MORTAR TELEGRAPH');
+
+  // 2 — burning ground: soft warm patch guttering out + flame licks
+  const px = 280, py = 110;
+  const g = ctx.createRadialGradient(px, py, 4, px, py, 42);
+  g.addColorStop(0, 'rgba(255,134,48,0.5)');
+  g.addColorStop(0.7, 'rgba(255,184,77,0.22)');
+  g.addColorStop(1, 'rgba(255,184,77,0)');
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(px, py, 42, 0, Math.PI * 2); ctx.fill();
+  for (const [dx, h] of [[-18, 12], [-2, 17], [13, 10]]) {
+    ctx.strokeStyle = 'rgba(255,211,77,0.85)'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(px + dx, py + 8);
+    ctx.quadraticCurveTo(px + dx + 4, py - h / 2, px + dx - 2, py - h);
+    ctx.stroke();
+  }
+  ctx.lineCap = 'butt';
+  label(280, 175, 'BURNING GROUND');
+
+  // 3 — meteor charge: growing dashed warm circle — the meter IS the blast preview
+  ctx.strokeStyle = warm; ctx.lineWidth = 2.5; ctx.setLineDash([7, 6]);
+  ctx.globalAlpha = 0.9;
+  ctx.beginPath(); ctx.arc(455, 110, 48, 0, Math.PI * 2); ctx.stroke();
+  ctx.setLineDash([]); ctx.globalAlpha = 1;
+  const mg = ctx.createRadialGradient(455, 110, 2, 455, 110, 20);
+  mg.addColorStop(0, 'rgba(255,243,208,0.9)');
+  mg.addColorStop(1, 'rgba(255,184,77,0)');
+  ctx.fillStyle = mg;
+  ctx.beginPath(); ctx.arc(455, 110, 20, 0, Math.PI * 2); ctx.fill();
+  label(455, 180, 'METEOR CHARGE = BLAST PREVIEW');
+</script>
+</body>
+</html>

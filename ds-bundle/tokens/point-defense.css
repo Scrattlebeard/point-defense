@@ -1,0 +1,45 @@
+/* Point Defense — design tokens.
+   Source of truth: the game repo's styles.css (:root) + src/core/config.js
+   (enemy/variant/tower palettes) + src/app/app.md (register grammar).
+   Single theme: dark neon arcade. There is no light mode. */
+:root {
+  /* ---- Chrome (UI surface) ---- */
+  --bg: #0a0d15;            /* the void the arena floats in */
+  --panel: #111726;         /* card/panel surface */
+  --panel-edge: #24314f;    /* 1px borders everywhere */
+  --ink: #dfe7f7;           /* primary text */
+  --dim: #8b97b0;           /* secondary text, labels */
+  --accent: #4de8ff;        /* player cyan — fire, xp, focus rings */
+  --accent-warm: #ffb84d;   /* warm register — ordnance, warnings, NEW marks */
+  --danger: #ff5c6c;        /* damage, death, destructive actions */
+  --shard: #c06bff;         /* currency. Shards are always this purple */
+  --gold: #ffd24d;          /* input & achievement register — reticle, toasts */
+  --auto: #59ff9c;          /* AUTO chip / MAX level green */
+
+  /* ---- Enemy species (hue = species; enemies are wireframe, never filled) ---- */
+  --enemy-grunt: #ff5c6c;    /* circle */
+  --enemy-dart: #ffb84d;     /* triangle */
+  --enemy-tank: #c06bff;     /* square */
+  --enemy-splitter: #59ff9c; /* pentagon */
+  --enemy-elite: #59d5ff;    /* hexagon */
+  --enemy-boss: #ff3df0;     /* nonagon */
+
+  /* ---- Variant highlights (highlight grammar layered over species hue) ---- */
+  --variant-swift: #ffffff;    /* glow */
+  --variant-armored: #b8c4d4;  /* second outline */
+  --variant-regen: #4dff88;    /* pulsing plus */
+  --variant-shielded: #7fd8ff; /* orbiting arcs */
+  --variant-volatile: #ff8630; /* filled core — the only fill an enemy gets */
+
+  /* ---- Towers ---- */
+  --tower-bastion: #4de8ff;
+  --tower-tempest: #c06bff;
+  --tower-warden: #ffb84d;
+  --tower-lance: #ff5c6c;
+
+  /* ---- Type ---- */
+  --font-ui: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --tracking-title: 0.14em;  /* display titles */
+  --tracking-label: 0.12em;  /* chips, section heads, buttons */
+  --tracking-body: 0.05em;   /* running text keeps a little air */
+}

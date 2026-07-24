@@ -1,0 +1,87 @@
+<!-- @dsCard group="Style" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Allegiance &amp; Fire — Point Defense</title>
+<link rel="stylesheet" href="../../../styles.css">
+<style>
+  body { padding: 24px; }
+  canvas { width: 560px; max-width: 100%; border: 1px solid var(--panel-edge); border-radius: 12px; }
+</style>
+</head>
+<body>
+<div class="tagline" style="margin-bottom:10px">Solid fill = the player's. Wireframe = threat. Cyan = fire. Gold = input.</div>
+<canvas id="c" width="1120" height="520"></canvas>
+<script>
+  const cs = getComputedStyle(document.documentElement);
+  const tok = n => cs.getPropertyValue('--' + n).trim();
+  const accent = tok('accent'), gold = tok('gold');
+  const ctx = document.getElementById('c').getContext('2d');
+  ctx.scale(2, 2);
+  // faint field grid
+  ctx.strokeStyle = 'rgba(77,232,255,0.06)'; ctx.lineWidth = 1;
+  for (let x = 0; x <= 560; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 260); ctx.stroke(); }
+  for (let y = 0; y <= 260; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(560, y); ctx.stroke(); }
+  const tx = 120, ty = 135;
+  // beam: layered glow — outer haze / mid sheath / white core
+  const bx = 380, by = 95;
+  for (const [w, c] of [[16, 'rgba(77,232,255,0.18)'], [7, 'rgba(77,232,255,0.6)'], [2.5, '#ffffff']]) {
+    ctx.lineWidth = w; ctx.strokeStyle = c;
+    ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(bx, by); ctx.stroke();
+  }
+  // the tower: solid player fill, hex hull + core dot
+  ctx.fillStyle = accent; ctx.shadowColor = accent; ctx.shadowBlur = 16;
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const a = -Math.PI / 2 + (i / 6) * Math.PI * 2;
+    i ? ctx.lineTo(tx + 22 * Math.cos(a), ty + 22 * Math.sin(a))
+      : ctx.moveTo(tx + 22 * Math.cos(a), ty + 22 * Math.sin(a));
+  }
+  ctx.closePath(); ctx.fill();
+  ctx.shadowBlur = 0; ctx.fillStyle = '#e8fbff';
+  ctx.beginPath(); ctx.arc(tx, ty, 5, 0, Math.PI * 2); ctx.fill();
+  // bullets: small solid cyan dots along a firing line
+  ctx.fillStyle = accent;
+  for (const [x, y, r] of [[210, 180, 3.5], [270, 195, 3.5], [330, 210, 5.5]]) {
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+  }
+  // boomerang: solid cyan crossed crescents + motion arc
+  ctx.strokeStyle = 'rgba(77,232,255,0.25)'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(300, 60, 60, 2.4, 3.1); ctx.stroke();
+  ctx.strokeStyle = accent; ctx.lineWidth = 4; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.arc(245, 55, 11, 0.4, 2.6); ctx.stroke();
+  ctx.beginPath(); ctx.arc(245, 55, 11, Math.PI + 0.4, Math.PI + 2.6); ctx.stroke();
+  ctx.lineCap = 'butt';
+  // threats: wireframe only (grunt + dart + tank), each in its species hue
+  const foes = [[tok('enemy-grunt'), 0, 470, 80, 14], [tok('enemy-dart'), 3, 500, 160, 12], [tok('enemy-tank'), 4, 440, 220, 16]];
+  for (const [c, sides, x, y, r] of foes) {
+    ctx.strokeStyle = c; ctx.shadowColor = c; ctx.shadowBlur = 9; ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    if (!sides) ctx.arc(x, y, r, 0, Math.PI * 2);
+    else {
+      // squares sit flat (vertex-up reads as the mine diamond register)
+      const rot = -Math.PI / 2 + (sides === 4 ? Math.PI / 4 : 0);
+      for (let i = 0; i < sides; i++) {
+        const a = rot + (i / sides) * Math.PI * 2;
+        i ? ctx.lineTo(x + r * Math.cos(a), y + r * Math.sin(a))
+          : ctx.moveTo(x + r * Math.cos(a), y + r * Math.sin(a));
+      }
+      ctx.closePath();
+    }
+    ctx.stroke();
+  }
+  ctx.shadowBlur = 0;
+  // gold reticle with dark casing — the input register (never cyan)
+  const rx = 380, ry = 95;
+  ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(5,8,14,0.9)';
+  for (const [dx1, dy1, dx2, dy2] of [[-14, 0, -5, 0], [5, 0, 14, 0], [0, -14, 0, -5], [0, 5, 0, 14]]) {
+    ctx.beginPath(); ctx.moveTo(rx + dx1, ry + dy1); ctx.lineTo(rx + dx2, ry + dy2); ctx.stroke();
+  }
+  ctx.lineWidth = 2.5; ctx.strokeStyle = gold;
+  for (const [dx1, dy1, dx2, dy2] of [[-13, 0, -5, 0], [5, 0, 13, 0], [0, -13, 0, -5], [0, 5, 0, 13]]) {
+    ctx.beginPath(); ctx.moveTo(rx + dx1, ry + dy1); ctx.lineTo(rx + dx2, ry + dy2); ctx.stroke();
+  }
+</script>
+</body>
+</html>

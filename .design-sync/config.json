@@ -1,0 +1,5 @@
+{
+  "projectId": "748badd5-66ca-467a-9dbc-655a71ef8703",
+  "shape": "off-script",
+  "note": "Style-layer-only sync: no components to bundle (canvas game). Layout hand-authored in ds-bundle/ from src/app/app.md registers + styles.css + config.js palette. See .design-sync/NOTES.md."
+}

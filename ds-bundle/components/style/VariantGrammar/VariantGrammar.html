@@ -1,0 +1,70 @@
+<!-- @dsCard group="Style" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Variant Grammar — Point Defense</title>
+<link rel="stylesheet" href="../../../styles.css">
+<style>
+  body { padding: 24px; }
+  .grid { display: flex; flex-wrap: wrap; gap: 10px; }
+  .bcard canvas { width: 56px; height: 56px; }
+</style>
+</head>
+<body>
+<div class="tagline" style="margin-bottom:12px">Hue = species. Highlight = variant. The modifier never recolors the shape.</div>
+<div class="grid" id="grid"></div>
+<script>
+  // The five highlights from src/core/config.js VARIANTS, drawn over one species
+  // (hexagon elite) to show the layering: glow / outline / plus / shield / core.
+  const cs = getComputedStyle(document.documentElement);
+  const tok = n => cs.getPropertyValue('--' + n).trim();
+  const base = tok('enemy-elite');
+  const V = [
+    { t: 'variant-swift',    hl: 'glow',    name: 'Swift',    desc: 'white-hot glow' },
+    { t: 'variant-armored',  hl: 'outline', name: 'Armored',  desc: 'second outline' },
+    { t: 'variant-regen',    hl: 'plus',    name: 'Regen',    desc: 'pulsing plus' },
+    { t: 'variant-shielded', hl: 'shield',  name: 'Shielded', desc: 'orbiting arcs' },
+    { t: 'variant-volatile', hl: 'core',    name: 'Volatile', desc: 'filled core — the part that explodes' },
+  ];
+  function hex(ctx, x, y, r) {
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const a = -Math.PI / 2 + (i / 6) * Math.PI * 2;
+      i ? ctx.lineTo(x + r * Math.cos(a), y + r * Math.sin(a))
+        : ctx.moveTo(x + r * Math.cos(a), y + r * Math.sin(a));
+    }
+    ctx.closePath();
+  }
+  for (const v of V) {
+    const c = tok(v.t);
+    const card = document.createElement('div');
+    card.className = 'bcard';
+    card.innerHTML = `<div class="bhead"><canvas width="112" height="112"></canvas></div>
+      <div class="bname">${v.name}</div><div class="blore">${v.desc}</div>`;
+    document.getElementById('grid').appendChild(card);
+    const ctx = card.querySelector('canvas').getContext('2d');
+    ctx.scale(2, 2);
+    const x = 28, y = 28, r = 16;
+    if (v.hl === 'glow') { ctx.shadowColor = c; ctx.shadowBlur = 14; }
+    ctx.lineWidth = 2.5; ctx.strokeStyle = base;
+    hex(ctx, x, y, r); ctx.stroke();
+    ctx.shadowBlur = 0; ctx.strokeStyle = c;
+    if (v.hl === 'outline') { ctx.lineWidth = 3; hex(ctx, x, y, r + 4.5); ctx.stroke(); }
+    if (v.hl === 'plus') {
+      ctx.lineWidth = 2.5; ctx.beginPath();
+      ctx.moveTo(x - 7, y); ctx.lineTo(x + 7, y);
+      ctx.moveTo(x, y - 7); ctx.lineTo(x, y + 7); ctx.stroke();
+    }
+    if (v.hl === 'shield') {
+      ctx.lineWidth = 2.5;
+      for (let s = 0; s < 3; s++) {
+        const a0 = (s / 3) * Math.PI * 2 - 0.4;
+        ctx.beginPath(); ctx.arc(x, y, r + 6, a0, a0 + Math.PI / 2.1); ctx.stroke();
+      }
+    }
+    if (v.hl === 'core') { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x, y, r * 0.42, 0, Math.PI * 2); ctx.fill(); }
+  }
+</script>
+</body>
+</html>

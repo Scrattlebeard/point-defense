@@ -1,0 +1,54 @@
+<!-- @dsCard group="Style" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Enemy Roster — Point Defense</title>
+<link rel="stylesheet" href="../../../styles.css">
+<style>
+  body { padding: 24px; }
+  .grid { display: flex; flex-wrap: wrap; gap: 10px; }
+  .bcard canvas { width: 56px; height: 56px; }
+</style>
+</head>
+<body>
+<div class="grid" id="grid"></div>
+<script>
+  // Species roster mirrors src/core/config.js ENEMIES; wireframe law: stroke, never fill.
+  const cs = getComputedStyle(document.documentElement);
+  const tok = n => cs.getPropertyValue('--' + n).trim();
+  const ROSTER = [
+    { t: 'enemy-grunt',    sides: 0, name: 'Circle Grunt',      lore: 'A circle with commitment issues — it commits to exactly one direction.' },
+    { t: 'enemy-dart',     sides: 3, name: 'Triangle Dart',     lore: 'An acute problem. Arrives fast, leaves faster.' },
+    { t: 'enemy-tank',     sides: 4, name: 'Square Tank',       lore: 'Four right angles, zero right of way.' },
+    { t: 'enemy-splitter', sides: 5, name: 'Pentagon Splitter', lore: 'The whole is worse than the sum of its parts.' },
+    { t: 'enemy-elite',    sides: 6, name: 'Hexagon Elite',     lore: 'Six sides, all of them rude.' },
+    { t: 'enemy-boss',     sides: 9, name: 'Nonagon Boss',      lore: 'Nonagon nobility. They have names.' },
+  ];
+  function poly(ctx, x, y, r, sides, rot) {
+    ctx.beginPath();
+    if (!sides) { ctx.arc(x, y, r, 0, Math.PI * 2); return; }
+    for (let i = 0; i < sides; i++) {
+      const a = rot + (i / sides) * Math.PI * 2;
+      i ? ctx.lineTo(x + r * Math.cos(a), y + r * Math.sin(a))
+        : ctx.moveTo(x + r * Math.cos(a), y + r * Math.sin(a));
+    }
+    ctx.closePath();
+  }
+  for (const e of ROSTER) {
+    const color = tok(e.t);
+    const card = document.createElement('div');
+    card.className = 'bcard';
+    card.innerHTML = `<div class="bhead"><canvas width="112" height="112"></canvas></div>
+      <div class="bname">${e.name}</div><div class="blore">${e.lore}</div>`;
+    document.getElementById('grid').appendChild(card);
+    const ctx = card.querySelector('canvas').getContext('2d');
+    ctx.scale(2, 2); ctx.lineWidth = 2.5;
+    ctx.strokeStyle = color; ctx.shadowColor = color; ctx.shadowBlur = 10;
+    // squares sit flat (vertex-up reads as the mine diamond register)
+    poly(ctx, 28, 28, 19, e.sides, -Math.PI / 2 + (e.sides === 4 ? Math.PI / 4 : 0));
+    ctx.stroke(); // stroke only — fill belongs to the player (registers.md law 2)
+  }
+</script>
+</body>
+</html>
