@@ -41,6 +41,13 @@ export function announce(fx, str, color = '#9fd8ff', sub = '', icon = null) {
 export function shake(fx, amount) { fx.shake = Math.min(14, fx.shake + amount); }
 export function flash(fx, amount) { fx.flash = Math.min(0.5, fx.flash + amount); }
 
+/** Decay camera juice (shake, flash) only. Runs every frame — even with the sim
+ * paused behind an overlay — so a frozen field never keeps jittering (app.md). */
+export function settleFx(fx, dt) {
+  fx.shake = Math.max(0, fx.shake - 26 * dt);
+  fx.flash = Math.max(0, fx.flash - 1.1 * dt);
+}
+
 export function updateFx(fx, dt) {
   for (const p of fx.parts) {
     p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt;
@@ -51,6 +58,5 @@ export function updateFx(fx, dt) {
   fx.texts = fx.texts.filter(t => t.t < t.life);
   for (const f of fx.flares) f.t += dt;
   fx.flares = fx.flares.filter(f => f.t < f.life);
-  fx.shake = Math.max(0, fx.shake - 26 * dt);
-  fx.flash = Math.max(0, fx.flash - 1.1 * dt);
+  settleFx(fx, dt);
 }

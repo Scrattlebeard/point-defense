@@ -5,7 +5,7 @@ import { newRun, levelChoices, applyChoice, payout, defaultMeta, addScore, evalA
 import { buy } from '../core/tech.js';
 import { WEAPONS } from '../core/config.js';
 import { loadMeta, saveMeta } from './meta.js';
-import { makeFx, updateFx, announce } from './fx.js';
+import { makeFx, updateFx, settleFx, announce } from './fx.js';
 import { setMuted, sfx } from './audio.js';
 import { resetWeapons } from './weapons/index.js';
 import { nearestEnemy } from './enemies.js';
@@ -150,6 +150,10 @@ function loop(now) {
     ui.updateHUD(G);
     if (sig === 'over') finishRun();
     else if (sig === 'levelup') openLevelUp();
+  } else {
+    // Sim is frozen behind an overlay, but camera juice still settles —
+    // a paused field must not keep shaking (fx.js settleFx, app.md).
+    settleFx(G.fx, dt);
   }
   renderFrame(G);
   requestAnimationFrame(loop);
