@@ -237,12 +237,19 @@ Every tower taps bolt (pillar 1). Identity = stat profile + extra starting weapo
 
 ## The Lattice (`config.js: LATTICE`, logic in `tech.js`) — ADR-0003 stage 1
 
-The meta tech system is a **radial web centered on the Point**: 60+ nodes in seven
-sectors (**Hull, Arms, Mind, Salvage, Arsenal, Armory, Towers** — Armory added
-by ADR-0004 for the manual/aim weapon unlocks, so Arsenal keeps its auto-ordnance
-identity and its wedge stays readable) across five rings, ring =
-cost band (~15 / 40 / 100 / 250 / 600 — deep lattice is weeks of play). Rendered as
-an actual graph (app.md "Lattice view"), not columns. This is the deliberate
+The meta tech system is a **web**: 60+ nodes in seven sectors (**Hull, Arms,
+Mind, Salvage, Arsenal, Armory, Towers** — Armory added by ADR-0004 for the
+manual/aim weapon unlocks, so Arsenal keeps its auto-ordnance identity and its
+lane stays readable) across five rings, ring = cost band (~15 / 40 / 100 / 250
+/ 600 — deep lattice is weeks of play). Rendered as an actual graph (app.md
+"Lattice view", layout per ADR-0005), not columns. **The sector order is core
+data** (`config.js: SECTORS`, the order above): since ADR-0005 stacks sectors
+as bands, adjacency in that order is *semantic* — **a cross-sector requisite
+may only reference an adjacent sector** (within-sector chains are free). Why:
+a cross-link should read as a short hop across one shared border — edge lanes
+of a sector reaching into the neighbouring sector's near lane — not a cable
+hauled across the whole board; the rule is enforced by test, so new content
+can't quietly violate it. This is the deliberate
 **mega-lattice**: large and deep first, mostly stat nodes for now; parts migrate to
 diverged weapon-mastery and tower trees in ADR-0003 stages 2–3, and the interesting
 behavior-changers land there. What stage 1 must nail is layout, presentation, and a
@@ -269,7 +276,7 @@ schema version lands with stage 2's nested fields — recorded in ADR-0003).
 | Arms | Overcharge I/II/III (+8% dmg; 15/30/60, chained) · Precision (10% crit ×2; 50, req Overcharge II) · Haste I/II (−6% cooldowns; 40/80, req Overcharge I then chained) |
 | Mind | Quick Study I/II (+10% xp; 15/35, chained) · Head Start (start at level 2 with a free pick; 45, req Quick Study I) · Salvage I/II (+20% shards; 30/60, req Quick Study I then chained) |
 | Arsenal | Unlock Tesla (25) → Unlock Seekers (45) → Unlock Turrets (70) — chained; Mines → Caltrops (r2) → Catapult (r3, any-req with Mortar) → Cascade (r4) — the field-ordnance trunk (ADR-0004 wave C) |
-| Armory | Two entries: Scattergun (r1) → Repeater → Howitzer gun trunk + Boomerang branch; Force Blades (r1) → Flamethrower → Meteor close-quarters trunk → Siegecraft (r4 stats) → Master-at-Arms capstone (r5, any-req from either trunk); Ballistics cross-links to Arms |
+| Armory | Two entries: Scattergun (r1) → Repeater → Howitzer gun trunk + Boomerang branch; Force Blades (r1) → Flamethrower → Meteor close-quarters trunk → Siegecraft (r4 stats) → Master-at-Arms capstone (r5, any-req from either trunk); Ballistics cross-links to Arsenal (Munitions) |
 | Towers | Tempest (40) → Warden (75) → Lance (120) — chained |
 
 Tuning intent: a first run reaching wave 5–8 pays ~20–40◆ — enough for one node.

@@ -3,18 +3,19 @@
 // ring (cost tier), sectors as horizontal bands, right-angle elbow edges. Pure
 // view: all purchases go through the hooks object (onBuy), the same contract
 // ui.js uses. Pan/zoom state lives here and survives re-renders.
-import { LATTICE } from '../core/config.js';
+import { LATTICE, SECTORS } from '../core/config.js';
 import { canBuy, reqsMet } from '../core/tech.js';
 
 const NS = 'http://www.w3.org/2000/svg';
-// seven sectors since ADR-0004 (Armory: manual/aim weapon unlocks)
-const SECTOR_ORDER = ['Hull', 'Arms', 'Mind', 'Salvage', 'Arsenal', 'Armory', 'Towers'];
+// band order comes from core — it is semantic since the adjacent-lanes rule
+// (core.md "The Lattice"); the view only owns the colors
 const SECTOR_COLOR = {
   Hull: '#59ff9c', Arms: '#ff5c6c', Mind: '#c06bff',
   Salvage: '#ffd24d', Arsenal: '#4de8ff', Armory: '#ff7fb0', Towers: '#ff9c59',
 };
 const COL_W = 185; // one column per ring, left→right (ADR-0005)
 const PITCH = 58;  // vertical pitch between nodes inside a (sector, ring) cell
+const BOX_W = 110, BOX_H = 46; // square node cards (app.md)
 const VIEW = 1000; // viewBox half-extent × 2
 
 // ---- computed layout: ring column × sector band + even spread (app.md) ----
@@ -30,7 +31,7 @@ let Y0 = 0, Y1 = 0; // vertical extent of the band stack
     bySR.get(k).push(n);
   }
   // band height from the sector's most crowded cell — computed, never hand-tuned
-  for (const s of SECTOR_ORDER) {
+  for (const s of SECTORS) {
     let m = 1;
     for (const [k, v] of bySR) if (k.startsWith(s + ':')) m = Math.max(m, v.length);
     BANDS.push({ y: 0, half: ((m - 1) * PITCH) / 2 + 48 });
@@ -39,13 +40,25 @@ let Y0 = 0, Y1 = 0; // vertical extent of the band stack
   let y = -total / 2;
   Y0 = y; Y1 = total / 2;
   for (const b of BANDS) { b.y = y + b.half; y += 2 * b.half; }
+  // lane pull (app.md): a node with a cross-sector partner (either direction)
+  // sorts toward the band edge facing it — cross-links become facing-lane hops
+  const byId = new Map(LATTICE.map(n => [n.id, n]));
+  const pull = new Map(LATTICE.map(n => [n.id, 0]));
+  for (const n of LATTICE) {
+    for (const r of n.req) {
+      const q = byId.get(r);
+      const d = Math.sign(SECTORS.indexOf(q.sector) - SECTORS.indexOf(n.sector));
+      pull.set(n.id, pull.get(n.id) + d);
+      pull.set(q.id, pull.get(q.id) - d);
+    }
+  }
   for (const [k, nodes] of bySR) {
     const [sector, ring] = k.split(':');
-    const band = BANDS[SECTOR_ORDER.indexOf(sector)];
+    const band = BANDS[SECTORS.indexOf(sector)];
+    nodes.sort((a, b) => pull.get(a.id) - pull.get(b.id)); // stable: ties keep config order
     nodes.forEach((n, i) => {
       POS.set(n.id, {
-        // x-stagger in crowded cells keeps labels off the neighbor's dot
-        x: X0 + Number(ring) * COL_W + (nodes.length > 1 ? (i % 2 === 0 ? -20 : 20) : 0),
+        x: X0 + Number(ring) * COL_W,
         y: band.y + (i - (nodes.length - 1) / 2) * PITCH,
       });
     });
@@ -54,13 +67,47 @@ let Y0 = 0, Y1 = 0; // vertical extent of the band stack
 
 // Right-angle elbow (ADR-0005): cross-column edges run horizontal-first so the
 // vertical segment lives in the gutter between columns, never inside one.
+// Same-column edges run straight — unless a card sits between the endpoints,
+// in which case they dogleg through the right-hand gutter (app.md).
+function vBlocked(a, b) {
+  const lo = Math.min(a.y, b.y), hi = Math.max(a.y, b.y);
+  for (const p of POS.values()) {
+    if (p === a || p === b) continue;
+    if (Math.abs(p.x - a.x) < BOX_W / 2 && p.y > lo && p.y < hi) return true;
+  }
+  return false;
+}
+function hBlocked(y, xa, xb, a, b) {
+  const lo = Math.min(xa, xb) - BOX_W / 2, hi = Math.max(xa, xb) + BOX_W / 2;
+  for (const p of POS.values()) {
+    if (p === a || p === b) continue;
+    if (Math.abs(p.y - y) < BOX_H / 2 + 2 && p.x > lo && p.x < hi) return true;
+  }
+  return false;
+}
 function elbow(a, b) {
   if (Math.abs(b.x - a.x) < 50) {
+    if (vBlocked(a, b)) {
+      const gx = a.x + COL_W / 2 - 4; // right-hand gutter, offset off span-1 verticals
+      return `M${a.x},${a.y} L${gx},${a.y} L${gx},${b.y} L${b.x},${b.y}`;
+    }
     const my = (a.y + b.y) / 2;
     return `M${a.x},${a.y} L${a.x},${my} L${b.x},${my} L${b.x},${b.y}`;
   }
-  const mx = (a.x + b.x) / 2;
-  return `M${a.x},${a.y} L${mx},${a.y} L${mx},${b.y} L${b.x},${b.y}`;
+  // cross-column: vertical segment in a gutter — for multi-column hops the
+  // midpoint would land ON a column, so pick whichever gutter routes clean
+  const s = Math.sign(b.x - a.x);
+  const late = b.x - s * (COL_W / 2), early = a.x + s * (COL_W / 2);
+  if (!hBlocked(a.y, a.x, late, a, b) && !hBlocked(b.y, late, b.x, a, b)) {
+    return `M${a.x},${a.y} L${late},${a.y} L${late},${b.y} L${b.x},${b.y}`;
+  }
+  if (!hBlocked(a.y, a.x, early, a, b) && !hBlocked(b.y, early, b.x, a, b)) {
+    return `M${a.x},${a.y} L${early},${a.y} L${early},${b.y} L${b.x},${b.y}`;
+  }
+  // both lanes blocked — the flat multi-column hop with a card dead between:
+  // jog through the pitch gap between lane rows for the middle stretch
+  const jy = a.y + PITCH / 2;
+  return `M${a.x},${a.y} L${early},${a.y} L${early},${jy} L${late},${jy} L${late},${b.y} L${b.x},${b.y}`;
 }
 
 // ---- pan/zoom state (module-scoped: survives re-renders, resets per session) ----
@@ -119,7 +166,7 @@ export function renderLattice(G, hooks) {
   }
 
   // sector labels at the left rim of each band
-  SECTOR_ORDER.forEach((s, si) => {
+  SECTORS.forEach((s, si) => {
     const t = el('text', {
       x: X0 - 40, y: BANDS[si].y,
       class: 'latSector', fill: SECTOR_COLOR[s],
@@ -160,14 +207,34 @@ export function renderLattice(G, hooks) {
       class: `latNode ${state}`, transform: `translate(${p.x} ${p.y})`,
       'data-id': n.id, style: `--sec:${color}`,
     });
-    const r = n.ring >= 5 ? 21 : 16;
-    g.appendChild(el('circle', { r, class: 'latDot' }));
-    const label = el('text', { y: r + 13, class: 'latLabel', 'text-anchor': 'middle' });
-    label.textContent = n.name;
-    g.appendChild(label);
-    const cost = el('text', { y: 4, class: 'latCost', 'text-anchor': 'middle' });
-    cost.textContent = state === 'owned' ? '✓' : n.cost;
-    g.appendChild(cost);
+    // square card (app.md): name inside, split to two lines when long
+    g.appendChild(el('rect', {
+      x: -BOX_W / 2, y: -BOX_H / 2, width: BOX_W, height: BOX_H, rx: 8, class: 'latDot',
+    }));
+    const words = n.name.split(' ');
+    let lines = [n.name];
+    if (n.name.length > 12 && words.length > 1) {
+      let best = 1, diff = 1e9;
+      for (let i = 1; i < words.length; i++) {
+        const d = Math.abs(words.slice(0, i).join(' ').length - words.slice(i).join(' ').length);
+        if (d < diff) { diff = d; best = i; }
+      }
+      lines = [words.slice(0, best).join(' '), words.slice(best).join(' ')];
+    }
+    const name = el('text', {
+      y: lines.length > 1 ? -10 : -4, class: 'latName', 'text-anchor': 'middle',
+    });
+    lines.forEach((ln, i) => {
+      const ts = el('tspan', { x: 0, dy: i === 0 ? 0 : 11 });
+      ts.textContent = ln;
+      name.appendChild(ts);
+    });
+    g.appendChild(name);
+    const sub = el('text', {
+      y: lines.length > 1 ? 15 : 13, class: 'latSub', 'text-anchor': 'middle',
+    });
+    sub.textContent = state === 'owned' ? '✓' : `◆ ${n.cost}`;
+    g.appendChild(sub);
     if (n.id === selectedId) g.classList.add('selected');
     g.addEventListener('click', ev => {
       if (dragMoved) return;

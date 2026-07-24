@@ -2,7 +2,7 @@
 // effect aggregation. Structure is pinned; exact node content is tuning.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { LATTICE } from '../src/core/config.js';
+import { LATTICE, SECTORS as CONFIG_SECTORS } from '../src/core/config.js';
 import { canBuy, buy, effectsOf } from '../src/core/tech.js';
 
 // 'Armory' added by ADR-0004 (deliberate extension — sector list is pinned so
@@ -65,6 +65,22 @@ test('legacy node ids survive so old saves keep their purchases', () => {
 test('cross-links exist: at least 4 any-mode nodes weave the web', () => {
   const links = LATTICE.filter(n => n.reqMode === 'any' && n.req.length >= 2);
   assert.ok(links.length >= 4, `only ${links.length} cross-links`);
+});
+
+// core.md "The Lattice": band order is semantic since ADR-0005 — a cross-sector
+// requisite may only hop one shared border. The local SECTORS literal pins the
+// order itself: reordering bands changes which links are legal, so it must land
+// here as a reviewed diff, never as a quiet config edit.
+test('cross-sector requisites span only adjacent lanes (band order)', () => {
+  assert.deepEqual(CONFIG_SECTORS, SECTORS);
+  const by = new Map(LATTICE.map(n => [n.id, n]));
+  for (const n of LATTICE) {
+    for (const r of n.req) {
+      const q = by.get(r);
+      const span = Math.abs(SECTORS.indexOf(q.sector) - SECTORS.indexOf(n.sector));
+      assert.ok(span <= 1, `${q.sector}:${r} → ${n.sector}:${n.id} spans ${span} lanes`);
+    }
+  }
 });
 
 test('canBuy enforces shards, prereqs (all + any modes), non-ownership', () => {

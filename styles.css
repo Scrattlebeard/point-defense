@@ -229,16 +229,19 @@ button:active { transform: translateY(1px); }
 .latHub circle { opacity: 0.8; }
 .latNode { cursor: pointer; }
 .latNode .latDot {
-  fill: #0d1322; stroke: var(--sec); stroke-width: 2.5;
+  fill: #0d1322; stroke: var(--sec); stroke-width: 2;
   transition: opacity 0.15s;
 }
-.latNode .latLabel { fill: #93a3bd; font-size: 11px; letter-spacing: 0.03em; }
-.latNode .latCost { fill: var(--sec); font-size: 12px; font-weight: 700; }
+.latNode .latName {
+  fill: #dfe7f7; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.07em; text-transform: uppercase;
+}
+.latNode .latSub { fill: var(--shard); font-size: 10px; font-weight: 700; letter-spacing: 0.06em; }
 .latNode.owned .latDot { fill: var(--sec); }
-.latNode.owned .latCost { fill: #0a0d15; }
+.latNode.owned .latName, .latNode.owned .latSub { fill: #0a0d15; }
 .latNode.avail .latDot { animation: latPulse 1.6s ease-in-out infinite; }
 .latNode.poor .latDot { opacity: 0.6; }
-.latNode.poor .latLabel, .latNode.poor .latCost { opacity: 0.6; }
+.latNode.poor .latName, .latNode.poor .latSub { opacity: 0.6; }
 .latNode.locked { opacity: 0.32; }
 .latNode.selected .latDot { stroke-width: 4.5; filter: drop-shadow(0 0 6px var(--sec)); }
 @keyframes latPulse {

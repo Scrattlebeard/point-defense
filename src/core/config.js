@@ -226,6 +226,11 @@ export const TOWERS = {
 // Radial web: six sectors × five rings, ring = cost band (core.md "The Lattice").
 // Legacy ids preserved verbatim so pre-lattice saves keep purchases. reqMode:'any'
 // marks web cross-links. Structure pinned by test/tech.test.mjs; content = tuning.
+// Band order (top to bottom in the Lattice view) — SEMANTIC since ADR-0005:
+// cross-sector requisites may only reference an adjacent sector in this order
+// (core.md "The Lattice"; enforced by tech.test 'adjacent lanes').
+export const SECTORS = ['Hull', 'Arms', 'Mind', 'Salvage', 'Arsenal', 'Armory', 'Towers'];
+
 export const LATTICE = [
   // ---- Hull (survival) ----
   { id: 'vit1',       sector: 'Hull', ring: 1, name: 'Vitality I',    desc: '+20 max HP',       cost: 15,  req: [],           effect: { hpBonus: 20 } },
@@ -285,7 +290,7 @@ export const LATTICE = [
   { id: 'burst',      sector: 'Armory', ring: 2, name: 'Repeater',   desc: 'Adds the Repeater to the level-up pool',   cost: 55,  req: ['scatter'], effect: { unlockWeapon: 'burst' } },
   { id: 'heavy',      sector: 'Armory', ring: 3, name: 'Howitzer',   desc: 'Adds the Howitzer to the level-up pool',   cost: 110, req: ['burst'],   effect: { unlockWeapon: 'heavy' } },
   { id: 'boomer',     sector: 'Armory', ring: 2, name: 'Boomerang',  desc: 'Adds the Boomerang to the level-up pool',  cost: 60,  req: ['scatter'], effect: { unlockWeapon: 'boomer' } },
-  { id: 'ballistics', sector: 'Armory', ring: 3, name: 'Ballistics', desc: '+6% damage', cost: 100, req: ['burst', 'over2'], reqMode: 'any', effect: { dmgAdd: 0.06 } },
+  { id: 'ballistics', sector: 'Armory', ring: 3, name: 'Ballistics', desc: '+6% damage', cost: 100, req: ['burst', 'mun1'], reqMode: 'any', effect: { dmgAdd: 0.06 } },
   { id: 'blades',     sector: 'Armory', ring: 1, name: 'Force Blades',  desc: 'Adds Force Blades to the level-up pool',    cost: 35,  req: [],         effect: { unlockWeapon: 'blades' } },
   { id: 'flame',      sector: 'Armory', ring: 2, name: 'Flamethrower',  desc: 'Adds the Flamethrower to the level-up pool', cost: 65, req: ['blades'], effect: { unlockWeapon: 'flame' } },
   { id: 'meteor',     sector: 'Armory', ring: 3, name: 'Meteor',        desc: 'Adds the Meteor to the level-up pool',      cost: 120, req: ['flame'],  effect: { unlockWeapon: 'meteor' } },
@@ -299,10 +304,10 @@ export const LATTICE = [
   { id: 'keel2',      sector: 'Towers', ring: 4, name: 'Resonant Core',    desc: '+5% damage',  cost: 250, req: ['keel1'],    effect: { dmgAdd: 0.05 } },
   { id: 'towermaster', sector: 'Towers', ring: 5, name: 'Master of Points', desc: '+40 max HP & +5% damage', cost: 600, req: ['tower_lance', 'keel2'], effect: { hpBonus: 40, dmgAdd: 0.05 } },
   // ---- Cross-links (reqMode any — the web strands between sectors) ----
-  { id: 'fieldkit',   sector: 'Hull',    ring: 2, name: 'Field Kit',      desc: '+0.3 HP/s regen', cost: 40,  req: ['nano1', 'salv1'],          reqMode: 'any', effect: { regen: 0.3 } },
-  { id: 'warchest',   sector: 'Salvage', ring: 3, name: 'War Chest',      desc: '+8% damage',      cost: 100, req: ['over2', 'salv2'],          reqMode: 'any', effect: { dmgAdd: 0.08 } },
+  { id: 'fieldkit',   sector: 'Hull',    ring: 2, name: 'Field Kit',      desc: '+0.3 HP/s regen', cost: 40,  req: ['nano1', 'prec'],           reqMode: 'any', effect: { regen: 0.3 } },
+  { id: 'warchest',   sector: 'Salvage', ring: 3, name: 'War Chest',      desc: '+8% damage',      cost: 100, req: ['mortar', 'salv2'],         reqMode: 'any', effect: { dmgAdd: 0.08 } },
   { id: 'scholarsoldier', sector: 'Mind', ring: 3, name: 'Scholar-Soldier', desc: '+8% XP',        cost: 100, req: ['study2', 'over2'],         reqMode: 'any', effect: { xpAdd: 0.08 } },
-  { id: 'overseer',   sector: 'Towers',  ring: 3, name: 'Overseer',       desc: '−4% cooldowns',   cost: 100, req: ['head', 'tower_tempest'],   reqMode: 'any', effect: { cdAdd: -0.04 } },
+  { id: 'overseer',   sector: 'Towers',  ring: 3, name: 'Overseer',       desc: '−4% cooldowns',   cost: 100, req: ['ballistics', 'tower_tempest'], reqMode: 'any', effect: { cdAdd: -0.04 } },
   { id: 'quartermaster', sector: 'Salvage', ring: 4, name: 'Quartermaster', desc: '+15% shards',   cost: 250, req: ['salv3', 'mun1'],           reqMode: 'any', effect: { salvageAdd: 0.15 } },
-  { id: 'reinforcedgrid', sector: 'Hull', ring: 4, name: 'Reinforced Grid', desc: '+25 max HP',    cost: 250, req: ['vit3', 'keel1'],           reqMode: 'any', effect: { hpBonus: 25 } },
+  { id: 'reinforcedgrid', sector: 'Hull', ring: 4, name: 'Reinforced Grid', desc: '+25 max HP',    cost: 250, req: ['vit3', 'over3'],           reqMode: 'any', effect: { hpBonus: 25 } },
 ];
