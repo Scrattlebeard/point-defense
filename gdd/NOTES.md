@@ -83,3 +83,23 @@ anchor ids per concept, Laws index up top.
 - In-run powerup system deep-dive (Daniel flagged: "we should dive into this").
 - Draft randomness for veterans (asked, unanswered at time of writing).
 - Replayability bar; radial lattice pin; events design; tower archetype roster.
+
+## Addendum (same session, later)
+- **Priority semantics (TENTATIVE — "not thought through yet"):** deterministic slot
+  resolution. You don't control *when* a slot-type offer appears; when it does, it's
+  your prioritized weapon. The run says "not yet," never "no." Unlocked per slot type.
+- **RULE: no meta-acceleration.** Nothing purchasable speeds meta-progression (no
+  +shards, no mastery-exp boosters) — the power-vs-rewards tradeoff is not fun.
+  In-run xp mults stay legal. (Salvage income line outlawed — see PINS.md.)
+- **RULE: QoL is milestone-granted, never bought.** Auto-unlocks at total-investment
+  thresholds (third hold weapon → hold-priority). QoL never competes with power.
+- **The draft (wave-30 level-up, canonical narration exists):** time stops; 3 cards
+  (4th card / reroll = named maybes); ~10% heal per level-up (number tentative; note:
+  stretching xp curve → rarifying heals = built-in late-run doom clock).
+- **META'S ORGANIZING PRINCIPLE: the account authors the draft.** Lattice unlocks
+  inject card types into the in-run pool (crit cards exist only after the crit node);
+  mastery trees inject form cards; priority fixes slot identity; loadout sets starting
+  forms. Meta-progression's payout = richer future decks, not (only) bigger numbers.
+- **Form cards:** offered only when a weapon is max-level and the form is
+  mastery-unlocked; forms change *rhythm and texture*, not just stats
+  ("ratatatata-pause-ratatatata" — the mastery reward is audible).
