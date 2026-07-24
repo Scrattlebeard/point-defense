@@ -106,12 +106,16 @@ multipliers (swift ×1.7) stack on top: a swift is still a swift *relative to it
 
 | id | shape | hp | speed | radius | dmg | xp | cost | from wave | color |
 |----|-------|----|-------|--------|-----|----|------|-----------|-------|
-| grunt | circle | 14 | 40 | 12 | 8 | 2 | 1 | 1 | red |
-| dart | triangle | 9 | 88 | 10 | 6 | 2 | 1.5 | 2 | amber |
-| tank | square | 55 | 26 | 15 | 16 | 5 | 3 | 4 | violet |
-| splitter | pentagon | 39 | 34 | 14 | 10 | 6 | 4 | 8 | green — splits into 2 darts (60% dart hp) on death |
-| elite | hexagon | 126 | 30 | 18 | 20 | 12 | 8 | 14 | blue |
-| boss | nonagon | `bossHp(w)` | 22 | 34 | 26 | 80 | — | every 5th wave | magenta |
+| grunt | circle | 16 | 44 | 12 | 8 | 2 | 1 | 1 | red |
+| dart | triangle | 10 | 96 | 10 | 6 | 2 | 1.5 | 2 | amber |
+| tank | square | 60 | 29 | 15 | 16 | 5 | 3 | 4 | violet |
+| splitter | pentagon | 43 | 37 | 14 | 10 | 6 | 4 | 8 | green — splits into 2 darts (60% dart hp) on death |
+| elite | hexagon | 138 | 33 | 18 | 20 | 12 | 8 | 14 | blue |
+| boss | nonagon | `bossHp(w)` | 24 | 34 | 26 | 80 | — | every 5th wave | magenta |
+
+*(Balance round 6, 2026-07-24: ~+10% base hp and speed across every species —
+human play after round 5 still outran the pressure; base stats moved rather than
+the wave curves so the change is uniform from wave 1. Calibrate band re-verified.)*
 
 **Introductions (2026-07-23 playtest):** content is deliberately drip-fed — roughly one
 new shape or variant every 2–3 waves, stretching past wave 20 — and every first

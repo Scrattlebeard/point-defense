@@ -11,7 +11,7 @@
 // roughly a new human. Randomness is inherent; this is a tool, not a test.
 import { defaultMeta, newRun, levelChoices, applyChoice } from '../src/core/state.js';
 import { makeFx, updateFx } from '../src/app/fx.js';
-import { resetWeapons } from '../src/app/weapons.js';
+import { resetWeapons } from '../src/app/weapons/index.js';
 import { resetWaveDirector, updateGame } from '../src/app/game.js';
 import { nearestEnemy } from '../src/app/enemies.js';
 
