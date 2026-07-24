@@ -4,7 +4,7 @@ import { composeWave, rollVariant, pickVariant } from '../core/waves.js';
 import { waveCleared } from '../core/state.js';
 import { BOSS_NAMES, VARIANTS } from '../core/config.js';
 import { spawnEnemy, updateEnemies } from './enemies.js';
-import { updateWeapons } from './weapons.js';
+import { updateWeapons } from './weapons/index.js';
 import { announce } from './fx.js';
 import { sfx } from './audio.js';
 

@@ -1,0 +1,179 @@
+// The classic autos: frost aura, orbitals, nova, tesla, seekers, turrets.
+import { dist, TAU } from '../../core/geom.js';
+import { damageEnemy, nearestEnemy, applyKnock } from '../enemies.js';
+import { burst, shake } from '../fx.js';
+import { sfx } from '../audio.js';
+import { lvl, stats, fireBullet, aoe } from './shared.js';
+
+export function updateAuto(G, dt) {
+  const S = G.S;
+  const wt = G.wt;
+
+  // frost aura (passive; read by enemies.js — must be assigned every frame)
+  G.aura = lvl(S, 'frost') >= 1
+    ? { r: stats(S, 'frost').radius, slow: stats(S, 'frost').slow }
+    : null;
+
+  // orbitals
+  if (lvl(S, 'orbit') >= 1) {
+    const st = stats(S, 'orbit');
+    wt.orbA += st.speed * dt;
+    for (let i = 0; i < st.n; i++) {
+      const a = wt.orbA + (i * TAU) / st.n;
+      const bx = G.cx + Math.cos(a) * st.radius;
+      const by = G.cy + Math.sin(a) * st.radius;
+      for (const e of S.enemies) {
+        if (e.dead || S.time < e.orbHit) continue;
+        if (dist(bx, by, e.x, e.y) < 13 + e.r) {
+          damageEnemy(G, e, st.dmg);
+          e.orbHit = S.time + 0.35;
+          const d = dist(G.cx, G.cy, e.x, e.y) || 1;
+          // shove restored 35→45 after the age-accrual fix: fresh shapes fling
+          // properly again, veterans still resist via mass (core.md enemyMass)
+          applyKnock(e, ((e.x - G.cx) / d) * 45, ((e.y - G.cy) / d) * 45);
+        }
+      }
+    }
+  }
+
+  // nova
+  if (lvl(S, 'nova') >= 1) {
+    const st = stats(S, 'nova');
+    wt.novaT -= dt;
+    if (wt.novaT <= 0) {
+      wt.novaT = st.cd * S.cdMult;
+      S.rings.push({ r: 26, max: st.radius, speed: 330, dmg: st.dmg, hit: new Set() });
+      sfx('nova');
+    }
+  }
+  for (const ring of S.rings) {
+    ring.r += ring.speed * dt;
+    for (const e of S.enemies) {
+      if (e.dead || ring.hit.has(e)) continue;
+      if (Math.abs(dist(e.x, e.y, G.cx, G.cy) - ring.r) < 20 + e.r) {
+        ring.hit.add(e);
+        damageEnemy(G, e, ring.dmg);
+      }
+    }
+  }
+  S.rings = S.rings.filter(r => r.r < r.max);
+
+  // tesla — explicit charge state for the telegraph (app.md): charging 0→1,
+  // held at full when ready with no target in range
+  if (lvl(S, 'tesla') >= 1) {
+    const st = stats(S, 'tesla');
+    const cd = st.cd * S.cdMult;
+    wt.teslaT -= dt;
+    if (wt.teslaT <= 0) {
+      const first = nearestEnemy(S, G.cx, G.cy, st.range);
+      if (first) {
+        wt.teslaT = cd;
+        wt.teslaReady = false;
+        const targets = [first];
+        while (targets.length < st.chains) {
+          const last = targets[targets.length - 1];
+          let next = null, bd = 140;
+          for (const e of S.enemies) {
+            if (e.dead || targets.includes(e)) continue;
+            const d = dist(last.x, last.y, e.x, e.y);
+            if (d < bd) { bd = d; next = e; }
+          }
+          if (!next) break;
+          targets.push(next);
+        }
+        targets.forEach((e, i) => damageEnemy(G, e, st.dmg * Math.pow(0.8, i)));
+        S.zaps.push({ pts: [{ x: G.cx, y: G.cy }, ...targets.map(e => ({ x: e.x, y: e.y }))], t: 0 });
+        // discharge oomph: the built-up charge visibly lets go (app.md)
+        burst(G.fx, G.cx, G.cy, '#bee6ff', 9, 170, 0.3, 2);
+        burst(G.fx, first.x, first.y, '#bee6ff', 7, 130, 0.25, 2);
+        shake(G.fx, 2);
+        sfx('zap');
+      } else {
+        wt.teslaT = 0.15; // rescan soon, but display stays "charged"
+        wt.teslaReady = true;
+      }
+    }
+    wt.teslaCharge = wt.teslaReady ? 1 : Math.max(0, Math.min(1, 1 - wt.teslaT / cd));
+  }
+  for (const z of S.zaps) z.t += dt;
+  S.zaps = S.zaps.filter(z => z.t < 0.18);
+
+  // seekers
+  if (lvl(S, 'seek') >= 1) {
+    const st = stats(S, 'seek');
+    wt.seekT -= dt;
+    if (wt.seekT <= 0 && S.enemies.some(e => !e.dead)) {
+      wt.seekT = st.cd * S.cdMult;
+      for (let i = 0; i < st.n; i++) {
+        const a = Math.random() * TAU;
+        S.missiles.push({
+          x: G.cx, y: G.cy, vx: Math.cos(a) * 140, vy: Math.sin(a) * 140,
+          speed: st.speed, dmg: st.dmg, blast: st.blast, target: null, life: 4,
+        });
+      }
+      sfx('seek');
+    }
+  }
+  for (const m of S.missiles) {
+    m.life -= dt;
+    const sp0 = Math.hypot(m.vx, m.vy) || 1;
+    const vhx = m.vx / sp0, vhy = m.vy / sp0;
+    // trajectory re-acquisition (core.md seek row): retarget when the target is
+    // gone OR has fallen behind our heading — never orbit a lost cause.
+    let stale = !m.target || m.target.dead;
+    if (!stale) {
+      const d = dist(m.x, m.y, m.target.x, m.target.y) || 1;
+      if (((m.target.x - m.x) / d) * vhx + ((m.target.y - m.y) / d) * vhy < -0.1) stale = true;
+    }
+    if (stale) m.target = acquireAhead(S, m, vhx, vhy);
+    if (m.target) {
+      const d = dist(m.x, m.y, m.target.x, m.target.y) || 1;
+      const ux = (m.target.x - m.x) / d, uy = (m.target.y - m.y) / d;
+      m.vx += ux * 900 * dt; m.vy += uy * 900 * dt;
+      const sp = Math.hypot(m.vx, m.vy) || 1;
+      m.vx = (m.vx / sp) * m.speed; m.vy = (m.vy / sp) * m.speed;
+    }
+    m.x += m.vx * dt; m.y += m.vy * dt;
+    const hit = m.target && !m.target.dead && dist(m.x, m.y, m.target.x, m.target.y) < m.target.r + 6;
+    if (hit || m.life <= 0) {
+      m.dead = true;
+      burst(G.fx, m.x, m.y, '#ffd24d', 10, 150, 0.35, 2.5);
+      aoe(G, m.x, m.y, m.blast, m.dmg);
+    }
+  }
+  S.missiles = S.missiles.filter(m => !m.dead);
+
+  // turrets
+  if (lvl(S, 'turret') >= 1) {
+    const st = stats(S, 'turret');
+    wt.turretT -= dt;
+    if (wt.turretT <= 0) {
+      let fired = false;
+      for (let i = 0; i < st.n; i++) {
+        const a = S.time * 0.5 + (i * TAU) / st.n;
+        const tx = G.cx + Math.cos(a) * 46;
+        const ty = G.cy + Math.sin(a) * 46;
+        const e = nearestEnemy(S, tx, ty, st.range);
+        if (!e) continue;
+        fireBullet(S, tx, ty, Math.atan2(e.y - ty, e.x - tx), 460, st.dmg,
+          { r: 2.5, color: '#ffd24d' });
+        fired = true;
+      }
+      if (fired) sfx('shoot');
+      wt.turretT = st.cd * S.cdMult;
+    }
+  }
+}
+
+/** Best-aligned living shape ahead of the missile's heading; nearest as fallback. */
+function acquireAhead(S, m, vhx, vhy) {
+  let best = null, bestScore = 0.15; // must be at least vaguely in front
+  for (const e of S.enemies) {
+    if (e.dead) continue;
+    const d = dist(m.x, m.y, e.x, e.y) || 1;
+    const align = ((e.x - m.x) / d) * vhx + ((e.y - m.y) / d) * vhy;
+    const score = align - d / 2200; // prefer aligned, mildly prefer close
+    if (score > bestScore) { bestScore = score; best = e; }
+  }
+  return best || nearestEnemy(S, m.x, m.y);
+}

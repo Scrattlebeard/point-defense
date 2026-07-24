@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { defaultMeta, newRun } from '../src/core/state.js';
 import { WEAPONS, LATTICE } from '../src/core/config.js';
 import { makeFx, updateFx } from '../src/app/fx.js';
-import { resetWeapons, updateWeapons } from '../src/app/weapons.js';
+import { resetWeapons, updateWeapons } from '../src/app/weapons/index.js';
 import { spawnEnemy } from '../src/app/enemies.js';
 
 function makeG(weaponId, lvl) {
@@ -134,7 +134,7 @@ test('boomerang bounces off the arena wall and comes home', () => {
 // ---- Wave B (ADR-0004): gesture slots + flamethrower, meteor, force blades ----
 import { levelChoices } from '../src/core/state.js';
 import { TOWERS } from '../src/core/config.js';
-import { fireBlades, releaseHold } from '../src/app/weapons.js';
+import { fireBlades, releaseHold } from '../src/app/weapons/index.js';
 import { mulberry32 } from '../src/core/rng.js';
 
 test('wave B config contract: slots declared, tech-locked, manual', () => {

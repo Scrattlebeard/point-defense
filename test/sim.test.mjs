@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { defaultMeta, newRun, levelChoices, applyChoice } from '../src/core/state.js';
 import { makeFx, updateFx } from '../src/app/fx.js';
-import { resetWeapons, fireWall } from '../src/app/weapons.js';
+import { resetWeapons, fireWall } from '../src/app/weapons/index.js';
 import { resetWaveDirector, updateGame } from '../src/app/game.js';
 import { nearestEnemy, spawnEnemy, damageEnemy } from '../src/app/enemies.js';
 

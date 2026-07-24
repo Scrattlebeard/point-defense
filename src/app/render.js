@@ -3,7 +3,7 @@
 // effects stay cyan/white; single dark neon theme.
 import { TOWERS, WEAPONS, VARIANTS } from '../core/config.js';
 import { TAU, clamp } from '../core/geom.js';
-import { BEAM_REARM } from './weapons.js';
+import { BEAM_REARM } from './weapons/index.js';
 
 const TOWER_R = 24;
 

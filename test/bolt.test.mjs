@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { defaultMeta, newRun } from '../src/core/state.js';
 import { makeFx } from '../src/app/fx.js';
-import { resetWeapons, updateWeapons } from '../src/app/weapons.js';
+import { resetWeapons, updateWeapons } from '../src/app/weapons/index.js';
 import { spawnEnemy } from '../src/app/enemies.js';
 
 function makeG(boltLvl) {

@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { defaultMeta, newRun } from '../src/core/state.js';
 import { WEAPONS } from '../src/core/config.js';
 import { makeFx, updateFx } from '../src/app/fx.js';
-import { resetWeapons, updateWeapons } from '../src/app/weapons.js';
+import { resetWeapons, updateWeapons } from '../src/app/weapons/index.js';
 import { spawnEnemy } from '../src/app/enemies.js';
 
 function makeG(weaponId, lvl) {

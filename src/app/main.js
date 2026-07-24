@@ -7,7 +7,7 @@ import { WEAPONS } from '../core/config.js';
 import { loadMeta, saveMeta } from './meta.js';
 import { makeFx, updateFx, announce } from './fx.js';
 import { setMuted, sfx } from './audio.js';
-import { resetWeapons } from './weapons.js';
+import { resetWeapons } from './weapons/index.js';
 import { nearestEnemy } from './enemies.js';
 import { resetWaveDirector, updateGame } from './game.js';
 import { initInput, updateInput, clearInput } from './input.js';

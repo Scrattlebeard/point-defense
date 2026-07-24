@@ -1,7 +1,7 @@
 // Pointer events → traces → core gesture classification → weapon triggers.
 // Multi-touch: one hold-slot channel at a time; other pointers still tap/swipe.
 import { newTrace, addPoint, shouldEngageHold, classifyRelease } from '../core/gestures.js';
-import { fireWall, fireBlades, releaseHold } from './weapons.js';
+import { fireWall, fireBlades, releaseHold } from './weapons/index.js';
 import { initAudio } from './audio.js';
 
 export function initInput(G, canvas) {
