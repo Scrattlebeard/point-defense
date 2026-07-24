@@ -1,5 +1,6 @@
 # Deploy to GitHub Pages on every push to main.
-# Spec: README.md "Deployment". Tests gate the deploy — red tests, no ship.
+# Spec: README.md "Deployment". Tests AND the calibrate band gate the deploy —
+# red tests or an out-of-band onboarding curve, no ship.
 name: Deploy to GitHub Pages
 
 on:
@@ -29,6 +30,8 @@ jobs:
           node-version: 22
       - run: npm ci
       - run: npm test
+      # onboarding-band gate (README Deployment, ADR-0003): out of band = no ship
+      - run: node scripts/calibrate.mjs 32
       - run: npm run build
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

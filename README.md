@@ -56,8 +56,15 @@ The phone-playable build is **GitHub Pages** at
 `https://scrattlebeard.github.io/point-defense/`.
 
 - `.github/workflows/pages.yml` deploys on every push to `main`: `npm ci` →
-  `npm test` → `npm run build` → publish `dist/`. A red test blocks the deploy —
-  the pipeline enforces the ship loop, not convention.
+  `npm test` → `node scripts/calibrate.mjs 32` → `npm run build` → publish
+  `dist/`. A red test blocks the deploy — the pipeline enforces the ship loop,
+  not convention — and so does an out-of-band calibrate (ADR-0003 guardrail:
+  fresh-run median death wave in [5,10]), making the onboarding band unskippable
+  rather than a remember-to-run tool. 32 trials (vs the local default 12)
+  because the robot is genuinely random and a flaky gate stops being enforced —
+  and because the whole sweep costs ~1s, flake resistance is nearly free; a
+  persistent boundary-flake means the band or the trial count needs an explicit
+  decision, not a re-run-until-green.
 - Pages serves `dist/index.html` — the **full standalone document**, so the game owns
   its `<head>` (viewport meta, `user-scalable=no`) with no wrapper between the
   browser and the canvas. This is why Pages is canonical: the Claude Artifact viewer
