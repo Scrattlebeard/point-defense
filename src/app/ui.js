@@ -1,6 +1,6 @@
 // DOM overlays + HUD. Reads core tables directly; all game actions go through
 // hooks injected by main.js (no circular imports, no rules in here).
-import { TOWERS, WEAPONS, GENERICS, ENEMIES, VARIANTS, ACHIEVEMENTS } from '../core/config.js';
+import { TOWERS, WEAPONS, GENERICS, ENEMIES, VARIANTS, ACHIEVEMENTS, chipOf } from '../core/config.js';
 import { towerUnlocked } from '../core/state.js';
 import { storageOk } from './meta.js';
 import { poly } from './render.js';
@@ -301,7 +301,7 @@ export function renderLevelUp(G, choices) {
       // level-up choices: NEW-as-chip hid how the weapon fires on first pick)
       el.innerHTML =
         `<span class="chead"><span class="cicon">${WEAPON_ICONS[c.id]}</span>` +
-        `<span class="chip ${w.tag}">${w.tag}</span>` +
+        `<span class="chip ${chipOf(w)}">${chipOf(w)}</span>` +
         `<span class="cname">${w.name}</span></span>` +
         `<span class="clvl">${isNew ? '<b class="newmark">NEW</b> — Level 1' : `Lv ${c.lvl} → ${c.lvl + 1}`}</span>` +
         `<span class="cdesc">${w.descs[c.lvl]}</span>`;

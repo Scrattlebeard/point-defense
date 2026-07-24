@@ -172,16 +172,29 @@ buffed ~10% — bolt is the always-on carry and was already winning the damage r
 frost's power is control, not damage, and its 45% slow cap is a hard ceiling (see
 variant row note). Frost got visual oomph instead (app.md render.js).*
 
-**Gesture slots (ADR-0004):** HOLD and SWIPE are exclusive slots — a run owns at
-most one weapon per gesture, and `levelChoices` never offers a slot's other
-weapons once it's occupied (a gesture must mean exactly one thing mid-fight).
-AIM is deliberately *not* a slot: the aim point is a standing input, and
-aim-ordnance stacks freely alongside bolt.
+**Taxonomy (ADR-0006, supersedes ADR-0004's gesture slots):** every weapon carries
+two orthogonal fields. **`input`** (`aim` / `hold` / `swipe` / `none`) is how the
+player drives it; the card chip is *derived* from it (`chipOf(w)`: AIM / HOLD /
+SWIPE, `none` → AUTO), never stored. **`category`** (`gun` / `hold` / `swipe` /
+`auto`) is what the weapon costs the build — the load-bearing field. The sorting
+test is attention-scaling: a gun's output scales with your aim, an auto's does not —
+which is why the boomerang (input `aim`, category `auto`) is infrastructure that
+happens to read the aim.
 
-Manual (gesture) weapons:
+**The slot budget (`config.js: SLOT_BUDGET`, enforced in `levelChoices`):** a run
+fields **at most 6 weapons — of which at most 1 gun, 1 hold, 1 swipe**. Autos have
+no cap of their own; they fill whatever the budget leaves. At 6/6 no new weapon is
+ever offered (upgrades and generics continue); a gun/hold/swipe category occupied
+by a *different* owned weapon locks its rivals out of the draft (a gesture must
+mean exactly one thing mid-fight — the ADR-0004 rule, generalized to guns). The
+gun slot **may sit empty** — bolt is the default weapon, not a guaranteed one
+(ADR-0007); no rule requires a loadout to contain a gun.
 
-| id | gesture | max | levels |
-|----|---------|-----|--------|
+Held weapons (input = the player's hands; categories: bolt = gun, wall/blades =
+swipe, beam/flame/meteor = hold):
+
+| id | input | max | levels |
+|----|-------|-----|--------|
 | bolt | aim | 6 | auto-fires toward the aim point every 0.34−0.02L s (needs a live enemy); dmg 9+4L; L4: pierce 1. **Two streams, fan volleys.** The *manual stream* fires at your aim; from L3 an *auto stream* fires at the nearest shape *inside the arena walls* (bullets die at the wall — an outside target eats bolts for nothing, 2026-07-23; no in-bounds shape → the auto stream holds fire, the manual stream always fires). **Fans are center-true:** a volley of n = one bolt exactly on the target line + flanks at +0.11/−0.11 rad (n=2: single flank) — the center bolt never straddles the aim point (the 2026-07-23 complaint stays fixed at every level). Ladder: **L3 +auto stream (1+1), L5 both streams fire 2-bolt fans (2+2), L6 MAX 3-bolt fans (3+3)**. *(Rebalanced 2026-07-24: the previous max — 1 aimed + 4 independently-auto-aimed bolts — was "way overpowered" (playtest): independent auto-aims hit near-guaranteed, fan flanks can miss, so five sure hits beat six maybes. Max power returns to fans "like before", one fan per stream. L5 = 2-bolt fans is interpolation — Daniel specified L3 and L6; a smooth 2→4→6 bullet ramp beats a 2→6 cliff at max.)* |
 | blades | swipe | 5 | **Force Blades** (swipe slot, ADR-0004): the swipe hurls 2/3/3/4/5 crescent blades, spawned evenly along the swipe segment (trimmed to 200px toward the start, wall rule), all traveling along the segment's tower-away normal at 400 px/s; dmg 15+7L, pierce everything (once per shape per blade), die at the arena wall with the standard flare; cd 0.45s. The wall's defensive cousin inverted: the same gesture, pushed *outward* as pure offense |
 | wall | swipe | 5 | **Force Wall** (reworked twice, 2026-07-23): the swipe conjures a stationary wall **anchored at the gesture's start** (length 150+40L; longer swipes trimmed toward the start — overshooting the tail must not move the wall). The wall is *siegeable*: it has **80+40L HP** that degens passively over ~5s, and shapes in contact **attack it** (their dmg every 0.9s) while being pushed along its tower-away normal at (100+25L)÷mass px/s and taking 5+2L dmg per 0.4s tick. Wall dies at 0 HP, whichever clock runs out first. Active walls: **1 until max level, 2 at L5**; swiping past the cap replaces the oldest; cd 0.4s |
@@ -189,15 +202,22 @@ Manual (gesture) weapons:
 | meteor | hold | 5 | **Meteor** (hold slot, ADR-0004): holding **charges** a meteor (0→full in 1.5s, shown growing at the aim); release drops it on the aim point — 0.45s fall behind a warm ground telegraph (mortar's grammar), then impact: dmg (24+12L)·(0.45+0.55·charge), blast (60+8L)·(0.55+0.45·charge), radial knockback scaling with charge, and a **scorch patch** (burning-ground register, ~2s). **Auto-releases at full charge** — keep holding and it keeps raining, one meteor per 0.9−0.05L s. A tap-short hold still throws a pebble: min charge is a real (weak) strike, never a dead input |
 | beam | hold | 5 | ticks **per-target every 0.25s** at dps 34+20L (damage = dps×0.25 per tick) — so a shield loses one charge per *tick*, never per frame (playtest 2026-07-23: frame-rate ticking erased shields on touch); **per-target damage ramp** ×1→×2.5 over 2s of continuous exposure, decaying back over ~1.5s once out of the beam — sustained tracking is rewarded, field-flicking isn't; heat 0→1 in ~3.5s, forced cooldown at 1, **re-arms at 0.35** (the heat gauge marks this threshold — the lockout must be legible, see app.md "Beam heat gauge"); L3: slower heat; **L5: no overheat and always-on — channels toward the standing aim point with no hold needed** (a no-overheat beam that still demanded holding would just be a finger tax) |
 
-Aim ordnance (kind `auto`, chip AIM — auto-fires toward the standing aim like
-bolt, holds fire with no live in-bounds shape; all **tech-locked**, ADR-0004):
+Aim-input ordnance (auto-fires toward the standing aim like bolt, holds fire with
+no live in-bounds shape; all **tech-locked**, ADR-0004). Categories per ADR-0006
+Decision 7: **scatter and heavy are guns** (their output scales with aim); **boomer
+is an auto** (it sweeps its own geometry whatever you point at); **burst is the
+demoted form-of-bolt** — category `auto` *interim* and `formOf: 'bolt'`, offered
+only once bolt is at max level (the "card you draw at max level", ADR-0006 Alt-4:
+the pilot for the phase-4 form system, at which point it stops costing a slot and
+becomes bolt's alternate rhythm; until then an aim-reading auto is the honest
+approximation that doesn't collide with the ≤1-gun ceiling — recorded in PINS):
 
-| id | max | behavior |
-|----|-----|----------|
-| scatter | 5 | **Scattergun** — a slow, heavily overlapping volley: 6+L pellets every 1.7−0.1L s toward the aim, each pellet on its own semi-random bearing within ±0.26 rad with ±70 speed jitter — a shot *pattern*, not a center-true fan (deliberate contrast with bolt: bolt rewards precision, scatter rewards pointing at the problem); dmg 6+2L per pellet |
-| burst | 5 | **Repeater** — salvos: 3/3/4/5/6 bolts 0.085s apart, each shot tracking the *live* aim through the salvo (dragging the aim smears the burst — a feature), then a pause; dmg 8+3L; salvo every 1.6−0.12L s |
-| heavy | 5 | **Howitzer** — the sidearm-and-heavy rhythm: three quick light rounds (dmg 6+2L, 0.11s apart), a 0.45s beat, then one heavy shell — dmg 24+11L, pierce 2, visibly fat and slower (380 vs 520 px/s). Cycle restarts 1.2−0.08L s after the shell |
-| boomer | 5 | **Boomerang** — a wide spinning blade thrown at the aim every 2.6−0.2L s, dmg 13+6L; decelerates (~480 px/s²), reverses, and returns to the Point, hitting each shape **once per leg** (out + back = two bites; the hit record resets at the turn); **bounces off the arena wall** instead of dying — the one projectile the force field returns to sender, keeping the return leg alive at every aim length; caught (removed) when it re-reaches the Point; L5: a second blade at +0.5 rad per throw |
+| id | category | max | behavior |
+|----|----------|-----|----------|
+| scatter | gun | 5 | **Scattergun** — a slow, heavily overlapping volley: 6+L pellets every 1.7−0.1L s toward the aim, each pellet on its own semi-random bearing within ±0.26 rad with ±70 speed jitter — a shot *pattern*, not a center-true fan (deliberate contrast with bolt: bolt rewards precision, scatter rewards pointing at the problem); dmg 6+2L per pellet |
+| burst | auto (form pilot) | 5 | **Repeater** — salvos: 3/3/4/5/6 bolts 0.085s apart, each shot tracking the *live* aim through the salvo (dragging the aim smears the burst — a feature), then a pause; dmg 8+3L; salvo every 1.6−0.12L s. Offered only when bolt is maxed (`formOf`) |
+| heavy | gun | 5 | **Howitzer** — the sidearm-and-heavy rhythm: three quick light rounds (dmg 6+2L, 0.11s apart), a 0.45s beat, then one heavy shell — dmg 24+11L, pierce 2, visibly fat and slower (380 vs 520 px/s). Cycle restarts 1.2−0.08L s after the shell |
+| boomer | auto | 5 | **Boomerang** — a wide spinning blade thrown at the aim every 2.6−0.2L s, dmg 13+6L; decelerates (~480 px/s²), reverses, and returns to the Point, hitting each shape **once per leg** (out + back = two bites; the hit record resets at the turn); **bounces off the arena wall** instead of dying — the one projectile the force field returns to sender, keeping the return leg alive at every aim length; caught (removed) when it re-reaches the Point; L5: a second blade at +0.5 rad per throw |
 
 Auto weapons (level-up pool):
 
@@ -221,11 +241,16 @@ stacking additively on the run's damage multiplier).
 
 Level-up choice generation (`state.js: levelChoices(state, rng)`): 3 distinct options
 drawn from {each owned weapon below max, each unowned *pool-unlocked* weapon, generic
-cards}. **Gesture-slot filter (ADR-0004):** a weapon whose `slot` is already
-occupied by a *different* owned weapon is never offered — owning the beam means
-never being offered the flamethrower or meteor that run, and vice versa; same for
-wall vs force blades. No tower's starting loadout may violate this (test-pinned). **Card chips are a control-scheme vocabulary, nothing else:** AIM / SWIPE /
-HOLD / AUTO on weapons, PASSIVE on generic cards. A new weapon keeps its control chip
+cards}. **Budget filter (ADR-0006, replacing ADR-0004's gesture-slot filter):** an
+unowned weapon is never offered when (a) the run already fields `SLOT_BUDGET.total`
+weapons, or (b) its category's ceiling is held by a *different* owned weapon —
+owning the beam means never being offered the flamethrower or meteor that run, and
+owning any gun locks out the other guns the same way; or (c) it carries `formOf`
+and its base weapon is not yet at max level. No tower's starting loadout may
+violate the budget (test-pinned — the pinned invariant is deliberately the budget
+and its ceilings, *never* "has a gun": ADR-0007). **Card chips are a control-scheme vocabulary, nothing else:** AIM / SWIPE /
+HOLD / AUTO on weapons (derived from `input` by `chipOf`, never stored — ADR-0006),
+PASSIVE on generic cards. A new weapon keeps its control chip
 — newness is marked in the level line ("NEW — Level 1"), never in the chip slot
 (2026-07-23 second playtester: NEW-as-chip hid *how the weapon fires* on exactly the
 pick where that matters most, and BOOST didn't say "this is not a weapon" — PASSIVE
@@ -233,7 +258,10 @@ does). Upgrades show current→next level.
 
 ## Towers (`config.js: TOWERS`)
 
-Every tower taps bolt (pillar 1). Identity = stat profile + extra starting weapon.
+Bolt is the **default** weapon a loadout reaches for, not a guaranteed one — a
+tower may open with a different gun, or with no gun at all (ADR-0007; the current
+four all happen to start bolt). Identity = stat profile + starting loadout, which
+must respect the slot budget (test-pinned).
 
 | id | name | unlock | hp | dmg | xp | starts with |
 |----|------|--------|----|----|----|-------------|

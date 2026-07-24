@@ -40,23 +40,37 @@ export const VARIANTS = {
 };
 
 // ---------- Weapons ----------
+// Two axes per weapon (ADR-0006): `input` = how the player drives it (aim/hold/
+// swipe/none — the card chip is chipOf(input), never stored); `category` = what
+// it costs the build (gun/hold/swipe/auto — the load-bearing field, priced by
+// SLOT_BUDGET). `formOf` marks a demoted form-pilot: offered only once its base
+// weapon is maxed (core.md "Aim-input ordnance").
 // descs[l] describes the upgrade *to* level l+1 (descs[0] = what you get at level 1).
 // stats(l) is only ever called with l >= 1.
+
+/** A run fields at most `total` weapons; gun/hold/swipe are ceilings, autos fill
+ *  the rest (ADR-0006 Decision 3). Tower-bent someday, never bought (Decision 5). */
+export const SLOT_BUDGET = { total: 6, gun: 1, hold: 1, swipe: 1 };
+
+/** Card chip = display of input (ADR-0006 Decision 1). */
+export function chipOf(w) {
+  return w.input === 'none' ? 'AUTO' : w.input.toUpperCase();
+}
 export const WEAPONS = {
   bolt: {
-    name: 'Bolt', kind: 'manual', gesture: 'aim', max: 6, tag: 'AIM',
+    name: 'Bolt', input: 'aim', category: 'gun', max: 6,
     descs: ['Auto-fires toward your aim', '+damage', 'A second bolt picks its own target', 'Bolts pierce one extra shape', 'Both bolts fire twin fans', 'MAX: triple fans'],
     // two streams (manual + auto), each firing a center-true fan of `volley`
     // bolts (core.md bolt row, 2026-07-24)
     stats: l => ({ dmg: 9 + 4 * l, volley: l >= 6 ? 3 : l >= 5 ? 2 : 1, auto: l >= 3 ? 1 : 0, pierce: l >= 4 ? 1 : 0, cd: 0.34 - 0.02 * l }),
   },
   wall: {
-    name: 'Force Wall', kind: 'manual', gesture: 'swipe', slot: 'swipe', max: 5, tag: 'SWIPE',
+    name: 'Force Wall', input: 'swipe', category: 'swipe', max: 5,
     descs: ['Swipe a wall into being — shapes must break through it', '+length & wall HP', '+push & damage', '+wall HP & length', 'MAX: two walls'],
     stats: l => ({ len: 150 + 40 * l, hp: 80 + 40 * l, dur: 5, push: 100 + 25 * l, dmg: 5 + 2 * l, tick: 0.4, maxWalls: l >= 5 ? 2 : 1, cd: 0.4 }),
   },
   beam: {
-    name: 'Lance Beam', kind: 'manual', gesture: 'hold', slot: 'hold', max: 5, tag: 'HOLD',
+    name: 'Lance Beam', input: 'hold', category: 'hold', max: 5,
     descs: ['Hold to channel a beam — damage ramps as it cooks a target', '+damage', '+width, runs cooler', '+damage', 'MAX: always on, aims itself at your reticle'],
     stats: l => ({
       dps: 34 + 20 * l, width: 9 + 2.5 * l, heatRate: l >= 5 ? 0 : (l >= 3 ? 0.22 : 0.29), alwaysOn: l >= 5,
@@ -64,87 +78,87 @@ export const WEAPONS = {
     }),
   },
   orbit: {
-    name: 'Orbitals', kind: 'auto', max: 5, tag: 'AUTO',
+    name: 'Orbitals', input: 'none', category: 'auto', max: 5,
     descs: ['Two blades circle the Point, grinding shapes they touch', '+1 blade', '+damage & radius', '+1 blade', 'MAX: 5 blades'],
     // radius pushed out 2026-07-24 — deliberate slight nerf (core.md orbit row)
     stats: l => ({ n: [0, 2, 3, 3, 4, 5][l], dmg: 10 + 6 * l, radius: 88 + 8 * l, speed: 2.3 + 0.18 * l }),
   },
   nova: {
-    name: 'Nova', kind: 'auto', max: 5, tag: 'AUTO',
+    name: 'Nova', input: 'none', category: 'auto', max: 5,
     descs: ['The Point pulses a damaging ring', '+damage', 'Faster pulse', '+range & damage', 'MAX: fast and huge'],
     // radius re-sloped twice 2026-07-24: "even more" first pulse (core.md nova row)
     stats: l => ({ dmg: 16 + 8 * l, cd: Math.max(1.7, 5.0 - 0.6 * l), radius: 195 + 15 * l }),
   },
   frost: {
-    name: 'Frost Aura', kind: 'auto', max: 5, tag: 'AUTO',
+    name: 'Frost Aura', input: 'none', category: 'auto', max: 5,
     descs: ['An aura that slows shapes', '+radius', '+slow', '+radius', 'MAX: glacial'],
     stats: l => ({ radius: 100 + 26 * l, slow: [0, 0.22, 0.28, 0.33, 0.38, 0.45][l] }),
   },
   tesla: {
-    name: 'Tesla Coil', kind: 'auto', max: 5, tag: 'AUTO', techLock: true,
+    name: 'Tesla Coil', input: 'none', category: 'auto', max: 5, techLock: true,
     descs: ['Lightning chains between shapes', '+1 chain', '+damage', '+chain & range', 'MAX: 6 chains'],
     stats: l => ({ chains: [0, 2, 3, 3, 4, 6][l], dmg: 12 + 7 * l, cd: Math.max(0.9, 2.3 - 0.22 * l), range: 170 + 18 * l }),
   },
   seek: {
-    name: 'Seekers', kind: 'auto', max: 5, tag: 'AUTO', techLock: true,
+    name: 'Seekers', input: 'none', category: 'auto', max: 5, techLock: true,
     descs: ['Homing missiles with a small blast', '+damage', '+1 seeker', 'Faster volleys', 'MAX: 3 seekers'],
     stats: l => ({ n: [0, 1, 1, 2, 2, 3][l], dmg: 20 + 10 * l, cd: Math.max(0.9, 2.6 - 0.3 * l), blast: 40, speed: 260 }),
   },
   turret: {
-    name: 'Turrets', kind: 'auto', max: 5, tag: 'AUTO', techLock: true,
+    name: 'Turrets', input: 'none', category: 'auto', max: 5, techLock: true,
     descs: ['A mini-turret orbits and shoots', 'Faster fire', '+1 turret', '+damage', 'MAX: 3 turrets'],
     stats: l => ({ n: [0, 1, 1, 2, 2, 3][l], dmg: 8 + 4 * l, cd: Math.max(0.35, 1.0 - 0.09 * l), range: 260 }),
   },
   mine: {
-    name: 'Mines', kind: 'auto', max: 5, tag: 'AUTO', techLock: true,
+    name: 'Mines', input: 'none', category: 'auto', max: 5, techLock: true,
     descs: ['Seeds proximity mines around the Point', '+1 mine & damage', '+blast radius', '+1 mine, faster seeding', 'MAX: 6 mines'],
     stats: l => ({ cap: [0, 2, 3, 4, 5, 6][l], dmg: 24 + 12 * l, blast: 62 + 6 * l, trigger: 44, cd: Math.max(1.2, 2.6 - 0.25 * l), arm: 0.5 }),
   },
   mortar: {
-    name: 'Mortar', kind: 'auto', max: 5, tag: 'AUTO', techLock: true,
+    name: 'Mortar', input: 'none', category: 'auto', max: 5, techLock: true,
     descs: ['Lobs arcing shells at distant shapes', '+damage', '+blast, faster volleys', '+damage', 'MAX: twin shells'],
     stats: l => ({ dmg: 30 + 14 * l, blast: 68 + 8 * l, cd: Math.max(1.6, 3.4 - 0.3 * l), shells: l >= 5 ? 2 : 1, flight: 1.1, scatter: 30 }),
   },
   // ---- Field exotics (ADR-0004 wave C) ----
   catapult: {
-    name: 'Catapult', kind: 'auto', max: 5, tag: 'AUTO', techLock: true,
+    name: 'Catapult', input: 'none', category: 'auto', max: 5, techLock: true,
     descs: ['Hurls a boulder that tramples everything it rolls over', '+damage', '+damage & size', 'Faster volleys', 'MAX: twin boulders'],
     stats: l => ({ dmg: 20 + 9 * l, cd: 4.5 - 0.35 * l, speed: 130, r: 14 + l, n: l >= 5 ? 2 : 1, tick: 0.5, knock: 260 }),
   },
   caltrop: {
-    name: 'Caltrops', kind: 'auto', max: 5, tag: 'AUTO', techLock: true,
+    name: 'Caltrops', input: 'none', category: 'auto', max: 5, techLock: true,
     descs: ['Scatters spikes that prick and slow', '+damage & bigger field', '+damage', 'Faster scattering', 'MAX: a carpet of spikes'],
     stats: l => ({ dmg: 6 + 3 * l, cd: 3.0 - 0.2 * l, cluster: 5, patchR: 55, cap: 12 + 3 * l, life: 14, slow: 0.45, slowDur: 1.2 }),
   },
   cascade: {
-    name: 'Cascade', kind: 'auto', max: 5, tag: 'AUTO', techLock: true,
+    name: 'Cascade', input: 'none', category: 'auto', max: 5, techLock: true,
     descs: ['A spark primes a shape to explode — and spread', '+damage', 'Faster sparks', '+damage', 'MAX: twin sparks'],
     stats: l => ({ dmg: 22 + 10 * l, cd: 5.5 - 0.4 * l, n: l >= 5 ? 2 : 1, fuse: 0.6, blast: 70, decay: 0.75, minDmg: 8, maxGen: 8, speed: 340 }),
   },
   // ---- Aim ordnance (ADR-0004 wave A): auto-fires toward the standing aim ----
   scatter: {
-    name: 'Scattergun', kind: 'auto', max: 5, tag: 'AIM', techLock: true,
+    name: 'Scattergun', input: 'aim', category: 'gun', max: 5, techLock: true,
     descs: ['A slow volley of overlapping pellets toward your aim', '+1 pellet & damage', '+1 pellet, faster volleys', '+1 pellet & damage', 'MAX: an 11-pellet wall'],
     stats: l => ({ pellets: 6 + l, dmg: 6 + 2 * l, spread: 0.26, speed: 470, jitter: 70, cd: 1.7 - 0.1 * l }),
   },
   burst: {
-    name: 'Repeater', kind: 'auto', max: 5, tag: 'AIM', techLock: true,
+    name: 'Repeater', input: 'aim', category: 'auto', formOf: 'bolt', max: 5, techLock: true,
     descs: ['Quick salvos of bolts toward your aim, with pauses', '+damage', '+1 bolt per salvo', '+1 bolt, faster salvos', 'MAX: 6-bolt salvos'],
     stats: l => ({ n: [0, 3, 3, 4, 5, 6][l], dmg: 8 + 3 * l, gap: 0.085, speed: 560, cd: 1.6 - 0.12 * l }),
   },
   heavy: {
-    name: 'Howitzer', kind: 'auto', max: 5, tag: 'AIM', techLock: true,
+    name: 'Howitzer', input: 'aim', category: 'gun', max: 5, techLock: true,
     descs: ['Three quick rounds, a beat, one heavy piercing shell', '+damage', '+damage, faster cycle', '+damage', 'MAX: the shell hits like a noble'],
     stats: l => ({ lightDmg: 6 + 2 * l, heavyDmg: 24 + 11 * l, lightGap: 0.11, pause: 0.45, pierce: 2, lightSpeed: 520, heavySpeed: 380, cd: 1.2 - 0.08 * l }),
   },
   boomer: {
-    name: 'Boomerang', kind: 'auto', max: 5, tag: 'AIM', techLock: true,
+    name: 'Boomerang', input: 'aim', category: 'auto', max: 5, techLock: true,
     descs: ['A returning blade — bites going out and coming back', '+damage', 'Faster throws', '+damage', 'MAX: twin blades'],
     stats: l => ({ dmg: 13 + 6 * l, cd: 2.6 - 0.2 * l, speed: 440, decel: 200, retAccel: 1100, retSpeed: 560, r: 11, n: l >= 5 ? 2 : 1 }),
   },
   // ---- Gesture-slot variants (ADR-0004 wave B) ----
   flame: {
-    name: 'Flamethrower', kind: 'manual', gesture: 'hold', slot: 'hold', max: 5, tag: 'HOLD', techLock: true,
+    name: 'Flamethrower', input: 'hold', category: 'hold', max: 5, techLock: true,
     descs: ['Hold to sweep a cone of fire — burns stack and linger', '+burn damage', '+range, runs cooler', '+burn damage & hotter ground', 'MAX: never overheats, aims itself'],
     stats: l => ({
       range: 230 + 18 * l, arc: 0.3, tick: 0.3, direct: 4 + 1.5 * l,
@@ -154,7 +168,7 @@ export const WEAPONS = {
     }),
   },
   meteor: {
-    name: 'Meteor', kind: 'manual', gesture: 'hold', slot: 'hold', max: 5, tag: 'HOLD', techLock: true,
+    name: 'Meteor', input: 'hold', category: 'hold', max: 5, techLock: true,
     descs: ['Hold to grow a meteor, release to drop it on your aim', '+damage', '+blast radius', '+damage, faster cycle', 'MAX: cataclysm'],
     stats: l => ({
       chargeTime: 1.5, dmg: 24 + 12 * l, blast: 60 + 8 * l,
@@ -163,7 +177,7 @@ export const WEAPONS = {
     }),
   },
   blades: {
-    name: 'Force Blades', kind: 'manual', gesture: 'swipe', slot: 'swipe', max: 5, tag: 'SWIPE', techLock: true,
+    name: 'Force Blades', input: 'swipe', category: 'swipe', max: 5, techLock: true,
     descs: ['Swipe to hurl piercing crescents outward', '+1 blade', '+damage', '+1 blade', 'MAX: 5 blades'],
     stats: l => ({ n: [0, 2, 3, 3, 4, 5][l], dmg: 15 + 7 * l, speed: 400, r: 12, len: 200, cd: 0.45 }),
   },
@@ -198,7 +212,8 @@ export const ACHIEVEMENTS = [
 ];
 
 // ---------- Towers ----------
-// Every tower taps bolt (README pillar 1); identity = stat profile + extra starter.
+// Bolt is the default weapon, not a guaranteed gun (ADR-0007) — a loadout may
+// skip it. Identity = stat profile + starters, within SLOT_BUDGET (test-pinned).
 export const TOWERS = {
   bastion: {
     name: 'Bastion', color: '#4de8ff', hpMult: 1.0, dmgMult: 1.0, xpMult: 1.0,

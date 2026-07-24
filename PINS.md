@@ -173,6 +173,22 @@ Numbers are measured (headless spikes over the real sim), not estimated.*
   and N should be calibrated against a capped build, not the current one. Pick N from
   measurement, then treat it as a ratchet.
 
+## [phase 4] Burst rides as an interim auto — make it a true form of bolt
+- **What:** ADR-0006 demoted `burst` (Repeater) from base to a form of bolt. Interim
+  state (2026-07-25, taxonomy landing): `category: 'auto'`, `formOf: 'bolt'` — offered
+  in the draft only once bolt is maxed (the "card you draw at max level", ADR-0006
+  Alt-4), but it still **costs one of the six slots** and fires *alongside* bolt rather
+  than replacing bolt's rhythm. A true form costs no slot and swaps the base's cadence.
+- **Why:** Category `gun` was impossible interim (bolt holds the ≤1-gun ceiling, so a
+  gun-burst could never be offered); `auto` is the honest approximation and is recorded
+  as such in core.md "Aim-input ordnance". The gate already pilots the mastery flavor.
+- **Where:** `config.js` burst entry (`formOf`), `state.js` levelChoices form gate,
+  `core.md` Aim-input ordnance, `test/taxonomy.test.mjs` burst-gate test; the real form
+  system is ADR-0003 stage 2 + ADR-0006 Decision 6/8.
+- **Context:** When forms land, burst stops being a separate weapon: it becomes bolt's
+  alternate rhythm, the slot cost disappears, and the levelChoices `formOf` gate + this
+  interim classification are deleted.
+
 ## [phase 3] The wave stops escalating at 29, and the boss dissolves into the crowd
 - **What:** Three linked fixes to `waves.js` / `balance.js`. (1) `composeWave` picks a
   species **uniformly** and only subtracts `e.cost` afterward, so cost regulates wave *size*

@@ -38,7 +38,7 @@ test('mine/mortar exist in config with the tech-locked contract', () => {
     assert.ok(w, `${id} missing`);
     assert.equal(w.techLock, true, `${id} must be tech-locked`);
     assert.equal(w.max, 5);
-    assert.equal(w.kind, 'auto');
+    assert.equal(w.category, 'auto');
     assert.equal(w.descs.length, 5);
   }
 });

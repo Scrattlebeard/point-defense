@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { defaultMeta, newRun } from '../src/core/state.js';
-import { WEAPONS, LATTICE } from '../src/core/config.js';
+import { WEAPONS, LATTICE, chipOf } from '../src/core/config.js';
 import { makeFx, updateFx } from '../src/app/fx.js';
 import { resetWeapons, updateWeapons } from '../src/app/weapons/index.js';
 import { spawnEnemy } from '../src/app/enemies.js';
@@ -38,17 +38,22 @@ function anvil(G, x, y) {
   return e;
 }
 
-test('wave A config contract: tech-locked aim ordnance', () => {
-  for (const id of ['scatter', 'burst', 'heavy', 'boomer']) {
+test('wave A config contract: tech-locked aim-input ordnance (ADR-0006 categories)', () => {
+  // ADR-0004's "aim is not a slot" is superseded: scatter/heavy are GUNS now
+  // (attention-scaling test), boomer an auto that reads the aim, burst the
+  // demoted form-of-bolt (taxonomy.test.mjs carries the budget rules).
+  const cats = { scatter: 'gun', burst: 'auto', heavy: 'gun', boomer: 'auto' };
+  for (const [id, cat] of Object.entries(cats)) {
     const w = WEAPONS[id];
     assert.ok(w, `${id} missing`);
     assert.equal(w.techLock, true, `${id} must be tech-locked`);
     assert.equal(w.max, 5);
-    assert.equal(w.kind, 'auto');
-    assert.equal(w.tag, 'AIM', `${id} chip must say how it fires`);
+    assert.equal(w.input, 'aim', `${id} reads the standing aim`);
+    assert.equal(chipOf(w), 'AIM', `${id} chip must say how it fires`);
+    assert.equal(w.category, cat, `${id} category (ADR-0006 Decision 7)`);
     assert.equal(w.descs.length, 5);
-    assert.equal(w.slot, undefined, 'aim is not a slot (ADR-0004)');
   }
+  assert.equal(WEAPONS.burst.formOf, 'bolt', 'burst is the form pilot');
 });
 
 test('armory lattice nodes exist, tech-locked ids match, sector is Armory', () => {
@@ -137,16 +142,16 @@ import { TOWERS } from '../src/core/config.js';
 import { fireBlades, releaseHold } from '../src/app/weapons/index.js';
 import { mulberry32 } from '../src/core/rng.js';
 
-test('wave B config contract: slots declared, tech-locked, manual', () => {
-  assert.equal(WEAPONS.beam.slot, 'hold');
-  assert.equal(WEAPONS.flame.slot, 'hold');
-  assert.equal(WEAPONS.meteor.slot, 'hold');
-  assert.equal(WEAPONS.wall.slot, 'swipe');
-  assert.equal(WEAPONS.blades.slot, 'swipe');
+test('wave B config contract: categories declared, tech-locked, held inputs', () => {
+  assert.equal(WEAPONS.beam.category, 'hold');
+  assert.equal(WEAPONS.flame.category, 'hold');
+  assert.equal(WEAPONS.meteor.category, 'hold');
+  assert.equal(WEAPONS.wall.category, 'swipe');
+  assert.equal(WEAPONS.blades.category, 'swipe');
   for (const id of ['flame', 'meteor', 'blades']) {
     const w = WEAPONS[id];
     assert.equal(w.techLock, true, `${id} must be tech-locked`);
-    assert.equal(w.kind, 'manual');
+    assert.equal(w.input, w.category, 'held weapons: input and category agree');
     assert.equal(w.max, 5);
     assert.equal(w.descs.length, 5);
   }
@@ -177,17 +182,8 @@ test('gesture slots: a free slot still offers its weapons', () => {
   }
 });
 
-test('no tower starts with two weapons in one gesture slot', () => {
-  for (const [tid, t] of Object.entries(TOWERS)) {
-    const bySlot = {};
-    for (const wid of Object.keys(t.start)) {
-      const slot = WEAPONS[wid].slot;
-      if (!slot) continue;
-      assert.ok(!bySlot[slot], `${tid} starts two ${slot}-slot weapons`);
-      bySlot[slot] = wid;
-    }
-  }
-});
+// (tower-loadout legality moved to taxonomy.test.mjs — the full budget invariant
+// replaced the per-slot check when ADR-0006 landed)
 
 test('flamethrower: burn stacks keep cooking after the shape leaves the cone', () => {
   const G = makeG('flame', 2);
@@ -278,8 +274,9 @@ test('wave C config contract: tech-locked auto field weapons', () => {
     const w = WEAPONS[id];
     assert.ok(w, `${id} missing`);
     assert.equal(w.techLock, true, `${id} must be tech-locked`);
-    assert.equal(w.kind, 'auto');
-    assert.equal(w.tag, 'AUTO');
+    assert.equal(w.category, 'auto');
+    assert.equal(w.input, 'none');
+    assert.equal(chipOf(w), 'AUTO');
     assert.equal(w.max, 5);
     assert.equal(w.descs.length, 5);
   }

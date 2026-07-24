@@ -1,6 +1,6 @@
 // Run-state math: creation, XP/leveling, level-up choices, payout.
 // The shell mutates entity arrays inside S during play; the *rules* stay here.
-import { TOWERS, WEAPONS, GENERICS, ACHIEVEMENTS } from './config.js';
+import { TOWERS, WEAPONS, GENERICS, ACHIEVEMENTS, SLOT_BUDGET } from './config.js';
 import { effectsOf } from './tech.js';
 import { xpForLevel, shardPayout } from './balance.js';
 
@@ -73,17 +73,29 @@ export function addXp(S, amount) {
 /** Three distinct options: upgradeable/ownable weapons from the pool + generic cards. */
 export function levelChoices(S, rng) {
   const opts = [];
-  // gesture-slot filter (core.md, ADR-0004): a slot occupied by a DIFFERENT
-  // owned weapon locks its rivals out of the pool for the run
-  const slotTaken = {};
+  // slot budget (core.md "The slot budget", ADR-0006): ≤ total weapons per run;
+  // a gun/hold/swipe ceiling held by an owned weapon locks its rivals out of the
+  // draft. Upgrades to owned weapons always flow — the budget prices NEW weapons.
+  let owned = 0;
+  const catTaken = {};
   for (const id in S.weapons) {
-    if (S.weapons[id] > 0 && WEAPONS[id].slot) slotTaken[WEAPONS[id].slot] = id;
+    if (S.weapons[id] > 0) {
+      owned++;
+      const cat = WEAPONS[id].category;
+      if (SLOT_BUDGET[cat]) catTaken[cat] = id;
+    }
   }
   for (const id of S.pool) {
     const l = S.weapons[id];
-    const slot = WEAPONS[id].slot;
-    if (slot && slotTaken[slot] && slotTaken[slot] !== id) continue;
-    if (l < WEAPONS[id].max) opts.push({ type: 'weapon', id, lvl: l });
+    const w = WEAPONS[id];
+    if (l >= w.max) continue;
+    if (l === 0) {
+      if (owned >= SLOT_BUDGET.total) continue;
+      if (SLOT_BUDGET[w.category] && catTaken[w.category]) continue;
+      // a form pilot is a card you draw at max level (ADR-0006 Alt-4)
+      if (w.formOf && S.weapons[w.formOf] < WEAPONS[w.formOf].max) continue;
+    }
+    opts.push({ type: 'weapon', id, lvl: l });
   }
   for (const id of Object.keys(GENERICS)) {
     if (id === 'repair' && S.hp >= 0.7 * S.maxHp) continue;
