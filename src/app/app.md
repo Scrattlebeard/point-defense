@@ -110,6 +110,15 @@ simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not un
   warm-family, so it cannot be mistaken for nova's cyan tower-centered rings;
   impact is a warm double-burst matching the shell. Both are plain entities in `S` arrays (mines/shells),
   sim-updated in weapons.js like every other projectile.
+- **Aim ordnance** (ADR-0004 wave A): scatter pellets, repeater bolts and the
+  howitzer's light rounds all reuse the bullet register (small solid dots,
+  cyan family, sized by role) — they must read as *player fire*, not new
+  vocabulary. The howitzer's heavy shell is the same register writ large: a
+  fat, slower slug with a short tail. The boomerang is its own register: a
+  solid cyan spinning blade (two crossed crescents) with a faint motion arc —
+  solid fill = player's (allegiance law), spin + size distinguish it from
+  every bullet at a glance. Its wall bounce fires the standard force-field
+  flare.
 - **Juice:** deaths burst in the enemy's color, tower hits shake + red vignette,
   level-ups pause the sim (cards are DOM, thumb-sized, stacked vertically on narrow
   screens). The beam is *loud*: layered glow (outer haze / mid sheath / white core)

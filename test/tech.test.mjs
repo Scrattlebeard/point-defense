@@ -5,7 +5,9 @@ import assert from 'node:assert/strict';
 import { LATTICE } from '../src/core/config.js';
 import { canBuy, buy, effectsOf } from '../src/core/tech.js';
 
-const SECTORS = ['Hull', 'Arms', 'Mind', 'Salvage', 'Arsenal', 'Towers'];
+// 'Armory' added by ADR-0004 (deliberate extension — sector list is pinned so
+// new sectors are a decision, not a typo)
+const SECTORS = ['Hull', 'Arms', 'Mind', 'Salvage', 'Arsenal', 'Armory', 'Towers'];
 const RING_MIN_COST = { 1: 10, 2: 30, 3: 70, 4: 200, 5: 500 };
 
 test('lattice integrity: unique ids, sectors, rings 1-5, resolvable prereqs', () => {

@@ -6,10 +6,11 @@ import { LATTICE } from '../core/config.js';
 import { canBuy, reqsMet } from '../core/tech.js';
 
 const NS = 'http://www.w3.org/2000/svg';
-const SECTOR_ORDER = ['Hull', 'Arms', 'Mind', 'Salvage', 'Arsenal', 'Towers'];
+// seven sectors since ADR-0004 (Armory: manual/aim weapon unlocks)
+const SECTOR_ORDER = ['Hull', 'Arms', 'Mind', 'Salvage', 'Arsenal', 'Armory', 'Towers'];
 const SECTOR_COLOR = {
   Hull: '#59ff9c', Arms: '#ff5c6c', Mind: '#c06bff',
-  Salvage: '#ffd24d', Arsenal: '#4de8ff', Towers: '#ff9c59',
+  Salvage: '#ffd24d', Arsenal: '#4de8ff', Armory: '#ff7fb0', Towers: '#ff9c59',
 };
 const RING_R = [0, 120, 200, 280, 360, 440];
 const VIEW = 1000; // viewBox half-extent × 2

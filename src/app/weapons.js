@@ -18,6 +18,8 @@ export function resetWeapons(G) {
     boltT: 0.3, wallCd: 0,
     orbA: 0, novaT: 2.5, teslaT: 1.2, teslaReady: false, teslaCharge: 0, seekT: 1.6, turretT: 0.8,
     mineT: 1.0, mortT: 1.5,
+    scatT: 0.15, burstT: 0.1, burstLeft: 0, burstGapT: 0,
+    heavyPhase: 0, heavyPhaseT: 0.1, boomT: 1.4,
     beamOwner: null, beamAim: null,
   };
   G.aim = { x: G.cx, y: G.cy - 160 }; // standing aim point; input moves it
@@ -361,7 +363,149 @@ export function updateWeapons(G, dt) {
   }
   S.shells = S.shells.filter(sh => !sh.dead);
 
-  // bullets (bolt + turret)
+  // ---- aim ordnance (ADR-0004 wave A): fires toward the standing aim, holds
+  // fire with no live shape (the bolt rule) ----
+  const aimReady = () => G.aim && S.enemies.some(e => !e.dead);
+  const aimAngle = () => Math.atan2(G.aim.y - G.cy, G.aim.x - G.cx);
+
+  // scattergun: a shot PATTERN, not a fan — every pellet on its own random
+  // bearing/speed inside the cone (core.md scatter row)
+  if (lvl(S, 'scatter') >= 1) {
+    const st = stats(S, 'scatter');
+    wt.scatT -= dt;
+    if (wt.scatT <= 0) {
+      if (aimReady()) {
+        const base = aimAngle();
+        for (let i = 0; i < st.pellets; i++) {
+          const a = base + (Math.random() * 2 - 1) * st.spread;
+          const sp = st.speed + (Math.random() * 2 - 1) * st.jitter;
+          S.bullets.push({
+            x: G.cx, y: G.cy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+            dmg: st.dmg, pierce: 0, r: 3, life: 6, color: '#bfe9ff', hit: new Set(),
+          });
+        }
+        sfx('shoot');
+        wt.scatT = st.cd * S.cdMult;
+      } else wt.scatT = 0.1;
+    }
+  }
+
+  // repeater: salvo state machine; each shot tracks the LIVE aim (core.md)
+  if (lvl(S, 'burst') >= 1) {
+    const st = stats(S, 'burst');
+    if (wt.burstLeft > 0) {
+      wt.burstGapT -= dt;
+      if (wt.burstGapT <= 0 && G.aim) {
+        const a = aimAngle();
+        S.bullets.push({
+          x: G.cx, y: G.cy, vx: Math.cos(a) * st.speed, vy: Math.sin(a) * st.speed,
+          dmg: st.dmg, pierce: 0, r: 3, life: 6, color: '#9ff3ff', hit: new Set(),
+        });
+        sfx('shoot');
+        wt.burstLeft--;
+        wt.burstGapT += st.gap;
+        if (wt.burstLeft === 0) wt.burstT = st.cd * S.cdMult;
+      }
+    } else {
+      wt.burstT -= dt;
+      if (wt.burstT <= 0) {
+        if (aimReady()) { wt.burstLeft = st.n; wt.burstGapT = 0; }
+        else wt.burstT = 0.1;
+      }
+    }
+  }
+
+  // howitzer: three light rounds, a beat, one piercing shell (core.md heavy row)
+  if (lvl(S, 'heavy') >= 1) {
+    const st = stats(S, 'heavy');
+    wt.heavyPhaseT -= dt;
+    if (wt.heavyPhaseT <= 0) {
+      if (!aimReady()) wt.heavyPhaseT = 0.1;
+      else if (wt.heavyPhase < 3) {
+        const a = aimAngle();
+        S.bullets.push({
+          x: G.cx, y: G.cy, vx: Math.cos(a) * st.lightSpeed, vy: Math.sin(a) * st.lightSpeed,
+          dmg: st.lightDmg, pierce: 0, r: 2.5, life: 6, color: '#9ff3ff', hit: new Set(),
+        });
+        sfx('shoot');
+        wt.heavyPhase++;
+        wt.heavyPhaseT = wt.heavyPhase === 3 ? st.pause : st.lightGap;
+      } else {
+        const a = aimAngle();
+        S.bullets.push({
+          x: G.cx, y: G.cy, vx: Math.cos(a) * st.heavySpeed, vy: Math.sin(a) * st.heavySpeed,
+          dmg: st.heavyDmg, pierce: st.pierce, r: 7, life: 6, color: '#dff6ff', hit: new Set(),
+        });
+        shake(G.fx, 1.5);
+        sfx('shoot');
+        wt.heavyPhase = 0;
+        wt.heavyPhaseT = st.cd * S.cdMult;
+      }
+    }
+  }
+
+  // boomerang: out (decelerating) → turn/wall-bounce → home (core.md boomer row)
+  if (lvl(S, 'boomer') >= 1) {
+    const st = stats(S, 'boomer');
+    wt.boomT -= dt;
+    if (wt.boomT <= 0) {
+      if (aimReady()) {
+        wt.boomT = st.cd * S.cdMult;
+        const base = aimAngle();
+        for (let i = 0; i < st.n; i++) {
+          const a = base + i * 0.5;
+          S.boomers.push({
+            x: G.cx, y: G.cy, vx: Math.cos(a) * st.speed, vy: Math.sin(a) * st.speed,
+            dmg: st.dmg, r: st.r, out: true, hit: new Set(), spin: 0, life: 8,
+          });
+        }
+        sfx('wave');
+      } else wt.boomT = 0.1;
+    }
+    const EDGE = 4;
+    const turn = b => { b.out = false; b.hit.clear(); }; // the return leg re-bites
+    for (const b of S.boomers) {
+      b.life -= dt;
+      b.spin += 13 * dt;
+      if (b.out) {
+        const sp = Math.hypot(b.vx, b.vy) || 1;
+        const ns = sp - st.decel * dt;
+        if (ns <= 0) { b.vx = 0; b.vy = 0; turn(b); }
+        else { b.vx *= ns / sp; b.vy *= ns / sp; }
+      } else {
+        const d = dist(b.x, b.y, G.cx, G.cy) || 1;
+        b.vx += ((G.cx - b.x) / d) * st.retAccel * dt;
+        b.vy += ((G.cy - b.y) / d) * st.retAccel * dt;
+        const sp = Math.hypot(b.vx, b.vy) || 1;
+        if (sp > st.retSpeed) { b.vx *= st.retSpeed / sp; b.vy *= st.retSpeed / sp; }
+        if (d < 26) { b.dead = true; continue; }
+      }
+      b.x += b.vx * dt; b.y += b.vy * dt;
+      // the force field returns it to sender (core.md: bounce, don't die)
+      if (b.x < EDGE || b.x > G.W - EDGE || b.y < EDGE || b.y > G.H - EDGE) {
+        addFlare(G.fx, Math.min(Math.max(b.x, EDGE), G.W - EDGE),
+          Math.min(Math.max(b.y, EDGE), G.H - EDGE),
+          b.x < EDGE ? 1 : b.x > G.W - EDGE ? -1 : 0,
+          b.y < EDGE ? 1 : b.y > G.H - EDGE ? -1 : 0);
+        if (b.x < EDGE) { b.x = EDGE; b.vx = Math.abs(b.vx); }
+        if (b.x > G.W - EDGE) { b.x = G.W - EDGE; b.vx = -Math.abs(b.vx); }
+        if (b.y < EDGE) { b.y = EDGE; b.vy = Math.abs(b.vy); }
+        if (b.y > G.H - EDGE) { b.y = G.H - EDGE; b.vy = -Math.abs(b.vy); }
+        if (b.out) turn(b);
+      }
+      if (b.life <= 0) { b.dead = true; continue; }
+      for (const e of S.enemies) {
+        if (e.dead || b.hit.has(e)) continue;
+        if (dist(b.x, b.y, e.x, e.y) < e.r + b.r) {
+          b.hit.add(e);
+          damageEnemy(G, e, b.dmg);
+        }
+      }
+    }
+    S.boomers = S.boomers.filter(b => !b.dead);
+  }
+
+  // bullets (bolt + turret + aim ordnance)
   const EDGE = 4; // arena wall inset (app.md "the play area is walled")
   for (const b of S.bullets) {
     b.life -= dt;

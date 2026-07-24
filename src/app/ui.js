@@ -230,6 +230,10 @@ function statLine(id, l) {
     case 'turret': return `${st.n}× DMG ${st.dmg} · ${st.cd.toFixed(2)}s`;
     case 'mine':   return `${st.cap} mines · DMG ${st.dmg} · R ${st.blast}`;
     case 'mortar': return `DMG ${st.dmg}${st.shells > 1 ? ' ×2' : ''} · R ${st.blast} · ${st.cd.toFixed(1)}s`;
+    case 'scatter': return `${st.pellets} pellets · DMG ${st.dmg} · ${st.cd.toFixed(1)}s`;
+    case 'burst':  return `${st.n}-bolt salvo · DMG ${st.dmg} · ${st.cd.toFixed(1)}s`;
+    case 'heavy':  return `3× DMG ${st.lightDmg} + shell DMG ${st.heavyDmg}`;
+    case 'boomer': return `DMG ${st.dmg}×2 legs${st.n > 1 ? ' · twin' : ''} · ${st.cd.toFixed(1)}s`;
     default: return '';
   }
 }

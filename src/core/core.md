@@ -161,6 +161,12 @@ buffed ~10% — bolt is the always-on carry and was already winning the damage r
 frost's power is control, not damage, and its 45% slow cap is a hard ceiling (see
 variant row note). Frost got visual oomph instead (app.md render.js).*
 
+**Gesture slots (ADR-0004):** HOLD and SWIPE are exclusive slots — a run owns at
+most one weapon per gesture, and `levelChoices` never offers a slot's other
+weapons once it's occupied (a gesture must mean exactly one thing mid-fight).
+AIM is deliberately *not* a slot: the aim point is a standing input, and
+aim-ordnance stacks freely alongside bolt.
+
 Manual (gesture) weapons:
 
 | id | gesture | max | levels |
@@ -168,6 +174,16 @@ Manual (gesture) weapons:
 | bolt | aim | 6 | auto-fires toward the aim point every 0.34−0.02L s (needs a live enemy); dmg 9+4L; L4: pierce 1. **Two streams, fan volleys.** The *manual stream* fires at your aim; from L3 an *auto stream* fires at the nearest shape *inside the arena walls* (bullets die at the wall — an outside target eats bolts for nothing, 2026-07-23; no in-bounds shape → the auto stream holds fire, the manual stream always fires). **Fans are center-true:** a volley of n = one bolt exactly on the target line + flanks at +0.11/−0.11 rad (n=2: single flank) — the center bolt never straddles the aim point (the 2026-07-23 complaint stays fixed at every level). Ladder: **L3 +auto stream (1+1), L5 both streams fire 2-bolt fans (2+2), L6 MAX 3-bolt fans (3+3)**. *(Rebalanced 2026-07-24: the previous max — 1 aimed + 4 independently-auto-aimed bolts — was "way overpowered" (playtest): independent auto-aims hit near-guaranteed, fan flanks can miss, so five sure hits beat six maybes. Max power returns to fans "like before", one fan per stream. L5 = 2-bolt fans is interpolation — Daniel specified L3 and L6; a smooth 2→4→6 bullet ramp beats a 2→6 cliff at max.)* |
 | wall | swipe | 5 | **Force Wall** (reworked twice, 2026-07-23): the swipe conjures a stationary wall **anchored at the gesture's start** (length 150+40L; longer swipes trimmed toward the start — overshooting the tail must not move the wall). The wall is *siegeable*: it has **80+40L HP** that degens passively over ~5s, and shapes in contact **attack it** (their dmg every 0.9s) while being pushed along its tower-away normal at (100+25L)÷mass px/s and taking 5+2L dmg per 0.4s tick. Wall dies at 0 HP, whichever clock runs out first. Active walls: **1 until max level, 2 at L5**; swiping past the cap replaces the oldest; cd 0.4s |
 | beam | hold | 5 | ticks **per-target every 0.25s** at dps 34+20L (damage = dps×0.25 per tick) — so a shield loses one charge per *tick*, never per frame (playtest 2026-07-23: frame-rate ticking erased shields on touch); **per-target damage ramp** ×1→×2.5 over 2s of continuous exposure, decaying back over ~1.5s once out of the beam — sustained tracking is rewarded, field-flicking isn't; heat 0→1 in ~3.5s, forced cooldown at 1, **re-arms at 0.35** (the heat gauge marks this threshold — the lockout must be legible, see app.md "Beam heat gauge"); L3: slower heat; **L5: no overheat and always-on — channels toward the standing aim point with no hold needed** (a no-overheat beam that still demanded holding would just be a finger tax) |
+
+Aim ordnance (kind `auto`, chip AIM — auto-fires toward the standing aim like
+bolt, holds fire with no live in-bounds shape; all **tech-locked**, ADR-0004):
+
+| id | max | behavior |
+|----|-----|----------|
+| scatter | 5 | **Scattergun** — a slow, heavily overlapping volley: 6+L pellets every 1.7−0.1L s toward the aim, each pellet on its own semi-random bearing within ±0.26 rad with ±70 speed jitter — a shot *pattern*, not a center-true fan (deliberate contrast with bolt: bolt rewards precision, scatter rewards pointing at the problem); dmg 6+2L per pellet |
+| burst | 5 | **Repeater** — salvos: 3/3/4/5/6 bolts 0.085s apart, each shot tracking the *live* aim through the salvo (dragging the aim smears the burst — a feature), then a pause; dmg 8+3L; salvo every 1.6−0.12L s |
+| heavy | 5 | **Howitzer** — the sidearm-and-heavy rhythm: three quick light rounds (dmg 6+2L, 0.11s apart), a 0.45s beat, then one heavy shell — dmg 24+11L, pierce 2, visibly fat and slower (380 vs 520 px/s). Cycle restarts 1.2−0.08L s after the shell |
+| boomer | 5 | **Boomerang** — a wide spinning blade thrown at the aim every 2.6−0.2L s, dmg 13+6L; decelerates (~480 px/s²), reverses, and returns to the Point, hitting each shape **once per leg** (out + back = two bites; the hit record resets at the turn); **bounces off the arena wall** instead of dying — the one projectile the force field returns to sender, keeping the return leg alive at every aim length; caught (removed) when it re-reaches the Point; L5: a second blade at +0.5 rad per throw |
 
 Auto weapons (level-up pool):
 
@@ -208,8 +224,10 @@ Every tower taps bolt (pillar 1). Identity = stat profile + extra starting weapo
 
 ## The Lattice (`config.js: LATTICE`, logic in `tech.js`) — ADR-0003 stage 1
 
-The meta tech system is a **radial web centered on the Point**: ~60 nodes in six
-sectors (**Hull, Arms, Mind, Salvage, Arsenal, Towers**) across five rings, ring =
+The meta tech system is a **radial web centered on the Point**: 60+ nodes in seven
+sectors (**Hull, Arms, Mind, Salvage, Arsenal, Armory, Towers** — Armory added
+by ADR-0004 for the manual/aim weapon unlocks, so Arsenal keeps its auto-ordnance
+identity and its wedge stays readable) across five rings, ring =
 cost band (~15 / 40 / 100 / 250 / 600 — deep lattice is weeks of play). Rendered as
 an actual graph (app.md "Lattice view"), not columns. This is the deliberate
 **mega-lattice**: large and deep first, mostly stat nodes for now; parts migrate to
@@ -238,6 +256,7 @@ schema version lands with stage 2's nested fields — recorded in ADR-0003).
 | Arms | Overcharge I/II/III (+8% dmg; 15/30/60, chained) · Precision (10% crit ×2; 50, req Overcharge II) · Haste I/II (−6% cooldowns; 40/80, req Overcharge I then chained) |
 | Mind | Quick Study I/II (+10% xp; 15/35, chained) · Head Start (start at level 2 with a free pick; 45, req Quick Study I) · Salvage I/II (+20% shards; 30/60, req Quick Study I then chained) |
 | Arsenal | Unlock Tesla (25) → Unlock Seekers (45) → Unlock Turrets (70) — chained |
+| Armory | Scattergun (r1) → Repeater → Howitzer gun trunk; Scattergun → Boomerang throw trunk; hold/swipe unlocks arrive with ADR-0004 wave B; Ballistics cross-links to Arms |
 | Towers | Tempest (40) → Warden (75) → Lance (120) — chained |
 
 Tuning intent: a first run reaching wave 5–8 pays ~20–40◆ — enough for one node.

@@ -105,6 +105,27 @@ export const WEAPONS = {
     descs: ['Lobs arcing shells at distant shapes', '+damage', '+blast, faster volleys', '+damage', 'MAX: twin shells'],
     stats: l => ({ dmg: 30 + 14 * l, blast: 68 + 8 * l, cd: Math.max(1.6, 3.4 - 0.3 * l), shells: l >= 5 ? 2 : 1, flight: 1.1, scatter: 30 }),
   },
+  // ---- Aim ordnance (ADR-0004 wave A): auto-fires toward the standing aim ----
+  scatter: {
+    name: 'Scattergun', kind: 'auto', max: 5, tag: 'AIM', techLock: true,
+    descs: ['A slow volley of overlapping pellets toward your aim', '+1 pellet & damage', '+1 pellet, faster volleys', '+1 pellet & damage', 'MAX: an 11-pellet wall'],
+    stats: l => ({ pellets: 6 + l, dmg: 6 + 2 * l, spread: 0.26, speed: 470, jitter: 70, cd: 1.7 - 0.1 * l }),
+  },
+  burst: {
+    name: 'Repeater', kind: 'auto', max: 5, tag: 'AIM', techLock: true,
+    descs: ['Quick salvos of bolts toward your aim, with pauses', '+damage', '+1 bolt per salvo', '+1 bolt, faster salvos', 'MAX: 6-bolt salvos'],
+    stats: l => ({ n: [0, 3, 3, 4, 5, 6][l], dmg: 8 + 3 * l, gap: 0.085, speed: 560, cd: 1.6 - 0.12 * l }),
+  },
+  heavy: {
+    name: 'Howitzer', kind: 'auto', max: 5, tag: 'AIM', techLock: true,
+    descs: ['Three quick rounds, a beat, one heavy piercing shell', '+damage', '+damage, faster cycle', '+damage', 'MAX: the shell hits like a noble'],
+    stats: l => ({ lightDmg: 6 + 2 * l, heavyDmg: 24 + 11 * l, lightGap: 0.11, pause: 0.45, pierce: 2, lightSpeed: 520, heavySpeed: 380, cd: 1.2 - 0.08 * l }),
+  },
+  boomer: {
+    name: 'Boomerang', kind: 'auto', max: 5, tag: 'AIM', techLock: true,
+    descs: ['A returning blade — bites going out and coming back', '+damage', 'Faster throws', '+damage', 'MAX: twin blades'],
+    stats: l => ({ dmg: 13 + 6 * l, cd: 2.6 - 0.2 * l, speed: 440, decel: 200, retAccel: 1100, retSpeed: 560, r: 11, n: l >= 5 ? 2 : 1 }),
+  },
 };
 
 // Generic level-up cards (always eligible; repair gated by hp in state.js).
@@ -215,6 +236,12 @@ export const LATTICE = [
   { id: 'mun1',       sector: 'Arsenal', ring: 3, name: 'Munitions I',  desc: '+5% damage',     cost: 100, req: ['seek', 'mortar'], reqMode: 'any', effect: { dmgAdd: 0.05 } },
   { id: 'mun2',       sector: 'Arsenal', ring: 4, name: 'Munitions II', desc: '+6% damage',     cost: 250, req: ['mun1'],     effect: { dmgAdd: 0.06 } },
   { id: 'arsmaster',  sector: 'Arsenal', ring: 5, name: 'Arsenal Master', desc: '+10% damage & −4% cooldowns', cost: 600, req: ['turret', 'mun2'], effect: { dmgAdd: 0.10, cdAdd: -0.04 } },
+  // ---- Armory (manual/aim weapon unlocks — ADR-0004) ----
+  { id: 'scatter',    sector: 'Armory', ring: 1, name: 'Scattergun', desc: 'Adds the Scattergun to the level-up pool', cost: 30,  req: [],          effect: { unlockWeapon: 'scatter' } },
+  { id: 'burst',      sector: 'Armory', ring: 2, name: 'Repeater',   desc: 'Adds the Repeater to the level-up pool',   cost: 55,  req: ['scatter'], effect: { unlockWeapon: 'burst' } },
+  { id: 'heavy',      sector: 'Armory', ring: 3, name: 'Howitzer',   desc: 'Adds the Howitzer to the level-up pool',   cost: 110, req: ['burst'],   effect: { unlockWeapon: 'heavy' } },
+  { id: 'boomer',     sector: 'Armory', ring: 2, name: 'Boomerang',  desc: 'Adds the Boomerang to the level-up pool',  cost: 60,  req: ['scatter'], effect: { unlockWeapon: 'boomer' } },
+  { id: 'ballistics', sector: 'Armory', ring: 3, name: 'Ballistics', desc: '+6% damage', cost: 100, req: ['burst', 'over2'], reqMode: 'any', effect: { dmgAdd: 0.06 } },
   // ---- Towers (unlocks + keel) ----
   { id: 'tower_tempest', sector: 'Towers', ring: 2, name: 'Tempest', desc: 'Unlock the Tempest tower', cost: 40,  req: [],                effect: { unlockTower: 'tempest' } },
   { id: 'tower_warden',  sector: 'Towers', ring: 3, name: 'Warden',  desc: 'Unlock the Warden tower',  cost: 75,  req: ['tower_tempest'], effect: { unlockTower: 'warden' } },

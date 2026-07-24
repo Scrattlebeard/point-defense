@@ -303,6 +303,30 @@ function drawField(G) {
     ctx.restore();
   }
 
+  // boomerangs — solid cyan spinning blade, two crossed crescents + motion arc
+  // (app.md "Aim ordnance": solid fill = player's; spin+size ≠ any bullet)
+  for (const b of S.boomers) {
+    ctx.save();
+    ctx.translate(b.x, b.y);
+    // faint motion arc trailing the velocity
+    const va = Math.atan2(b.vy, b.vx);
+    ctx.strokeStyle = 'rgba(159, 243, 255, 0.25)';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(0, 0, b.r + 3, va + Math.PI * 0.6, va + Math.PI * 1.4); ctx.stroke();
+    ctx.rotate(b.spin);
+    ctx.fillStyle = '#9ff3ff';
+    for (let k = 0; k < 2; k++) {
+      ctx.rotate(k * Math.PI / 2);
+      ctx.beginPath();
+      ctx.ellipse(0, -b.r * 0.55, b.r * 0.28, b.r * 0.8, 0, 0, TAU);
+      ctx.ellipse(0, b.r * 0.55, b.r * 0.28, b.r * 0.8, 0, 0, TAU);
+      ctx.fill();
+    }
+    ctx.fillStyle = '#e8fbff';
+    ctx.beginPath(); ctx.arc(0, 0, 2.4, 0, TAU); ctx.fill();
+    ctx.restore();
+  }
+
   // orbit blades
   if (S.weapons.orbit >= 1) {
     const st = WEAPONS.orbit.stats(S.weapons.orbit);
