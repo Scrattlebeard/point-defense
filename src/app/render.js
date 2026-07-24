@@ -400,6 +400,64 @@ function drawField(G) {
     ctx.restore();
   }
 
+  // caltrops — tiny solid cyan jacks, dim by decree (floor hazard, not signal)
+  for (const c of S.caltrops) {
+    const blink = 0.45 + 0.2 * Math.sin(S.time * 4 + c.x);
+    ctx.strokeStyle = `rgba(159, 243, 255, ${blink})`;
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    for (let k = 0; k < 4; k++) {
+      const a = k * (TAU / 4) + Math.PI / 4;
+      ctx.beginPath();
+      ctx.moveTo(c.x, c.y);
+      ctx.lineTo(c.x + Math.cos(a) * 4.5, c.y + Math.sin(a) * 4.5);
+      ctx.stroke();
+    }
+    ctx.lineCap = 'butt';
+  }
+
+  // boulders — fat solid rolling polygon, player cyan-grey, dust at the rim
+  for (const b of S.boulders) {
+    ctx.save();
+    ctx.translate(b.x, b.y);
+    ctx.rotate(b.rot);
+    ctx.fillStyle = '#a9ccd6';
+    ctx.beginPath();
+    for (let k = 0; k < 7; k++) {
+      const a = (k * TAU) / 7;
+      const rr = b.r * (0.85 + 0.15 * Math.sin(k * 5.7)); // craggy, stable per-vertex
+      k === 0 ? ctx.moveTo(Math.cos(a) * rr, Math.sin(a) * rr)
+        : ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = 'rgba(232, 251, 255, 0.5)';
+    ctx.beginPath(); ctx.arc(b.r * 0.3, -b.r * 0.25, b.r * 0.22, 0, TAU); ctx.fill();
+    ctx.restore();
+    // dust flecks trailing the roll
+    const sp = Math.hypot(b.vx, b.vy) || 1;
+    for (let i = 0; i < 3; i++) {
+      const ph = (S.time * 2.1 + i * 0.33) % 1;
+      ctx.fillStyle = `rgba(188, 216, 224, ${0.4 * (1 - ph)})`;
+      ctx.beginPath();
+      ctx.arc(b.x - (b.vx / sp) * (b.r + ph * 22), b.y - (b.vy / sp) * (b.r + ph * 22) + Math.sin(i * 7) * 4, 1.6, 0, TAU);
+      ctx.fill();
+    }
+  }
+
+  // cascade sparks — small white comets with a short tail
+  for (const sp of S.sparks) {
+    const v = Math.hypot(sp.vx, sp.vy) || 1;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(sp.x - (sp.vx / v) * 14, sp.y - (sp.vy / v) * 14);
+    ctx.lineTo(sp.x, sp.y);
+    ctx.stroke();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(sp.x, sp.y, 3, 0, TAU); ctx.fill();
+  }
+
   // boomerangs — solid cyan spinning blade, two crossed crescents + motion arc
   // (app.md "Aim ordnance": solid fill = player's; spin+size ≠ any bullet)
   for (const b of S.boomers) {
@@ -564,6 +622,18 @@ function drawEnemies(G) {
         const a0 = S.time * 1.6 + (s * TAU) / 3;
         ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 6, a0, a0 + TAU / 4.2); ctx.stroke();
       }
+    }
+
+    // primed shapes carry a pulsing white diamond — marker, not ring (app.md)
+    if (e.primed) {
+      const p = 0.6 + 0.4 * Math.sin(S.time * 14);
+      const s = 4 + 2 * p;
+      const my = e.y - e.r - 10;
+      ctx.fillStyle = `rgba(255, 255, 255, ${0.5 + 0.5 * p})`;
+      ctx.beginPath();
+      ctx.moveTo(e.x, my - s); ctx.lineTo(e.x + s * 0.6, my);
+      ctx.lineTo(e.x, my + s); ctx.lineTo(e.x - s * 0.6, my);
+      ctx.fill();
     }
 
     // burning shapes flicker with small flame licks — the fire IS the damage

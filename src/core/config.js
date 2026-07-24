@@ -105,6 +105,22 @@ export const WEAPONS = {
     descs: ['Lobs arcing shells at distant shapes', '+damage', '+blast, faster volleys', '+damage', 'MAX: twin shells'],
     stats: l => ({ dmg: 30 + 14 * l, blast: 68 + 8 * l, cd: Math.max(1.6, 3.4 - 0.3 * l), shells: l >= 5 ? 2 : 1, flight: 1.1, scatter: 30 }),
   },
+  // ---- Field exotics (ADR-0004 wave C) ----
+  catapult: {
+    name: 'Catapult', kind: 'auto', max: 5, tag: 'AUTO', techLock: true,
+    descs: ['Hurls a boulder that tramples everything it rolls over', '+damage', '+damage & size', 'Faster volleys', 'MAX: twin boulders'],
+    stats: l => ({ dmg: 20 + 9 * l, cd: 4.5 - 0.35 * l, speed: 130, r: 14 + l, n: l >= 5 ? 2 : 1, tick: 0.5, knock: 260 }),
+  },
+  caltrop: {
+    name: 'Caltrops', kind: 'auto', max: 5, tag: 'AUTO', techLock: true,
+    descs: ['Scatters spikes that prick and slow', '+damage & bigger field', '+damage', 'Faster scattering', 'MAX: a carpet of spikes'],
+    stats: l => ({ dmg: 6 + 3 * l, cd: 3.0 - 0.2 * l, cluster: 5, patchR: 55, cap: 12 + 3 * l, life: 14, slow: 0.45, slowDur: 1.2 }),
+  },
+  cascade: {
+    name: 'Cascade', kind: 'auto', max: 5, tag: 'AUTO', techLock: true,
+    descs: ['A spark primes a shape to explode — and spread', '+damage', 'Faster sparks', '+damage', 'MAX: twin sparks'],
+    stats: l => ({ dmg: 22 + 10 * l, cd: 5.5 - 0.4 * l, n: l >= 5 ? 2 : 1, fuse: 0.6, blast: 70, decay: 0.75, minDmg: 8, maxGen: 8, speed: 340 }),
+  },
   // ---- Aim ordnance (ADR-0004 wave A): auto-fires toward the standing aim ----
   scatter: {
     name: 'Scattergun', kind: 'auto', max: 5, tag: 'AIM', techLock: true,
@@ -258,6 +274,9 @@ export const LATTICE = [
   { id: 'turret',     sector: 'Arsenal', ring: 3, name: 'Turrets',     desc: 'Adds Turrets to the level-up pool',    cost: 100, req: ['seek'], effect: { unlockWeapon: 'turret' } },
   { id: 'mine',       sector: 'Arsenal', ring: 1, name: 'Mines',       desc: 'Adds Mines to the level-up pool',      cost: 30, req: [],        effect: { unlockWeapon: 'mine' } },
   { id: 'mortar',     sector: 'Arsenal', ring: 2, name: 'Mortar',      desc: 'Adds the Mortar to the level-up pool', cost: 65, req: ['mine'],  effect: { unlockWeapon: 'mortar' } },
+  { id: 'caltrop',    sector: 'Arsenal', ring: 2, name: 'Caltrops',     desc: 'Adds Caltrops to the level-up pool',     cost: 55,  req: ['mine'],    effect: { unlockWeapon: 'caltrop' } },
+  { id: 'catapult',   sector: 'Arsenal', ring: 3, name: 'Catapult',     desc: 'Adds the Catapult to the level-up pool', cost: 110, req: ['mortar', 'caltrop'], reqMode: 'any', effect: { unlockWeapon: 'catapult' } },
+  { id: 'cascade',    sector: 'Arsenal', ring: 4, name: 'Cascade',      desc: 'Adds the Cascade to the level-up pool',  cost: 260, req: ['catapult'], effect: { unlockWeapon: 'cascade' } },
   { id: 'mun1',       sector: 'Arsenal', ring: 3, name: 'Munitions I',  desc: '+5% damage',     cost: 100, req: ['seek', 'mortar'], reqMode: 'any', effect: { dmgAdd: 0.05 } },
   { id: 'mun2',       sector: 'Arsenal', ring: 4, name: 'Munitions II', desc: '+6% damage',     cost: 250, req: ['mun1'],     effect: { dmgAdd: 0.06 } },
   { id: 'arsmaster',  sector: 'Arsenal', ring: 5, name: 'Arsenal Master', desc: '+10% damage & −4% cooldowns', cost: 600, req: ['turret', 'mun2'], effect: { dmgAdd: 0.10, cdAdd: -0.04 } },

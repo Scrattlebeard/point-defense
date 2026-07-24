@@ -76,6 +76,16 @@ simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not un
   crescents** (player fill law) sweeping outward with a thin motion trail;
   their wall death fires the standard flare. The heat gauge (below) serves
   whichever hot hold weapon is owned — beam or flamethrower.
+- **Field exotics** (ADR-0004 wave C): the boulder is a fat solid rolling
+  polygon in the player's cyan-grey (fill law), visibly *rotating* as it
+  travels, with dust-fleck particles at its rim; it crumbles at the wall in a
+  grey-cyan burst. Caltrops are tiny solid cyan four-point jacks, deliberately
+  dim (they're a floor hazard, not a signal) but blinking faintly like mines
+  once live. The cascade spark is a small white comet with a short tail;
+  a **primed shape carries a pulsing white diamond marker** above it (marker,
+  not ring — rings belong to nova/frost/intro) and detonates as a white
+  double-burst. Chain detonations must read as *the same white event
+  repeating*, so the eye learns the spreading pattern.
 - **Beam heat gauge** (2026-07-23, second playtester: beam triggering "feels wonky" —
   the real culprit was an *illegible lockout*: overheat silently ignores the hold):
   bottom-center canvas bar, visible whenever the beam is owned and heat > 0 or

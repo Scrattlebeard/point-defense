@@ -237,6 +237,9 @@ function statLine(id, l) {
     case 'flame':  return `BURN ${st.burnDps}/stack ×${st.maxStacks} · R ${st.range}${st.alwaysOn ? ' · always on' : ''}`;
     case 'meteor': return `DMG ≤${st.dmg} · R ≤${st.blast} · charge ${st.chargeTime}s`;
     case 'blades': return `${st.n} blades · DMG ${st.dmg}`;
+    case 'catapult': return `DMG ${st.dmg}/roll${st.n > 1 ? ' ×2' : ''} · ${st.cd.toFixed(1)}s`;
+    case 'caltrop': return `${st.cap} spikes · DMG ${st.dmg} · SLOW ${Math.round(st.slow * 100)}%`;
+    case 'cascade': return `DMG ${st.dmg} ×0.75/hop${st.n > 1 ? ' · twin' : ''} · ${st.cd.toFixed(1)}s`;
     default: return '';
   }
 }

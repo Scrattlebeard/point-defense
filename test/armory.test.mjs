@@ -269,3 +269,101 @@ test('flamethrower overheats like the beam: sustained channel forces a lockout',
   }
   assert.ok(overheated, 'flame never overheated — another weapon is bleeding its heat');
 });
+
+// ---- Wave C (ADR-0004): catapult, caltrops, cascade ----
+import { spawnEnemy as spawn2, updateEnemies } from '../src/app/enemies.js';
+
+test('wave C config contract: tech-locked auto field weapons', () => {
+  for (const id of ['catapult', 'caltrop', 'cascade']) {
+    const w = WEAPONS[id];
+    assert.ok(w, `${id} missing`);
+    assert.equal(w.techLock, true, `${id} must be tech-locked`);
+    assert.equal(w.kind, 'auto');
+    assert.equal(w.tag, 'AUTO');
+    assert.equal(w.max, 5);
+    assert.equal(w.descs.length, 5);
+  }
+  for (const id of ['catapult', 'caltrop', 'cascade']) {
+    const n = LATTICE.find(n => n.id === id);
+    assert.ok(n, `lattice node ${id} missing`);
+    assert.equal(n.sector, 'Arsenal', 'field ordnance lives in Arsenal (ADR-0004)');
+    assert.deepEqual(n.effect, { unlockWeapon: id });
+  }
+});
+
+test('catapult: the boulder tramples through a line and shoves what it hits', () => {
+  const G = makeG('catapult', 2);
+  const line = [520, 570, 620].map(x => spawnEnemy(G, 'tank', null, x, 300));
+  anvil(G, 700, 300); // far target keeps every random bearing on the +x line
+  simulate(G, 8);
+  const hurt = line.filter(e => e.dead || e.hp < e.maxHp);
+  assert.ok(hurt.length >= 2, `boulder should trample the line, hurt ${hurt.length}/3`);
+  const shoved = line.filter(e => Math.hypot(e.kbx, e.kby) > 1 || e.dead);
+  assert.ok(shoved.length >= 1, 'trample must shove, not just scratch');
+  // boulders crumble at the wall: at most the latest volley is ever in flight
+  assert.ok(G.S.boulders.length <= WEAPONS.catapult.stats(2).n,
+    `boulders accumulating (${G.S.boulders.length}) — the wall is not crumbling them`);
+});
+
+test('caltrops: seeded in clusters; a prick costs hp, speed, and the spike', () => {
+  const G = makeG('caltrop', 2);
+  simulate(G, 7); // seed a few clusters on the empty field
+  assert.ok(G.S.caltrops.length >= 5, `expected a cluster, got ${G.S.caltrops.length}`);
+  const cap = WEAPONS.caltrop.stats(2).cap;
+  assert.ok(G.S.caltrops.length <= cap, `over cap: ${G.S.caltrops.length} > ${cap}`);
+  const c = G.S.caltrops[0];
+  const before = G.S.caltrops.length;
+  const e = spawnEnemy(G, 'grunt', null, c.x, c.y); // steps right on it
+  simulate(G, 0.5);
+  assert.ok(e.dead || e.hp < e.maxHp, 'prick dealt no damage');
+  assert.ok(e.dead || e.calSlowT > 0, 'prick did not slow');
+  assert.ok(G.S.caltrops.length < before, 'caltrop not spent on the prick');
+});
+
+test('caltrop slow actually slows movement (enemies.js integration)', () => {
+  const G = makeG(null, 0);
+  const free = spawn2(G, 'grunt', null, 700, 300);
+  const stuck = spawn2(G, 'grunt', null, 700, 306);
+  stuck.calSlowT = 5; stuck.calSlow = 0.45;
+  const fx = free.x, sx = stuck.x;
+  for (let i = 0; i < 30; i++) updateEnemies(G, 1 / 60);
+  const freeMoved = fx - free.x, stuckMoved = sx - stuck.x;
+  assert.ok(freeMoved > 0 && stuckMoved > 0, 'both should approach the Point');
+  assert.ok(stuckMoved < freeMoved * 0.7,
+    `slowed grunt moved ${stuckMoved.toFixed(1)} vs free ${freeMoved.toFixed(1)}`);
+});
+
+test('cascade: one spark chain-reacts through a cluster', () => {
+  const G = makeG('cascade', 2);
+  for (const [dx, dy] of [[0, 0], [30, 20], [-25, 25], [20, -30], [-30, -20]]) {
+    spawnEnemy(G, 'grunt', null, 600 + dx, 300 + dy);
+  }
+  simulate(G, 8);
+  assert.ok(G.S.kills >= 3,
+    `a primed cluster should chain: only ${G.S.kills} kills`);
+});
+
+test('cascade: a primed shape that dies early still detonates (fuse OR death)', () => {
+  const G = makeG('cascade', 1);
+  const a = anvil(G, 600, 300);
+  const b = spawnEnemy(G, 'grunt', null, 640, 300); // inside a's blast radius
+  // wait for a spark to prime something, then kill the primed shape instantly
+  const dt = 1 / 60;
+  let detonated = false;
+  for (let t = 0; t < 10 && !detonated; t += dt) {
+    updateWeapons(G, dt);
+    G.S.time += dt;
+    const primed = G.S.enemies.find(e => e.primed && !e.dead);
+    if (primed && primed.primed.t > 0.3) {
+      primed.hp = 0.1;
+      damageEnemy_(G, primed); // finish it: death must trigger the blast
+    }
+    if (b.dead || b.hp < b.maxHp) detonated = true;
+    G.S.enemies = G.S.enemies.filter(e => !e.dead);
+  }
+  assert.ok(detonated, 'death-while-primed never detonated');
+});
+
+// tiny helper: route through the real damage path so death side-effects fire
+import { damageEnemy } from '../src/app/enemies.js';
+function damageEnemy_(G, e) { damageEnemy(G, e, 1, { noMult: true, silent: true }); }

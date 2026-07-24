@@ -38,6 +38,8 @@ export function spawnEnemy(G, kind, variantId = null, x = null, y = null) {
     kbx: 0, kby: 0, contactCd: 0, flash: 0, orbHit: 0, age: 0, wallAtk: 0,
     beamHeat: 0, beamTick: 0,
     burnStacks: 0, burnLeft: 0, burnTick: 0, // flamethrower DoT (core.md flame row)
+    calSlowT: 0, calSlow: 0, // caltrop prick (core.md caltrop row)
+    primed: null, // cascade charge {t, dmg, gen, ...params} (core.md cascade row)
     boss: isBoss, dead: false,
   };
   S.enemies.push(e);
@@ -109,6 +111,35 @@ export function applyKnock(e, ix, iy) {
   e.kby += iy / m;
 }
 
+/**
+ * Cascade detonation (core.md cascade row) — lives here because "primed shapes
+ * detonate on death" is a death side-effect, and the recursive domino (a blast
+ * kills an already-primed neighbor → it detonates too) falls out of killEnemy
+ * for free. Params ride on e.primed so no weapon-config import is needed.
+ */
+export function detonatePrimed(G, e) {
+  const p = e.primed;
+  if (!p) return;
+  e.primed = null;
+  const S = G.S;
+  burst(G.fx, e.x, e.y, '#ffffff', 14, 220, 0.35, 2.5);
+  burst(G.fx, e.x, e.y, '#e8fbff', 7, 90, 0.2, 1.5);
+  shake(G.fx, 2);
+  sfx('zap');
+  const spreads = p.dmg * p.decay >= p.minDmg && p.gen + 1 <= p.maxGen;
+  for (const o of S.enemies) {
+    if (o.dead || o === e) continue;
+    if (dist(e.x, e.y, o.x, o.y) > p.blast + o.r) continue;
+    damageEnemy(G, o, p.dmg);
+    // survivors inherit a weaker prime — the chain reaction (spec: ×decay)
+    if (spreads && !o.dead && (!o.primed || o.primed.dmg < p.dmg * p.decay)) {
+      o.primed = { ...p, t: p.fuse, dmg: p.dmg * p.decay, gen: p.gen + 1 };
+    }
+  }
+  // the carrier takes the blast too (fuse-out case; a dead carrier is past caring)
+  if (!e.dead) damageEnemy(G, e, p.dmg);
+}
+
 /** Death by player: full side-effects (xp, splits, explosions). */
 function killEnemy(G, e) {
   const S = G.S;
@@ -124,6 +155,7 @@ function killEnemy(G, e) {
       c.hp = c.maxHp = c.maxHp * SPLIT.hpMult;
     }
   }
+  if (e.primed) detonatePrimed(G, e); // death lights the fuse instantly (core.md cascade)
   if (e.vdef?.explode) {
     // medic-bomb (core.md volatile): the burst heals its own kind, harms only the Point
     const { r, healPct } = e.vdef.explode;
@@ -186,6 +218,11 @@ export function updateEnemies(G, dt) {
     let slow = 1;
     if (G.aura && d < G.aura.r + e.r) {
       slow = 1 - G.aura.slow / enemyMass(e.age);
+    }
+    // caltrop prick: brief, multiplicative with frost, mass-resisted (core.md)
+    if (e.calSlowT > 0) {
+      e.calSlowT -= dt;
+      slow *= 1 - e.calSlow / enemyMass(e.age);
     }
     // seek the Point
     const ux = (G.cx - e.x) / d, uy = (G.cy - e.y) / d;

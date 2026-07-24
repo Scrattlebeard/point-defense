@@ -5,7 +5,7 @@
 import { WEAPONS } from '../core/config.js';
 import { dist, distToSegment, TAU } from '../core/geom.js';
 import { enemyMass } from '../core/balance.js';
-import { damageEnemy, nearestEnemy, nearestEnemies, applyKnock } from './enemies.js';
+import { damageEnemy, nearestEnemy, nearestEnemies, applyKnock, detonatePrimed } from './enemies.js';
 import { burst, shake, addFlare } from './fx.js';
 import { sfx } from './audio.js';
 
@@ -21,6 +21,7 @@ export function resetWeapons(G) {
     scatT: 0.15, burstT: 0.1, burstLeft: 0, burstGapT: 0,
     heavyPhase: 0, heavyPhaseT: 0.1, boomT: 1.4,
     bladeCd: 0, flamePatchT: 0, metCharge: 0, metCd: 0,
+    cataT: 2.0, calT: 1.0, cascT: 2.5,
     holdOwner: null, holdAim: null, // one hold-slot weapon per run (ADR-0004)
   };
   G.aim = { x: G.cx, y: G.cy - 160 }; // standing aim point; input moves it
@@ -452,6 +453,146 @@ export function updateWeapons(G, dt) {
     }
   }
   S.shells = S.shells.filter(sh => !sh.dead);
+
+  // ---- field exotics (ADR-0004 wave C) ----
+
+  // catapult: the boulder never stops for anyone — trample + shove (core.md)
+  if (lvl(S, 'catapult') >= 1) {
+    const st = stats(S, 'catapult');
+    wt.cataT -= dt;
+    if (wt.cataT <= 0) {
+      const live = S.enemies.filter(e => !e.dead);
+      if (live.length) {
+        wt.cataT = st.cd * S.cdMult;
+        for (let i = 0; i < st.n; i++) {
+          const e = live[Math.floor(Math.random() * live.length)];
+          const a = Math.atan2(e.y - G.cy, e.x - G.cx) + (i ? (Math.random() - 0.5) * 0.5 : 0);
+          S.boulders.push({
+            x: G.cx, y: G.cy, vx: Math.cos(a) * st.speed, vy: Math.sin(a) * st.speed,
+            dmg: st.dmg, r: st.r, knock: st.knock, tick: st.tick,
+            rot: 0, hits: new Map(), life: 12,
+          });
+        }
+        sfx('wave');
+      } else wt.cataT = 0.2;
+    }
+    const EDGE = 4;
+    for (const b of S.boulders) {
+      b.life -= dt;
+      b.rot += 2.2 * dt;
+      b.x += b.vx * dt; b.y += b.vy * dt;
+      if (b.x < EDGE || b.x > G.W - EDGE || b.y < EDGE || b.y > G.H - EDGE || b.life <= 0) {
+        burst(G.fx, b.x, b.y, '#bcd8e0', 14, 160, 0.4, 2.5); // crumble
+        shake(G.fx, 2);
+        b.dead = true; continue;
+      }
+      for (const e of S.enemies) {
+        if (e.dead) continue;
+        if (dist(b.x, b.y, e.x, e.y) >= e.r + b.r) continue;
+        if (S.time < (b.hits.get(e) || 0)) continue;
+        b.hits.set(e, S.time + b.tick);
+        damageEnemy(G, e, b.dmg);
+        if (!e.dead) {
+          // shove: part forward along the roll, part aside from the bulk
+          const sp = Math.hypot(b.vx, b.vy) || 1;
+          const dd = dist(b.x, b.y, e.x, e.y) || 1;
+          applyKnock(e,
+            ((b.vx / sp) * 0.5 + ((e.x - b.x) / dd) * 0.6) * b.knock,
+            ((b.vy / sp) * 0.5 + ((e.y - b.y) / dd) * 0.6) * b.knock);
+        }
+      }
+    }
+    S.boulders = S.boulders.filter(b => !b.dead);
+  }
+
+  // caltrops: cluster-seeded ground spikes, one prick each (core.md caltrop row)
+  if (lvl(S, 'caltrop') >= 1) {
+    const st = stats(S, 'caltrop');
+    wt.calT -= dt;
+    if (wt.calT <= 0) {
+      wt.calT = st.cd * S.cdMult;
+      if (S.caltrops.length < st.cap) {
+        const a = Math.random() * TAU;
+        const rr = 120 + Math.random() * Math.max(40, Math.min(G.W, G.H) / 2 - 160);
+        const px = G.cx + Math.cos(a) * rr, py = G.cy + Math.sin(a) * rr;
+        for (let i = 0; i < st.cluster && S.caltrops.length < st.cap; i++) {
+          const ca = Math.random() * TAU, cr = Math.sqrt(Math.random()) * st.patchR;
+          S.caltrops.push({
+            x: px + Math.cos(ca) * cr, y: py + Math.sin(ca) * cr,
+            dmg: st.dmg, slow: st.slow, slowDur: st.slowDur, life: st.life,
+          });
+        }
+      }
+    }
+    for (const c of S.caltrops) {
+      c.life -= dt;
+      if (c.life <= 0) { c.dead = true; continue; }
+      for (const e of S.enemies) {
+        if (e.dead) continue;
+        if (dist(c.x, c.y, e.x, e.y) <= 6 + e.r) {
+          c.dead = true; // spent on the prick
+          damageEnemy(G, e, c.dmg);
+          if (!e.dead) { e.calSlow = c.slow; e.calSlowT = c.slowDur; }
+          burst(G.fx, c.x, c.y, '#9ff3ff', 3, 60, 0.2, 1.5);
+          break;
+        }
+      }
+    }
+    S.caltrops = S.caltrops.filter(c => !c.dead);
+  }
+
+  // cascade: sparks prime, fuses tick, primes spread on detonation (core.md).
+  // Death-while-primed detonates via killEnemy (enemies.js detonatePrimed).
+  if (lvl(S, 'cascade') >= 1) {
+    const st = stats(S, 'cascade');
+    wt.cascT -= dt;
+    if (wt.cascT <= 0) {
+      const live = S.enemies.filter(e => !e.dead);
+      if (live.length) {
+        wt.cascT = st.cd * S.cdMult;
+        for (let i = 0; i < st.n; i++) {
+          const e = live[Math.floor(Math.random() * live.length)];
+          const d = dist(G.cx, G.cy, e.x, e.y) || 1;
+          S.sparks.push({
+            x: G.cx, y: G.cy,
+            vx: ((e.x - G.cx) / d) * st.speed, vy: ((e.y - G.cy) / d) * st.speed,
+            target: e, dmg: st.dmg, life: 4,
+          });
+        }
+        sfx('zap');
+      } else wt.cascT = 0.2;
+    }
+    for (const sp of S.sparks) {
+      sp.life -= dt;
+      if (sp.target && !sp.target.dead) {
+        // gentle homing: enough to connect, not a seeker missile
+        const d = dist(sp.x, sp.y, sp.target.x, sp.target.y) || 1;
+        sp.vx += ((sp.target.x - sp.x) / d) * 700 * dt;
+        sp.vy += ((sp.target.y - sp.y) / d) * 700 * dt;
+        const v = Math.hypot(sp.vx, sp.vy) || 1;
+        sp.vx *= st.speed / v; sp.vy *= st.speed / v;
+      }
+      sp.x += sp.vx * dt; sp.y += sp.vy * dt;
+      if (sp.life <= 0) { sp.dead = true; continue; }
+      for (const e of S.enemies) {
+        if (e.dead) continue;
+        if (dist(sp.x, sp.y, e.x, e.y) < e.r + 5) {
+          if (!e.primed || e.primed.dmg < sp.dmg) {
+            e.primed = { t: st.fuse, dmg: sp.dmg, gen: 0, fuse: st.fuse, blast: st.blast, decay: st.decay, minDmg: st.minDmg, maxGen: st.maxGen };
+          }
+          sp.dead = true;
+          break;
+        }
+      }
+    }
+    S.sparks = S.sparks.filter(s => !s.dead);
+    // fuse clock: detonate on fuse-out (death path lives in killEnemy)
+    for (const e of S.enemies) {
+      if (e.dead || !e.primed) continue;
+      e.primed.t -= dt;
+      if (e.primed.t <= 0) detonatePrimed(G, e);
+    }
+  }
 
   // ---- aim ordnance (ADR-0004 wave A): fires toward the standing aim, holds
   // fire with no live shape (the bolt rule) ----
