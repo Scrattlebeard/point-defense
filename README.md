@@ -118,6 +118,8 @@ parameter, or a new URL is silently minted and the old link goes stale.
 
 - **`index.html`** — the game, playable from a dev server.
 - **`dist/index.html`** — the game, single self-contained file. The shipping artifact.
+- **localStorage key `pointdefense.gdd.comments.v1`** — GDD inline review comments
+  (browser-local; exportable as anchored markdown from the GDD page's comment bar).
 - **localStorage key `pointdefense.meta.v1`** — persistent meta-progression (shards,
   tech-tree purchases, best wave, settings). Versioned; bumping the key is a save wipe
   and must be an ADR-level decision.
