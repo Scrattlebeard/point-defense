@@ -69,6 +69,20 @@ simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not un
   signal (same rule as grid sparks). Rebuilt only when the loadout signature changes
   (a per-frame innerHTML rebuild would thrash layout), so it updates exactly at
   level-up picks and run start.
+- **Level-up deal-in** (2026-07-24): the choice cards *deal in* — a staggered
+  pop (~90ms apart, ~280ms each), and the whole hand is **unclickable until the
+  deal finishes (~460ms, inside the 300–500ms ask)**: `renderLevelUp` puts
+  `.dealing` on `#levelup` and clears it on a timer; CSS kills `pointer-events`
+  on the cards while it's set, and the click handler double-checks the class
+  (belt for synthetic/keyboard events CSS can't stop). Functional, not just
+  festive: level-up interrupts a firefight where the player is actively tapping,
+  so without the gate a tap meant for a shape lands on a card the frame it
+  appears — and the animation is what keeps the locked window reading as
+  *celebration* rather than an unresponsive UI. Banked picks re-deal per pick
+  (each `openLevelUp` re-renders), so a double-tap can't spend two banked levels
+  on the same spot. *Deliberate test-tier silence:* this is DOM-only shell
+  behavior and the repo has no DOM harness (zero runtime deps by design); the
+  spec here is the review surface, like the rest of ui.js.
 - **Hold & swipe variants** (ADR-0004 wave B): the flamethrower renders as a
   layered cone (deep orange haze → amber body → pale core) with forward-drifting
   flame particles — warm register, unmistakably not the beam's cyan. Burning

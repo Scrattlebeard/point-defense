@@ -137,6 +137,16 @@ button:active { transform: translateY(1px); }
 #wbar .wpips.lmax { color: #59ff9c; }
 
 /* ---------- Level-up cards ---------- */
+/* deal-in (app.md "Level-up deal-in"): staggered pop; hand locked while dealing.
+   `backwards` fill keeps delayed cards invisible before their turn. */
+#levelup.dealing .card { pointer-events: none; }
+#levelup .card { animation: deal 0.28s cubic-bezier(0.2, 1.4, 0.4, 1) backwards; }
+#levelup .card:nth-child(2) { animation-delay: 90ms; }
+#levelup .card:nth-child(3) { animation-delay: 180ms; }
+@keyframes deal {
+  from { opacity: 0; transform: translateY(18px) scale(0.92); }
+  to { opacity: 1; transform: none; }
+}
 #cardRow { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; width: 100%; max-width: 720px; }
 .card {
   flex: 1 1 180px; max-width: 220px; padding: 16px 14px; text-align: left;

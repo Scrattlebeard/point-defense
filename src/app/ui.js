@@ -275,8 +275,17 @@ export function renderPause(G) {
   $('pauseLoadout').innerHTML = statsHTML(S);
 }
 
+// Deal-in gate (app.md "Level-up deal-in"): cards unclickable until the deal
+// finishes. 460ms = last card's 180ms stagger + its 280ms pop (styles.css).
+const DEAL_MS = 460;
+let dealTimer = 0;
+
 export function renderLevelUp(G, choices) {
   const S = G.S;
+  const lv = $('levelup');
+  lv.classList.add('dealing');
+  clearTimeout(dealTimer);
+  dealTimer = setTimeout(() => lv.classList.remove('dealing'), DEAL_MS);
   $('levelupTitle').textContent =
     S.pendingLevels > 1 ? `LEVEL UP — ${S.pendingLevels} picks banked` : 'LEVEL UP';
   $('lvlLoadout').innerHTML = loadoutHTML(S);
@@ -303,7 +312,8 @@ export function renderLevelUp(G, choices) {
         `<span class="cname">${g.name}</span></span>` +
         `<span class="cdesc">${g.desc}</span>`;
     }
-    el.addEventListener('click', () => H.onChoice(c));
+    // class check = belt for synthetic/keyboard clicks pointer-events can't stop
+    el.addEventListener('click', () => { if (!lv.classList.contains('dealing')) H.onChoice(c); });
     row.appendChild(el);
   }
 }
