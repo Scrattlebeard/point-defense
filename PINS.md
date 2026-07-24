@@ -85,6 +85,12 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
 - **Context:** Landed sim-verified only (calibrate in band, median 8). Daniel +
   playtester are the feel authority — first dev-channel playtest decides.
 
+## Lattice layout: probably back to radial web (GDD session, 2026-07-24)
+- **What:** Daniel, during GDD vision talk: "tech tree should probably go back to radial web." The radial defense-grid metaphor is part of the visual language (radiation from the Point); ADR-0005 moved the lattice to horizontal rectilinear, trading metaphor for scroll ergonomics.
+- **Why:** The GDD-level visual language (radials, Tron/cyber geometry) outranks screen ergonomics if a workable radial rendering exists.
+- **Where:** `src/app/lattice.js`, ADR-0005 (supersede via new ADR if done); GDD visual-language section once it exists.
+- **Context:** "Probably" — a candidate, not a commitment. Revisit against whatever made 0005 abandon radial (check the ADR's alternatives before re-deciding).
+
 ## Haptics + better sound design
 - **What:** `navigator.vibrate` on tower hit / boss spawn; richer synth (noise bursts for explosions, filter sweeps).
 - **Why:** Phone-first game, big cheap juice win.
