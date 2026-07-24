@@ -125,6 +125,17 @@ button:active { transform: translateY(1px); }
 .tower.locked { opacity: 0.45; }
 .tower.locked .tstart { color: var(--dim); }
 
+/* ---------- In-game weapons bar (app.md "Loadout visibility") ---------- */
+#wbar {
+  position: fixed; left: 8px; bottom: calc(10px + env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; gap: 4px;
+  z-index: 4; pointer-events: none; opacity: 0.65; /* reference info: below every gameplay signal */
+}
+#wbar .wrow { display: flex; align-items: center; gap: 6px; }
+#wbar svg { width: 20px; height: 20px; display: block; }
+#wbar .wpips { color: var(--accent); font-size: 8px; letter-spacing: 2px; }
+#wbar .wpips.lmax { color: #59ff9c; }
+
 /* ---------- Level-up cards ---------- */
 #cardRow { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; width: 100%; max-width: 720px; }
 .card {
@@ -134,6 +145,8 @@ button:active { transform: translateY(1px); }
 }
 .card:active { border-color: var(--accent); }
 .card .chead { display: flex; align-items: center; gap: 8px; }
+.card .cicon { flex: 0 0 auto; }
+.card .cicon svg { width: 26px; height: 26px; display: block; }
 .card .cname { font-weight: 700; font-size: 15px; letter-spacing: 0.04em; }
 .card .clvl { color: var(--dim); font-size: 12px; font-variant-numeric: tabular-nums; }
 .card .cdesc { color: var(--dim); font-size: 13px; line-height: 1.5; }

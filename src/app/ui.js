@@ -5,6 +5,7 @@ import { towerUnlocked } from '../core/state.js';
 import { storageOk } from './meta.js';
 import { poly } from './render.js';
 import { renderLattice } from './lattice.js';
+import { WEAPON_ICONS } from './icons.js';
 
 const $ = id => document.getElementById(id);
 const OVERLAYS = ['menu', 'tech', 'bestiary', 'records', 'levelup', 'pause', 'over'];
@@ -47,6 +48,7 @@ export function initUI(G, hooks) {
 export function showOnly(name) {
   for (const id of OVERLAYS) $(id).classList.toggle('hidden', id !== name);
   $('hud').classList.toggle('hidden', name !== null && name !== 'pause');
+  $('wbar').classList.toggle('hidden', name !== null); // in-fight reference only
 }
 
 export function renderMenu(G) {
@@ -289,7 +291,8 @@ export function renderLevelUp(G, choices) {
       // chip = control scheme, always — newness lives in the level line (core.md
       // level-up choices: NEW-as-chip hid how the weapon fires on first pick)
       el.innerHTML =
-        `<span class="chead"><span class="chip ${w.tag}">${w.tag}</span>` +
+        `<span class="chead"><span class="cicon">${WEAPON_ICONS[c.id]}</span>` +
+        `<span class="chip ${w.tag}">${w.tag}</span>` +
         `<span class="cname">${w.name}</span></span>` +
         `<span class="clvl">${isNew ? '<b class="newmark">NEW</b> — Level 1' : `Lv ${c.lvl} → ${c.lvl + 1}`}</span>` +
         `<span class="cdesc">${w.descs[c.lvl]}</span>`;
@@ -326,4 +329,15 @@ export function updateHUD(G) {
   if (c.hot !== hot) { $('xpbar').classList.toggle('hot', hot); c.hot = hot; }
   if (c.wave !== S.wave) { $('waveTxt').textContent = 'Wave ' + S.wave; c.wave = S.wave; }
   if (c.lvl !== S.lvl) { $('lvlTxt').textContent = 'Lv ' + S.lvl; c.lvl = S.lvl; }
+  // weapons bar: rebuild only on loadout change (app.md "Loadout visibility")
+  const owned = Object.entries(S.weapons).filter(([, l]) => l > 0);
+  const wsig = owned.map(([id, l]) => id + l).join('.');
+  if (c.wsig !== wsig) {
+    c.wsig = wsig;
+    $('wbar').innerHTML = owned.map(([id, l]) => {
+      const max = WEAPONS[id].max;
+      return `<span class="wrow">${WEAPON_ICONS[id]}` +
+        `<span class="wpips${l >= max ? ' lmax' : ''}">${'●'.repeat(l)}${'○'.repeat(max - l)}</span></span>`;
+    }).join('');
+  }
 }

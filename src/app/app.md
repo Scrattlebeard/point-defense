@@ -21,7 +21,8 @@ simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not un
 | `render.js` | Canvas drawing: field grid, entities (shape + variant highlight grammar), tower, beams/lightning/rings, HUD elements drawn on canvas (hp arc, boss bar) |
 | `fx.js` | Particles, floating damage numbers, announcements, screen shake, hit flashes — capped pools, purely cosmetic. Announcements (wave / debut / boss name) anchor **top-left under the HUD**, linger **15s**, and debut/boss banners carry a **mini specimen icon** (the wireframe shape with its variant highlight) so the banner teaches what to look for (2026-07-23 playtest) |
 | `audio.js` | WebAudio synth one-shots (fire, death, nova, levelup, hurt, gameover); lazy AudioContext on first gesture; mute persisted via meta |
-| `ui.js` | DOM overlays: menu, tower select, **bestiary** (discovered enemies/variants with wireframe icon canvases; "?" cards for the unmet), **records** (top-10 high scores + achievement grid, locked entries dimmed), level-up cards, pause, game-over payout (with high-score rank when placed), **achievement toasts** (DOM, bottom-center, queued — they must work over any overlay, including menus) |
+| `ui.js` | DOM overlays: menu, tower select, **bestiary** (discovered enemies/variants with wireframe icon canvases; "?" cards for the unmet), **records** (top-10 high scores + achievement grid, locked entries dimmed), level-up cards (each weapon card carries its icon), pause, game-over payout (with high-score rank when placed), **achievement toasts** (DOM, bottom-center, queued — they must work over any overlay, including menus), **in-game weapons bar** (below) |
+| `icons.js` | **Generated — never hand-edit.** `WEAPON_ICONS`: weapon id → inline SVG string, regenerated from `assets/icons/` (the retrieval seam, see `assets/icons/icons.md`) by `scripts/icons.mjs`. Inline-as-JS because the build ships single-file bundles — an `<img src>` would break `dist/`. Contract (every weapon has an icon) enforced by `test/icons.test.mjs` |
 | `lattice.js` | **The Lattice view** (ADR-0003 stage 1): renders `LATTICE` as a radial SVG web inside the tech overlay — the Point at center, six color-coded sectors, ring guides at each cost tier, edges lit by ownership (dashed for `reqMode:'any'` cross-links). **Pan by drag, pinch/wheel zoom** — the web is bigger than any phone screen on purpose; exploring it is part of the pitch. **Tap a node → detail card** (bottom sheet: name, desc, cost, unmet prereqs, BUY) — tap-to-inspect then confirm, never tap-to-spend, because ring-4/5 nodes cost hundreds of shards and thumbs slip. Node states: owned (filled sector color), affordable (bright ring, slow pulse), reachable-but-poor (dim ring), locked (faded). Layout is computed, not hand-placed: sector wedge angle + ring radius + even spread within (sector, ring) — content changes never require repositioning work |
 
 ## Shell-level behaviors (presentation truths)
@@ -61,7 +62,13 @@ simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not un
   `WEAPONS.stats` tables the sim uses** — never hand-written numbers that can drift —
   plus run modifiers (dmg/cd/crit/regen) and a run line (wave · kills · time · HP).
   The level-up screen keeps its compact one-line strip of the same, so picks are made
-  in context without burying the three cards.
+  in context without burying the three cards. **The in-game weapons bar** (2026-07-24)
+  extends this to mid-fight: a bottom-left column of owned weapons — icon + level pips
+  (`●●●○○`, MAX pips in the MAX green) — visible whenever the HUD is, `pointer-events:
+  none`, and deliberately dim: it's reference info and must sit below every gameplay
+  signal (same rule as grid sparks). Rebuilt only when the loadout signature changes
+  (a per-frame innerHTML rebuild would thrash layout), so it updates exactly at
+  level-up picks and run start.
 - **Hold & swipe variants** (ADR-0004 wave B): the flamethrower renders as a
   layered cone (deep orange haze → amber body → pale core) with forward-drifting
   flame particles — warm register, unmistakably not the beam's cyan. Burning
