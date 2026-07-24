@@ -18,6 +18,21 @@ export function poly(ctx, x, y, r, sides, rot) {
   ctx.closePath();
 }
 
+/** Vertical diamond path (half-width w, half-height h) — mines, crystals, markers. */
+function diamond(ctx, x, y, w, h) {
+  ctx.beginPath();
+  ctx.moveTo(x, y - h); ctx.lineTo(x + w, y);
+  ctx.lineTo(x, y + h); ctx.lineTo(x - w, y);
+  ctx.closePath();
+}
+
+/** A single upward flame lick — shared by burning ground and burning shapes. */
+function flameLick(ctx, x, y, h, style, width = 1.8) {
+  ctx.strokeStyle = style;
+  ctx.lineWidth = width;
+  ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - h); ctx.stroke();
+}
+
 export function renderFrame(G) {
   const { ctx, W, H, fx } = G;
   ctx.clearRect(0, 0, W, H);
@@ -119,9 +134,7 @@ function drawField(G) {
       const tw = Math.sin(t * (0.9 + 1.8 * hash(i * 3.7 + 3)) + hash(i * 5.1 + 4) * TAU);
       const glint = 0.09 + 0.34 * Math.max(0, tw) ** 3;
       ctx.fillStyle = `rgba(185, 234, 255, ${glint})`;
-      ctx.beginPath();
-      ctx.moveTo(mx, my - size); ctx.lineTo(mx + size * 0.6, my);
-      ctx.lineTo(mx, my + size); ctx.lineTo(mx - size * 0.6, my);
+      diamond(ctx, mx, my, size * 0.6, size);
       ctx.fill();
       // the biggest crystals get a tiny core flash at glint peak
       if (size > 3.4 && tw > 0.92) {
@@ -136,9 +149,7 @@ function drawField(G) {
   for (const m of S.mines) {
     const armed = m.arm <= 0;
     ctx.fillStyle = armed ? 'rgba(159, 243, 255, 0.85)' : 'rgba(159, 243, 255, 0.35)';
-    ctx.beginPath();
-    ctx.moveTo(m.x, m.y - 6); ctx.lineTo(m.x + 4.5, m.y);
-    ctx.lineTo(m.x, m.y + 6); ctx.lineTo(m.x - 4.5, m.y);
+    diamond(ctx, m.x, m.y, 4.5, 6);
     ctx.fill();
     if (armed && Math.sin(S.time * 6) > 0) {
       ctx.fillStyle = '#ffffff';
@@ -163,9 +174,7 @@ function drawField(G) {
       const rr = f.r * 0.55 * ((Math.sin(f.y * 0.29 + i * 3.7) * 9871.3 % 1 + 1) % 1);
       const hgt = (2 + 3 * ((Math.sin(S.time * (3 + i) + f.x + i) + 1) / 2)) * a;
       const lx = f.x + Math.cos(fa) * rr, ly = f.y + Math.sin(fa) * rr;
-      ctx.strokeStyle = `rgba(255, 200, 90, ${0.35 * a * flick})`;
-      ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx, ly - hgt * 2); ctx.stroke();
+      flameLick(ctx, lx, ly, hgt * 2, `rgba(255, 200, 90, ${0.35 * a * flick})`, 1.5);
     }
   }
 
@@ -630,9 +639,7 @@ function drawEnemies(G) {
       const s = 4 + 2 * p;
       const my = e.y - e.r - 10;
       ctx.fillStyle = `rgba(255, 255, 255, ${0.5 + 0.5 * p})`;
-      ctx.beginPath();
-      ctx.moveTo(e.x, my - s); ctx.lineTo(e.x + s * 0.6, my);
-      ctx.lineTo(e.x, my + s); ctx.lineTo(e.x - s * 0.6, my);
+      diamond(ctx, e.x, my, s * 0.6, s);
       ctx.fill();
     }
 
@@ -644,9 +651,7 @@ function drawEnemies(G) {
         const lx = e.x + Math.cos(fa) * e.r * 0.6;
         const ly = e.y + Math.sin(fa) * e.r * 0.6;
         const hgt = 3 + 3 * ((Math.sin(S.time * (6 + i) + i * 1.7) + 1) / 2);
-        ctx.strokeStyle = `rgba(255, ${160 + i * 20}, 60, 0.7)`;
-        ctx.lineWidth = 1.8;
-        ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx, ly - hgt * 1.8); ctx.stroke();
+        flameLick(ctx, lx, ly, hgt * 1.8, `rgba(255, ${160 + i * 20}, 60, 0.7)`);
       }
     }
 

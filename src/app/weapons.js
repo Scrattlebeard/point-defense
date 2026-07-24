@@ -32,6 +32,68 @@ export function resetWeapons(G) {
 const lvl = (S, id) => S.weapons[id];
 const stats = (S, id) => WEAPONS[id].stats(S.weapons[id]);
 
+// ---------- shared projectile plumbing ----------
+const EDGE = 4; // arena wall inset (app.md "the play area is walled")
+
+/** True when (x,y) sits outside the arena walls. */
+const outside = (G, x, y) => x < EDGE || x > G.W - EDGE || y < EDGE || y > G.H - EDGE;
+
+/** Force-field flare at the wall point nearest (x,y) — the standard projectile death. */
+function wallFlare(G, x, y) {
+  addFlare(G.fx,
+    Math.min(Math.max(x, EDGE), G.W - EDGE),
+    Math.min(Math.max(y, EDGE), G.H - EDGE),
+    x < EDGE ? 1 : x > G.W - EDGE ? -1 : 0,
+    y < EDGE ? 1 : y > G.H - EDGE ? -1 : 0);
+}
+
+/** Clamp a projectile back inside the walls, reflecting its velocity (boomerang). */
+function wallBounce(G, b) {
+  if (b.x < EDGE) { b.x = EDGE; b.vx = Math.abs(b.vx); }
+  if (b.x > G.W - EDGE) { b.x = G.W - EDGE; b.vx = -Math.abs(b.vx); }
+  if (b.y < EDGE) { b.y = EDGE; b.vy = Math.abs(b.vy); }
+  if (b.y > G.H - EDGE) { b.y = G.H - EDGE; b.vy = -Math.abs(b.vy); }
+}
+
+/** Push a straight bullet into S.bullets, flying along `angle`. */
+function fireBullet(S, x, y, angle, speed, dmg, { pierce = 0, r = 3, color = '#9ff3ff' } = {}) {
+  S.bullets.push({
+    // life is a safety net only — the arena wall is the real range (app.md)
+    x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+    dmg, pierce, r, life: 6, color, hit: new Set(),
+  });
+}
+
+/** Damage every living shape within `radius` of (x,y); `each` runs on survivors. */
+function aoe(G, x, y, radius, dmg, each = null) {
+  for (const e of G.S.enemies) {
+    if (e.dead || dist(x, y, e.x, e.y) > radius + e.r) continue;
+    damageEnemy(G, e, dmg);
+    if (each && !e.dead) each(e);
+  }
+}
+
+/**
+ * A swipe as the sim sees it: segment anchored at the gesture start, trimmed
+ * toward it past maxLen (overshooting the tail must not move the anchor —
+ * core.md wall row), plus the unit normal pointing away from the Point.
+ * Shared by the force wall and force blades (same gesture, two weapons).
+ */
+function swipeSegment(G, from, to, maxLen) {
+  let { x: ax, y: ay } = from, { x: bx, y: by } = to;
+  const len = dist(ax, ay, bx, by) || 1;
+  if (len > maxLen) {
+    bx = ax + ((bx - ax) / len) * maxLen;
+    by = ay + ((by - ay) / len) * maxLen;
+  }
+  let nx = -(by - ay), ny = bx - ax;
+  const nl = Math.hypot(nx, ny) || 1;
+  nx /= nl; ny /= nl;
+  const mx = (ax + bx) / 2, my = (ay + by) / 2;
+  if (nx * (G.cx - mx) + ny * (G.cy - my) > 0) { nx = -nx; ny = -ny; }
+  return { ax, ay, bx, by, nx, ny };
+}
+
 // ---------- bolt (aim-driven; fired by updateWeapons, never by input) ----------
 // Center-true fan: one bolt EXACTLY on the target line + flanks at ±0.11 —
 // aim fidelity is the weapon's identity (core.md bolt row, 2026-07-24).
@@ -39,12 +101,7 @@ const FAN_OFFSETS = [[0], [0, 0.11], [0, 0.11, -0.11]];
 function fireFan(G, tx, ty, st) {
   const base = Math.atan2(ty - G.cy, tx - G.cx);
   for (const off of FAN_OFFSETS[st.volley - 1]) {
-    const a = base + off;
-    G.S.bullets.push({
-      // life is a safety net only — the arena wall is the real range (app.md)
-      x: G.cx, y: G.cy, vx: Math.cos(a) * 540, vy: Math.sin(a) * 540,
-      dmg: st.dmg, pierce: st.pierce, r: 3.5, life: 6, color: '#9ff3ff', hit: new Set(),
-    });
+    fireBullet(G.S, G.cx, G.cy, base + off, 540, st.dmg, { pierce: st.pierce, r: 3.5 });
   }
 }
 
@@ -55,18 +112,7 @@ export function fireBlades(G, from, to) {
   if (G.wt.bladeCd > 0) return false; // cooling: swipe degrades to re-aim (wall rule)
   const st = stats(S, 'blades');
   G.wt.bladeCd = st.cd;
-  // segment trimmed toward the start (wall rule); blades ride its outward normal
-  let { x: ax, y: ay } = from, { x: bx, y: by } = to;
-  const len = dist(ax, ay, bx, by) || 1;
-  if (len > st.len) {
-    bx = ax + ((bx - ax) / len) * st.len;
-    by = ay + ((by - ay) / len) * st.len;
-  }
-  let nx = -(by - ay), ny = bx - ax;
-  const nl = Math.hypot(nx, ny) || 1;
-  nx /= nl; ny /= nl;
-  const mx = (ax + bx) / 2, my = (ay + by) / 2;
-  if (nx * (G.cx - mx) + ny * (G.cy - my) > 0) { nx = -nx; ny = -ny; }
+  const { ax, ay, bx, by, nx, ny } = swipeSegment(G, from, to, st.len);
   for (let i = 0; i < st.n; i++) {
     const t = st.n === 1 ? 0.5 : i / (st.n - 1);
     S.blades.push({
@@ -86,20 +132,7 @@ export function fireWall(G, from, to) {
   if (G.wt.wallCd > 0) return false;
   const st = stats(S, 'wall');
   G.wt.wallCd = st.cd;
-  // anchor at the gesture start; trim overshoot toward the tail (core.md wall row)
-  let { x: ax, y: ay } = from, { x: bx, y: by } = to;
-  const len = dist(ax, ay, bx, by) || 1;
-  if (len > st.len) {
-    const ux = (bx - ax) / len, uy = (by - ay) / len;
-    bx = ax + ux * st.len;
-    by = ay + uy * st.len;
-  }
-  // outward normal: perpendicular pointing away from the Point
-  let nx = -(by - ay), ny = bx - ax;
-  const nl = Math.hypot(nx, ny) || 1;
-  nx /= nl; ny /= nl;
-  const mx = (ax + bx) / 2, my = (ay + by) / 2;
-  if (nx * (G.cx - mx) + ny * (G.cy - my) > 0) { nx = -nx; ny = -ny; }
+  const { ax, ay, bx, by, nx, ny } = swipeSegment(G, from, to, st.len);
   while (G.walls.length >= st.maxWalls) G.walls.shift(); // cap: replace the oldest
   G.walls.push({ ax, ay, bx, by, nx, ny, hp: st.hp, maxHp: st.hp, tick: 0 });
   for (let i = 0; i <= 5; i++) {
@@ -146,15 +179,11 @@ export function updateWeapons(G, dt) {
 
   // force blades in flight (ADR-0004 wave B): pierce all, die at the wall
   if (S.blades.length) {
-    const EDGE = 4;
     for (const bl of S.blades) {
       bl.life -= dt;
       bl.x += bl.vx * dt; bl.y += bl.vy * dt;
-      if (bl.x < EDGE || bl.x > G.W - EDGE || bl.y < EDGE || bl.y > G.H - EDGE || bl.life <= 0) {
-        addFlare(G.fx, Math.min(Math.max(bl.x, EDGE), G.W - EDGE),
-          Math.min(Math.max(bl.y, EDGE), G.H - EDGE),
-          bl.x < EDGE ? 1 : bl.x > G.W - EDGE ? -1 : 0,
-          bl.y < EDGE ? 1 : bl.y > G.H - EDGE ? -1 : 0);
+      if (outside(G, bl.x, bl.y) || bl.life <= 0) {
+        wallFlare(G, bl.x, bl.y);
         bl.dead = true; continue;
       }
       for (const e of S.enemies) {
@@ -336,10 +365,7 @@ export function updateWeapons(G, dt) {
     if (hit || m.life <= 0) {
       m.dead = true;
       burst(G.fx, m.x, m.y, '#ffd24d', 10, 150, 0.35, 2.5);
-      for (const e of G.S.enemies) {
-        if (e.dead) continue;
-        if (dist(m.x, m.y, e.x, e.y) <= m.blast + e.r) damageEnemy(G, e, m.dmg);
-      }
+      aoe(G, m.x, m.y, m.blast, m.dmg);
     }
   }
   S.missiles = S.missiles.filter(m => !m.dead);
@@ -356,11 +382,8 @@ export function updateWeapons(G, dt) {
         const ty = G.cy + Math.sin(a) * 46;
         const e = nearestEnemy(S, tx, ty, st.range);
         if (!e) continue;
-        const d = dist(tx, ty, e.x, e.y) || 1;
-        S.bullets.push({
-          x: tx, y: ty, vx: ((e.x - tx) / d) * 460, vy: ((e.y - ty) / d) * 460,
-          dmg: st.dmg, pierce: 0, r: 2.5, life: 6, color: '#ffd24d', hit: new Set(),
-        });
+        fireBullet(S, tx, ty, Math.atan2(e.y - ty, e.x - tx), 460, st.dmg,
+          { r: 2.5, color: '#ffd24d' });
         fired = true;
       }
       if (fired) sfx('shoot');
@@ -393,9 +416,7 @@ export function updateWeapons(G, dt) {
           burst(G.fx, m.x, m.y, '#9ff3ff', 16, 230, 0.4, 2.5);
           burst(G.fx, m.x, m.y, '#e8fbff', 8, 90, 0.25, 1.5);
           shake(G.fx, 2);
-          for (const t2 of S.enemies) {
-            if (!t2.dead && dist(m.x, m.y, t2.x, t2.y) <= m.blast + t2.r) damageEnemy(G, t2, m.dmg);
-          }
+          aoe(G, m.x, m.y, m.blast, m.dmg);
           sfx('nova');
           break;
         }
@@ -434,15 +455,11 @@ export function updateWeapons(G, dt) {
       burst(G.fx, sh.tx, sh.ty, '#ffd24d', big ? 28 : 18, big ? 300 : 240, 0.45, 3);
       burst(G.fx, sh.tx, sh.ty, '#fff3d0', big ? 14 : 8, big ? 140 : 100, 0.25, 1.5);
       shake(G.fx, big ? 5 : 2);
-      for (const e of S.enemies) {
-        if (e.dead || dist(sh.tx, sh.ty, e.x, e.y) > sh.blast + e.r) continue;
-        damageEnemy(G, e, sh.dmg);
-        if (sh.knock && !e.dead) {
-          // radial shove scaling with charge (core.md meteor row)
-          const d = dist(sh.tx, sh.ty, e.x, e.y) || 1;
-          applyKnock(e, ((e.x - sh.tx) / d) * sh.knock, ((e.y - sh.ty) / d) * sh.knock);
-        }
-      }
+      // survivors of a meteor take a radial shove scaling with charge (core.md)
+      aoe(G, sh.tx, sh.ty, sh.blast, sh.dmg, sh.knock ? e => {
+        const d = dist(sh.tx, sh.ty, e.x, e.y) || 1;
+        applyKnock(e, ((e.x - sh.tx) / d) * sh.knock, ((e.y - sh.ty) / d) * sh.knock);
+      } : null);
       if (sh.scorch && S.fires.length < 40) {
         S.fires.push({
           x: sh.tx, y: sh.ty, r: sh.blast * 0.5, dps: sh.scorch.dps,
@@ -476,12 +493,11 @@ export function updateWeapons(G, dt) {
         sfx('wave');
       } else wt.cataT = 0.2;
     }
-    const EDGE = 4;
     for (const b of S.boulders) {
       b.life -= dt;
       b.rot += 2.2 * dt;
       b.x += b.vx * dt; b.y += b.vy * dt;
-      if (b.x < EDGE || b.x > G.W - EDGE || b.y < EDGE || b.y > G.H - EDGE || b.life <= 0) {
+      if (outside(G, b.x, b.y) || b.life <= 0) {
         burst(G.fx, b.x, b.y, '#bcd8e0', 14, 160, 0.4, 2.5); // crumble
         shake(G.fx, 2);
         b.dead = true; continue;
@@ -608,12 +624,10 @@ export function updateWeapons(G, dt) {
       if (aimReady()) {
         const base = aimAngle();
         for (let i = 0; i < st.pellets; i++) {
-          const a = base + (Math.random() * 2 - 1) * st.spread;
-          const sp = st.speed + (Math.random() * 2 - 1) * st.jitter;
-          S.bullets.push({
-            x: G.cx, y: G.cy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
-            dmg: st.dmg, pierce: 0, r: 3, life: 6, color: '#bfe9ff', hit: new Set(),
-          });
+          fireBullet(S, G.cx, G.cy,
+            base + (Math.random() * 2 - 1) * st.spread,
+            st.speed + (Math.random() * 2 - 1) * st.jitter,
+            st.dmg, { color: '#bfe9ff' });
         }
         sfx('shoot');
         wt.scatT = st.cd * S.cdMult;
@@ -627,11 +641,7 @@ export function updateWeapons(G, dt) {
     if (wt.burstLeft > 0) {
       wt.burstGapT -= dt;
       if (wt.burstGapT <= 0 && G.aim) {
-        const a = aimAngle();
-        S.bullets.push({
-          x: G.cx, y: G.cy, vx: Math.cos(a) * st.speed, vy: Math.sin(a) * st.speed,
-          dmg: st.dmg, pierce: 0, r: 3, life: 6, color: '#9ff3ff', hit: new Set(),
-        });
+        fireBullet(S, G.cx, G.cy, aimAngle(), st.speed, st.dmg);
         sfx('shoot');
         wt.burstLeft--;
         wt.burstGapT += st.gap;
@@ -653,20 +663,13 @@ export function updateWeapons(G, dt) {
     if (wt.heavyPhaseT <= 0) {
       if (!aimReady()) wt.heavyPhaseT = 0.1;
       else if (wt.heavyPhase < 3) {
-        const a = aimAngle();
-        S.bullets.push({
-          x: G.cx, y: G.cy, vx: Math.cos(a) * st.lightSpeed, vy: Math.sin(a) * st.lightSpeed,
-          dmg: st.lightDmg, pierce: 0, r: 2.5, life: 6, color: '#9ff3ff', hit: new Set(),
-        });
+        fireBullet(S, G.cx, G.cy, aimAngle(), st.lightSpeed, st.lightDmg, { r: 2.5 });
         sfx('shoot');
         wt.heavyPhase++;
         wt.heavyPhaseT = wt.heavyPhase === 3 ? st.pause : st.lightGap;
       } else {
-        const a = aimAngle();
-        S.bullets.push({
-          x: G.cx, y: G.cy, vx: Math.cos(a) * st.heavySpeed, vy: Math.sin(a) * st.heavySpeed,
-          dmg: st.heavyDmg, pierce: st.pierce, r: 7, life: 6, color: '#dff6ff', hit: new Set(),
-        });
+        fireBullet(S, G.cx, G.cy, aimAngle(), st.heavySpeed, st.heavyDmg,
+          { pierce: st.pierce, r: 7, color: '#dff6ff' });
         shake(G.fx, 1.5);
         sfx('shoot');
         wt.heavyPhase = 0;
@@ -713,15 +716,9 @@ export function updateWeapons(G, dt) {
       }
       b.x += b.vx * dt; b.y += b.vy * dt;
       // the force field returns it to sender (core.md: bounce, don't die)
-      if (b.x < EDGE || b.x > G.W - EDGE || b.y < EDGE || b.y > G.H - EDGE) {
-        addFlare(G.fx, Math.min(Math.max(b.x, EDGE), G.W - EDGE),
-          Math.min(Math.max(b.y, EDGE), G.H - EDGE),
-          b.x < EDGE ? 1 : b.x > G.W - EDGE ? -1 : 0,
-          b.y < EDGE ? 1 : b.y > G.H - EDGE ? -1 : 0);
-        if (b.x < EDGE) { b.x = EDGE; b.vx = Math.abs(b.vx); }
-        if (b.x > G.W - EDGE) { b.x = G.W - EDGE; b.vx = -Math.abs(b.vx); }
-        if (b.y < EDGE) { b.y = EDGE; b.vy = Math.abs(b.vy); }
-        if (b.y > G.H - EDGE) { b.y = G.H - EDGE; b.vy = -Math.abs(b.vy); }
+      if (outside(G, b.x, b.y)) {
+        wallFlare(G, b.x, b.y);
+        wallBounce(G, b);
         if (b.out) turn(b);
       }
       if (b.life <= 0) { b.dead = true; continue; }
@@ -737,16 +734,11 @@ export function updateWeapons(G, dt) {
   }
 
   // bullets (bolt + turret + aim ordnance)
-  const EDGE = 4; // arena wall inset (app.md "the play area is walled")
   for (const b of S.bullets) {
     b.life -= dt;
     b.x += b.vx * dt; b.y += b.vy * dt;
-    if (b.x < EDGE || b.x > G.W - EDGE || b.y < EDGE || b.y > G.H - EDGE) {
-      const fx = Math.min(Math.max(b.x, EDGE), G.W - EDGE);
-      const fy = Math.min(Math.max(b.y, EDGE), G.H - EDGE);
-      addFlare(G.fx, fx, fy,
-        b.x < EDGE ? 1 : b.x > G.W - EDGE ? -1 : 0,
-        b.y < EDGE ? 1 : b.y > G.H - EDGE ? -1 : 0);
+    if (outside(G, b.x, b.y)) {
+      wallFlare(G, b.x, b.y);
       b.dead = true; continue;
     }
     if (b.life <= 0) { b.dead = true; continue; }
@@ -795,7 +787,6 @@ function updateBeam(G, dt) {
     if (len > 4) {
       // clip the beam at the arena wall (app.md): it blooms there, not beyond
       const ux = dx / len, uy = dy / len;
-      const EDGE = 4;
       let t = 1600;
       if (ux > 0) t = Math.min(t, (G.W - EDGE - G.cx) / ux);
       else if (ux < 0) t = Math.min(t, (EDGE - G.cx) / ux);
