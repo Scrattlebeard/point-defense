@@ -97,6 +97,12 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
 - **Where:** `src/core/waves.js` rollVariant (single-roll today), `core.md` Variants, xp mults need a stacking rule (multiplicative?).
 - **Context:** Future work, deliberately unscheduled. GDD threat-design section will carry the intent; this pin is the mechanical breadcrumb.
 
+## Salvage sector violates the new no-meta-acceleration rule (GDD session, 2026-07-24)
+- **What:** GDD rule ratified: **no upgrades that speed up meta-progression** (no +shards, no meta-exp boosters) — managing the in-run-power-vs-rewards tradeoff is not fun (Daniel). The entire Salvage income line (salv1–4, goldrush, quartermaster's salvage half) violates it and must be redesigned; the sector needs a new theme (its non-income nodes — warchest etc. — can stay).
+- **Why:** Two laws convict it: the ratified rule, plus the focus law (income nodes are an optimizer's no-brainer first-buy — never a real choice). Corollary rule: QoL unlocks are milestone-granted by total investment (e.g. third hold weapon → hold-priority auto-unlocks), never explicit purchases.
+- **Where:** `src/core/config.js` LATTICE Salvage sector, `tech.js` effectsOf salvageAdd, `state.js` payout, `core.md` + ADR-0003 (supersede note), state tests pinning salvage.
+- **Context:** Save-compat: owned salvage nodes need a migration story (free respec makes this easy — refund on load). Redesign is open; do it when the GDD Builds/Meta chapters land.
+
 ## Haptics + better sound design
 - **What:** `navigator.vibrate` on tower hit / boss spawn; richer synth (noise bursts for explosions, filter sweeps).
 - **Why:** Phone-first game, big cheap juice win.
