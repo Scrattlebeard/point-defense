@@ -145,6 +145,15 @@ status axis + §11 Route added after the prototype audit of 2026-07-25</p>
     <a href="#law-no-meta-accel">no-meta-accel</a>
     <a href="#law-qol">qol-milestone</a>
   </div>
+  <p style="margin:.9rem 0 0; font-size:.88rem; color:var(--dim);">
+    <strong style="color:var(--ink)">Laws bind the default, not the chassis.</strong>
+    A tower, build or future system may <em>deliberately</em> break one — a chassis whose
+    whole identity is "actually, you <em>can</em> park and turtle" is a legitimate future.
+    The break must be named on the law it breaks, and must read as a choice the player made
+    rather than something that fell out of stacking upgrades nobody planned. That distinction
+    is the whole difference between an exception and a loophole
+    (<a href="../adr/0007-laws-bind-the-default.md">ADR-0007</a>).
+  </p>
 </nav>
 
 <nav class="toc" aria-label="Contents">
@@ -334,9 +343,13 @@ howitzer better and it hits harder; point a boomerang better and it still sweeps
 back on its own geometry — so the boomerang is infrastructure that happens to read the aim,
 and it sits with the autos. A beam is aim-driven too, and is a hold, not a gun.</p>
 
-<p><strong>Every run starts with a gun; bolt is the default one.</strong> Not every tower
-need start with bolt — a chassis that opens with a howitzer is a legible identity
-(this amends README pillar 1, which said every tower taps bolt).</p>
+<p><strong>Bolt is the default weapon — not a guaranteed gun.</strong> A run starts with
+whatever its tower's loadout says, and a chassis may open with a howitzer, or with a beam
+and no gun at all. The gun slot may sit empty, in a run or permanently
+(<a href="../adr/0007-laws-bind-the-default.md">ADR-0007</a>; this amends README pillar 1,
+which said every tower taps bolt). The cost is real — the aim vocabulary no longer teaches
+itself from second one in every run — so a gunless chassis is a deliberate unlock and never
+the first tower a new player meets. Onboarding is the Bastion's job.</p>
 
 <h3>Forms are texture</h3>
 <p>Mastery-unlocked weapon <strong>forms</strong> (<a href="#builds">§7</a>) change a

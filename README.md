@@ -127,9 +127,10 @@ parameter, or a new URL is silently minted and the old link goes stale.
 
 ## Design pillars (the .md-level truths of the game)
 
-1. **Gestures are weapon classes — and the pointer is the aim.** Every run starts with a
-   **gun**, and bolt is the default one *(amended by ADR-0006: a tower may open with a
-   different gun — never with none)*. Guns auto-fire toward the standing aim point: the
+1. **Gestures are weapon classes — and the pointer is the aim.** Bolt is the **default
+   weapon**, not a guaranteed one *(ADR-0006, corrected by ADR-0007: a tower may open with
+   a different gun, or with no gun at all — the gun slot may sit empty)*. Guns auto-fire
+   toward the standing aim point: the
    live cursor on desktop, the last touch position on mobile. Aim lines show the volley
    directions. Swipe = force wall, hold = channeled beam — unlocked in-run via level-ups,
    so the gesture vocabulary teaches itself. Every tap and swipe also updates the aim — no
@@ -140,7 +141,9 @@ parameter, or a new URL is silently minted and the old link goes stale.
    **deliberately insufficient alone**: what they buy is not rest, it is the freedom to
    spend every second of focus on the decisions that matter. The veteran is a conductor,
    hands busy every few seconds, all of it high-leverage. Build scarcity (ADR-0006's slot
-   budget) and threats that cannot be delegated are what keep this true.
+   budget) and threats that cannot be delegated are what keep this true. **This pillar binds
+   the default chassis:** a tower may be designed to break it outright (ADR-0007), provided
+   the break is named on the pillar and reads as an identity the player chose.
    *(Rewritten 2026-07-25. This pillar previously read "attention early, idle power fantasy
    late — the Vampire Survivors curve," which GDD §3 contradicts and outranks. Taken
    seriously, the old pillar produced a measurable result: a full-gear run with the aim
