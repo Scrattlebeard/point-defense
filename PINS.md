@@ -70,6 +70,21 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
 - **Context:** GitHub Pages hosting stays static throughout — no server of ours at
   any step. Discussed 2026-07-24 (chat); Daniel: "put a pin in it."
 
+## Siege strike readability (follow-up to the 2026-07-24 besiege rework)
+- **What:** Besiegers (core.md Enemies) currently strike with only a small particle
+  burst + the generic tower shake/flash — consider a telegraph (wind-up lunge, or a
+  strike flash on the attacker) so "who is hurting me" reads at a glance when several
+  shapes hold the rim. Also playtest the pile-up feel: a surrounded tower now takes
+  N×dmg/0.9s sustained instead of N one-shot hits — does death read as a siege lost
+  or as an abrupt melt?
+- **Why:** Kamikaze deaths were self-announcing (attacker vanished); a static besieger
+  is easy to misread as harmless. Damage attribution is a legibility pillar elsewhere
+  (flame's watch-list entry, same file).
+- **Where:** `src/app/enemies.js` contact branch, `render.js` if a lunge/telegraph is
+  drawn; spec in `core.md` Enemies.
+- **Context:** Landed sim-verified only (calibrate in band, median 8). Daniel +
+  playtester are the feel authority — first dev-channel playtest decides.
+
 ## Haptics + better sound design
 - **What:** `navigator.vibrate` on tower hit / boss spawn; richer synth (noise bursts for explosions, filter sweeps).
 - **Why:** Phone-first game, big cheap juice win.

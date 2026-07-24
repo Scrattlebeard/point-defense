@@ -60,6 +60,21 @@ test('90 sim-seconds of bastion play: waves advance, shapes die, levels arrive',
   assert.ok(G.meta.seen.enemies.includes('grunt'), 'sighting not recorded in meta');
 });
 
+test('shapes besiege the Point: survive contact, hold the rim, strike on a cadence', () => {
+  // core.md Enemies: reaching the Point is a siege, not a kamikaze — the shape
+  // stops at the rim and strikes dmg every 0.9s (first strike on arrival).
+  const G = makeG();
+  G.S.weapons.bolt = 0; // nothing shoots back
+  const e = spawnEnemy(G, 'grunt', null, G.cx, G.cy - 40); // at the rim
+  const hp0 = G.S.hp;
+  for (let i = 0; i < 120; i++) updateGame(G, 1 / 60); // 2s: strikes at ~0, 0.9, 1.8
+  assert.ok(!e.dead, 'besieger died on contact (kamikaze regression)');
+  const d = Math.hypot(e.x - G.cx, e.y - G.cy);
+  assert.ok(d >= 20, `besieger burrowed into the tower center (d=${d.toFixed(1)})`);
+  const struck = (hp0 - G.S.hp) / e.dmg;
+  assert.ok(struck >= 2 && struck <= 4, `expected ~3 strikes in 2s, saw ${struck}`);
+});
+
 test('a weaponless Point falls', () => {
   // the bolt now auto-fires even unaimed, so "undefended" means no bolt at all
   const G = makeG();

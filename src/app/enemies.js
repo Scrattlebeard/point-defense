@@ -224,14 +224,17 @@ export function updateEnemies(G, dt) {
       e.calSlowT -= dt;
       slow *= 1 - e.calSlow / enemyMass(e.age);
     }
-    // seek the Point
+    // seek the Point — stop at the rim: besiegers hold position, they don't
+    // burrow (core.md Enemies "besiege"). Knockback rides on top unclamped,
+    // so CC can still shove a besieger off the rim; it walks back in.
     const ux = (G.cx - e.x) / d, uy = (G.cy - e.y) / d;
-    e.x += (ux * e.spd * slow + e.kbx) * dt;
-    e.y += (uy * e.spd * slow + e.kby) * dt;
+    const adv = Math.min(e.spd * slow * dt, Math.max(0, d - (e.r + TOWER_R)));
+    e.x += ux * adv + e.kbx * dt;
+    e.y += uy * adv + e.kby * dt;
     e.kbx *= Math.pow(0.02, dt); // knockback decays hard
     e.kby *= Math.pow(0.02, dt);
-    // contact with the Point
-    if (d < e.r + TOWER_R) {
+    // contact with the Point (core.md Enemies: siege, not kamikaze)
+    if (d < e.r + TOWER_R + 1) {
       if (e.boss) {
         if (e.contactCd <= 0) {
           hitTower(G, e.dmg);
@@ -240,11 +243,12 @@ export function updateEnemies(G, dt) {
           const m = enemyMass(e.age);
           e.kbx = (-ux * 420) / m; e.kby = (-uy * 420) / m;
         }
-      } else {
+      } else if (e.contactCd <= 0) {
+        // besiege: strike and stay — dmg every 0.9s, same cadence as the
+        // wall siege (core.md force wall row)
         hitTower(G, e.dmg);
-        // kamikaze: dies uncelebrated — no xp, no splits, no explosion
-        e.dead = true;
-        burst(G.fx, e.x, e.y, e.color, 8, 110);
+        e.contactCd = 0.9;
+        burst(G.fx, e.x, e.y, e.color, 5, 90, 0.25, 2);
       }
     }
   }

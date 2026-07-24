@@ -86,8 +86,15 @@ prereqs enforced), not exact constants, so tuning stays cheap.
 
 ## Enemies (`config.js: ENEMIES`)
 
-Base shapes; contact with the Point deals `dmg` and the enemy dies (kamikaze), except
-the boss, which rams, knocks itself back, and comes again.
+Base shapes; on reaching the Point they **besiege** it: stop at the rim and strike
+for `dmg` every 0.9s (first strike on arrival) — same siege grammar as the force
+wall ("shapes in contact attack it"). Knockback still applies, so CC can shove a
+besieger off the rim; it walks back in. The boss keeps its own melee identity:
+ram, self-knockback, come again. *(Reworked 2026-07-24 from v1 kamikaze — contact
+killed the attacker, uncelebrated. Consequences of the rework are deliberate:
+every shape now dies by player hand, so every shape pays XP; splitters split and
+volatiles burst even at the rim — a volatile reaching the Point is a standing
+threat, not a free trade.)*
 
 **Spawn geometry — time-to-Point is the invariant, not speed** (`geom.edgeSpawn`,
 2026-07-23). Wave spawns appear ON the arena wall (uniform over the perimeter, offset
