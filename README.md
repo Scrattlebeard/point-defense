@@ -68,6 +68,12 @@ deployed from branches — not separate repos):
   outright; a dev/beta failure emits a warning and deploys without that channel
   (its subpath 404s until fixed) — a broken experiment on `dev` must never
   block shipping `main`.
+- *Repo-external config (recorded because it lives outside git):* the
+  `github-pages` **environment branch policy** must allowlist `main`, `dev`
+  AND `beta` — GitHub's default is main-only, which rejects channel-triggered
+  deploys with "not allowed to deploy due to environment protection rules"
+  (bit on first deploy, 2026-07-24; fixed via
+  `gh api -X POST repos/…/environments/github-pages/deployment-branch-policies -f name=dev`).
 - **Channels share the browser origin**, so the save key is channel-scoped
   (`meta.js` appends `.dev`/`.beta` from the path) — a dev playtest can never
   read or overwrite the real save.
