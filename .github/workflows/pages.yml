@@ -74,6 +74,16 @@ jobs:
           npm run build
           mkdir -p site/dev
           cp dist/index.html site/dev/index.html
+      - name: gdd (dev head - the living design doc)
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          if ! git show-ref -q refs/remotes/origin/dev; then
+            echo "no dev branch - gdd skipped"; exit 0
+          fi
+          git checkout --force --detach origin/dev
+          mkdir -p site/gdd
+          cp gdd/index.html site/gdd/index.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

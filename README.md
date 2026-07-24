@@ -61,6 +61,7 @@ deployed from branches — not separate repos):
 |---------|-----|--------|--------------|
 | prod | `https://scrattlebeard.github.io/point-defense/` | `prod` | **human-verified releases** — moves only via `scripts/promote`, after playtesting on dev. Gated (tests + calibrate band) as a backstop against non-loop pushes |
 | beta | `…/point-defense/beta/` | `beta` | release candidate — promoted via `scripts/promote beta`; prod gates. Idle until a real release flow exists |
+| gdd  | `…/point-defense/gdd/`  | `dev`  | **the living GDD** (`gdd/index.html`) — served from dev head so it tracks main; failure warns, never blocks |
 | dev  | `…/point-defense/dev/`  | `dev`  | **the default target**: tracks `main` — every land is pushed as `main main:dev`, so day-to-day work is playtested here first. May be force-pushed with out-of-band experiments (the band-gate escape hatch). Build-only in CI: `main` is already loop-gated before it gets here |
 
 - **Ship loop (dev-first, decided 2026-07-24):** loop green → land → `git push
