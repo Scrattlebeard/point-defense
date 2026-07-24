@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# scripts/promote [prod|beta] — move a release channel's pointer to current main.
+# Spec: README.md "Deployment" (dev-first flow): dev tracks main automatically;
+# prod and beta move only through this explicit, human-invoked step.
+set -euo pipefail
+
+chan="${1:-prod}"
+case "$chan" in
+  prod|beta) ;;
+  *) echo "usage: scripts/promote [prod|beta]" >&2; exit 1 ;;
+esac
+
+root="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")"
+# plain push = fast-forward only: a diverged channel branch means something
+# was force-pushed there and deserves a human look, not a silent overwrite
+git -C "$root" push origin main:"$chan"
+echo "promoted: main → $chan ($(git -C "$root" rev-parse --short main))"

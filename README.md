@@ -56,20 +56,26 @@ The phone-playable build is **GitHub Pages**, one site with three **release
 channels** (a repo gets exactly one Pages site, so channels are subpaths
 deployed from branches — not separate repos):
 
-| channel | URL | branch | gates |
-|---------|-----|--------|-------|
-| prod | `https://scrattlebeard.github.io/point-defense/` | `main` | tests + calibrate band |
-| beta | `…/point-defense/beta/` | `beta` | tests + calibrate band (release candidate — prod rules) |
-| dev  | `…/point-defense/dev/`  | `dev`  | **build only, by design** — dev exists to playtest unfinished and out-of-band things; the escape hatch from the band gate. Nothing reaches `main` except through the loop, so the gate loses nothing |
+| channel | URL | branch | role & gates |
+|---------|-----|--------|--------------|
+| prod | `https://scrattlebeard.github.io/point-defense/` | `prod` | **human-verified releases** — moves only via `scripts/promote`, after playtesting on dev. Gated (tests + calibrate band) as a backstop against non-loop pushes |
+| beta | `…/point-defense/beta/` | `beta` | release candidate — promoted via `scripts/promote beta`; prod gates. Idle until a real release flow exists |
+| dev  | `…/point-defense/dev/`  | `dev`  | **the default target**: tracks `main` — every land is pushed as `main main:dev`, so day-to-day work is playtested here first. May be force-pushed with out-of-band experiments (the band-gate escape hatch). Build-only in CI: `main` is already loop-gated before it gets here |
 
-- `.github/workflows/pages.yml` deploys on any push to `main`/`dev`/`beta`. A
-  Pages deploy replaces the whole site, so every run assembles **all** channels
-  from their branch heads. Failure isolation: a prod failure blocks the deploy
-  outright; a dev/beta failure emits a warning and deploys without that channel
-  (its subpath 404s until fixed) — a broken experiment on `dev` must never
-  block shipping `main`.
+- **Ship loop (dev-first, decided 2026-07-24):** loop green → land → `git push
+  origin main main:dev` → playtest on the dev URL → `scripts/promote` when it's
+  earned prod. The loop's gates verify the sim; the promote step verifies the
+  *feel* — the calibrate robot green-lit a tech tree whose nodes were
+  unclickable for two days, which is exactly the class of bug only thumbs catch.
+- `.github/workflows/pages.yml` deploys on any push to `prod`/`dev`/`beta`
+  (`main` maps to no channel — its content reaches Pages via the `main:dev`
+  push). A Pages deploy replaces the whole site, so every run assembles **all**
+  channels from their branch heads. Failure isolation: a prod-channel failure
+  blocks the deploy outright; a dev/beta failure emits a warning and deploys
+  without that channel (its subpath 404s until fixed) — a broken experiment on
+  `dev` must never block redeploying prod.
 - *Repo-external config (recorded because it lives outside git):* the
-  `github-pages` **environment branch policy** must allowlist `main`, `dev`
+  `github-pages` **environment branch policy** must allowlist `prod`, `dev`
   AND `beta` — GitHub's default is main-only, which rejects channel-triggered
   deploys with "not allowed to deploy due to environment protection rules"
   (bit on first deploy, 2026-07-24; fixed via

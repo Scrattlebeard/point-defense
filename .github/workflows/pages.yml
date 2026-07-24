@@ -1,17 +1,18 @@
 # Deploy all release channels to GitHub Pages on any channel push.
-# Spec: README.md "Deployment". One Pages site, three channels:
-#   /       <- main  (gated: tests + calibrate band)
-#   /beta/  <- beta  (gated like prod - it's a release candidate)
-#   /dev/   <- dev   (build only, BY DESIGN - the playtest escape hatch)
+# Spec: README.md "Deployment" (dev-first flow). One Pages site, three channels:
+#   /       <- prod  (human-promoted via scripts/promote; gated as backstop)
+#   /beta/  <- beta  (promoted release candidate; prod gates)
+#   /dev/   <- dev   (tracks main on every land; build only - main is loop-gated)
+# main maps to NO channel: its content reaches Pages via the `main:dev` push.
 # A Pages deploy replaces the whole site, so every run assembles all channels
 # from their branch heads. Prod failure kills the deploy; dev/beta failures
 # warn and deploy without that channel - a broken experiment must never block
-# shipping main.
+# redeploying prod.
 name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main, dev, beta]
+    branches: [prod, dev, beta]
   workflow_dispatch:
 
 permissions:
@@ -36,10 +37,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: prod channel (main, gated)
+      - name: prod channel (prod, gated)
         run: |
           set -euo pipefail
-          git checkout --force --detach origin/main
+          git checkout --force --detach origin/prod
           npm ci
           npm test
           # onboarding-band gate (README Deployment, ADR-0003): out of band = no ship
