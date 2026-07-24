@@ -26,10 +26,13 @@ const G = {
 setMuted(!G.meta.sound);
 
 const PHONE_ZOOM = 0.75; // app.md "Phone zoom (out)" — more arena on small screens
+const MAX_FIELD = { w: 1400, h: 1000 }; // app.md "Field size cap" — screen size must not be a difficulty setting
 
 function resize() {
   const dpr = Math.min(2, window.devicePixelRatio || 1);
-  const zoom = Math.min(window.innerWidth, window.innerHeight) < 600 ? PHONE_ZOOM : 1;
+  const zoom = Math.min(window.innerWidth, window.innerHeight) < 600
+    ? PHONE_ZOOM
+    : Math.max(1, window.innerWidth / MAX_FIELD.w, window.innerHeight / MAX_FIELD.h);
   G.zoom = zoom;
   G.W = window.innerWidth / zoom; G.H = window.innerHeight / zoom;
   G.cx = G.W / 2; G.cy = G.H / 2;
