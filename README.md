@@ -52,15 +52,30 @@ non-zero when out of band).
 
 ## Deployment (GitHub Pages — canonical)
 
-The phone-playable build is **GitHub Pages** at
-`https://scrattlebeard.github.io/point-defense/`.
+The phone-playable build is **GitHub Pages**, one site with three **release
+channels** (a repo gets exactly one Pages site, so channels are subpaths
+deployed from branches — not separate repos):
 
-- `.github/workflows/pages.yml` deploys on every push to `main`: `npm ci` →
-  `npm test` → `node scripts/calibrate.mjs 32` → `npm run build` → publish
-  `dist/`. A red test blocks the deploy — the pipeline enforces the ship loop,
-  not convention — and so does an out-of-band calibrate (ADR-0003 guardrail:
-  fresh-run median death wave in [5,10]), making the onboarding band unskippable
-  rather than a remember-to-run tool. 32 trials (vs the local default 12)
+| channel | URL | branch | gates |
+|---------|-----|--------|-------|
+| prod | `https://scrattlebeard.github.io/point-defense/` | `main` | tests + calibrate band |
+| beta | `…/point-defense/beta/` | `beta` | tests + calibrate band (release candidate — prod rules) |
+| dev  | `…/point-defense/dev/`  | `dev`  | **build only, by design** — dev exists to playtest unfinished and out-of-band things; the escape hatch from the band gate. Nothing reaches `main` except through the loop, so the gate loses nothing |
+
+- `.github/workflows/pages.yml` deploys on any push to `main`/`dev`/`beta`. A
+  Pages deploy replaces the whole site, so every run assembles **all** channels
+  from their branch heads. Failure isolation: a prod failure blocks the deploy
+  outright; a dev/beta failure emits a warning and deploys without that channel
+  (its subpath 404s until fixed) — a broken experiment on `dev` must never
+  block shipping `main`.
+- **Channels share the browser origin**, so the save key is channel-scoped
+  (`meta.js` appends `.dev`/`.beta` from the path) — a dev playtest can never
+  read or overwrite the real save.
+- Prod gate detail: a red test blocks the deploy — the pipeline enforces the
+  ship loop, not convention — and so does an out-of-band calibrate (ADR-0003
+  guardrail: fresh-run median death wave in [5,10]), making the onboarding band
+  unskippable rather than a remember-to-run tool. 32 trials (vs the local
+  default 12)
   because the robot is genuinely random and a flaky gate stops being enforced —
   and because the whole sweep costs ~1s, flake resistance is nearly free; a
   persistent boundary-flake means the band or the trial count needs an explicit

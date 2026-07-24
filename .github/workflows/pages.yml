@@ -1,11 +1,17 @@
-# Deploy to GitHub Pages on every push to main.
-# Spec: README.md "Deployment". Tests AND the calibrate band gate the deploy —
-# red tests or an out-of-band onboarding curve, no ship.
+# Deploy all release channels to GitHub Pages on any channel push.
+# Spec: README.md "Deployment". One Pages site, three channels:
+#   /       <- main  (gated: tests + calibrate band)
+#   /beta/  <- beta  (gated like prod - it's a release candidate)
+#   /dev/   <- dev   (build only, BY DESIGN - the playtest escape hatch)
+# A Pages deploy replaces the whole site, so every run assembles all channels
+# from their branch heads. Prod failure kills the deploy; dev/beta failures
+# warn and deploy without that channel - a broken experiment must never block
+# shipping main.
 name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev, beta]
   workflow_dispatch:
 
 permissions:
@@ -25,17 +31,51 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm ci
-      - run: npm test
-      # onboarding-band gate (README Deployment, ADR-0003): out of band = no ship
-      - run: node scripts/calibrate.mjs 32
-      - run: npm run build
+      - name: prod channel (main, gated)
+        run: |
+          set -euo pipefail
+          git checkout --force --detach origin/main
+          npm ci
+          npm test
+          # onboarding-band gate (README Deployment, ADR-0003): out of band = no ship
+          node scripts/calibrate.mjs 32
+          npm run build
+          mkdir -p site
+          cp dist/index.html site/index.html
+      - name: beta channel (beta, gated)
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          if ! git show-ref -q refs/remotes/origin/beta; then
+            echo "no beta branch - channel skipped"; exit 0
+          fi
+          git checkout --force --detach origin/beta
+          npm ci
+          npm test
+          node scripts/calibrate.mjs 32
+          npm run build
+          mkdir -p site/beta
+          cp dist/index.html site/beta/index.html
+      - name: dev channel (dev, build only)
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          if ! git show-ref -q refs/remotes/origin/dev; then
+            echo "no dev branch - channel skipped"; exit 0
+          fi
+          git checkout --force --detach origin/dev
+          npm ci
+          npm run build
+          mkdir -p site/dev
+          cp dist/index.html site/dev/index.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: site
       - id: deployment
         uses: actions/deploy-pages@v4
