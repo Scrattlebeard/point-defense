@@ -248,6 +248,19 @@ button:active { transform: translateY(1px); }
   0%, 100% { filter: drop-shadow(0 0 2px var(--sec)); }
   50% { filter: drop-shadow(0 0 9px var(--sec)); }
 }
+#latLegend {
+  position: absolute; left: 10px; top: 10px;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap; max-width: 78%;
+  background: rgba(10, 13, 21, 0.75); border: 1px solid var(--panel-edge);
+  border-radius: 10px; padding: 7px 11px; pointer-events: none;
+}
+#latLegend span { display: flex; align-items: center; gap: 6px; font-size: 9.5px; letter-spacing: 0.1em; color: var(--dim); }
+#latLegend .lgBox { width: 13px; height: 13px; border-radius: 4px; border: 1px solid var(--panel-edge); background: #0c1120; }
+#latLegend .lgLocked { opacity: 0.4; }
+#latLegend .lgAvail { border-color: var(--accent); background: #111726; box-shadow: 0 0 5px rgba(77, 232, 255, 0.5); }
+#latLegend .lgPoor { border-color: rgba(77, 232, 255, 0.45); opacity: 0.6; }
+#latLegend .lgOwned { border-color: var(--accent); background: var(--accent); }
+#latLegend .lgDash { width: 20px; border-top: 2px dashed rgba(150, 170, 200, 0.55); }
 #nodeCard {
   position: absolute; left: 50%; transform: translateX(-50%);
   bottom: calc(12px + env(safe-area-inset-bottom));

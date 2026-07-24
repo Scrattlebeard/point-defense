@@ -85,34 +85,48 @@ function hBlocked(y, xa, xb, a, b) {
   }
   return false;
 }
+// Trim both ends to the card border (app.md): locked cards are translucent,
+// so an under-card segment reads as *through* the card. Points are copies —
+// never mutate POS entries.
+function trim(pts) {
+  const t0 = pts[0], t1 = pts[1];
+  if (t1.x !== t0.x) t0.x += Math.sign(t1.x - t0.x) * (BOX_W / 2);
+  else t0.y += Math.sign(t1.y - t0.y) * (BOX_H / 2);
+  const e0 = pts[pts.length - 1], e1 = pts[pts.length - 2];
+  if (e1.x !== e0.x) e0.x += Math.sign(e1.x - e0.x) * (BOX_W / 2);
+  else e0.y += Math.sign(e1.y - e0.y) * (BOX_H / 2);
+  return 'M' + pts.map(p => `${p.x},${p.y}`).join(' L');
+}
 function elbow(a, b) {
   if (Math.abs(b.x - a.x) < 50) {
     if (vBlocked(a, b)) {
       const gx = a.x + COL_W / 2 - 4; // right-hand gutter, offset off span-1 verticals
-      return `M${a.x},${a.y} L${gx},${a.y} L${gx},${b.y} L${b.x},${b.y}`;
+      return trim([{ ...a }, { x: gx, y: a.y }, { x: gx, y: b.y }, { ...b }]);
     }
     const my = (a.y + b.y) / 2;
-    return `M${a.x},${a.y} L${a.x},${my} L${b.x},${my} L${b.x},${b.y}`;
+    return trim([{ ...a }, { x: a.x, y: my }, { x: b.x, y: my }, { ...b }]);
   }
   // cross-column: vertical segment in a gutter — for multi-column hops the
   // midpoint would land ON a column, so pick whichever gutter routes clean
   const s = Math.sign(b.x - a.x);
   const late = b.x - s * (COL_W / 2), early = a.x + s * (COL_W / 2);
   if (!hBlocked(a.y, a.x, late, a, b) && !hBlocked(b.y, late, b.x, a, b)) {
-    return `M${a.x},${a.y} L${late},${a.y} L${late},${b.y} L${b.x},${b.y}`;
+    return trim([{ ...a }, { x: late, y: a.y }, { x: late, y: b.y }, { ...b }]);
   }
   if (!hBlocked(a.y, a.x, early, a, b) && !hBlocked(b.y, early, b.x, a, b)) {
-    return `M${a.x},${a.y} L${early},${a.y} L${early},${b.y} L${b.x},${b.y}`;
+    return trim([{ ...a }, { x: early, y: a.y }, { x: early, y: b.y }, { ...b }]);
   }
   // both lanes blocked — the flat multi-column hop with a card dead between:
   // jog through the pitch gap between lane rows for the middle stretch
   const jy = a.y + PITCH / 2;
-  return `M${a.x},${a.y} L${early},${a.y} L${early},${jy} L${late},${jy} L${late},${b.y} L${b.x},${b.y}`;
+  return trim([{ ...a }, { x: early, y: a.y }, { x: early, y: jy },
+    { x: late, y: jy }, { x: late, y: b.y }, { ...b }]);
 }
 
 // ---- pan/zoom state (module-scoped: survives re-renders, resets per session) ----
 const view = { x: 0, y: 0, k: 1 };
 let selectedId = null;
+let hoverId = null; // mouse-only card preview; never set on touch
 let wired = false;
 let zoomInit = false; // first render adapts k to the viewport (phones start closer)
 
@@ -236,22 +250,21 @@ export function renderLattice(G, hooks) {
     sub.textContent = state === 'owned' ? '✓' : `◆ ${n.cost}`;
     g.appendChild(sub);
     if (n.id === selectedId) g.classList.add('selected');
-    g.addEventListener('click', ev => {
-      if (dragMoved) return;
-      ev.stopPropagation();
-      selectedId = n.id;
-      renderLattice(G, hooks);
-    });
+    // no click listener here — pointer capture retargets clicks to the svg;
+    // taps are resolved in wireGestures' pointerup (app.md, the 2026-07-24 bug)
     pan.appendChild(g);
   }
 
   renderCard(G, hooks);
-  wireGestures(svg, pan, () => renderCard(G, hooks));
+  wireGestures(svg, pan,
+    id => { selectedId = id; renderLattice(G, hooks); },
+    () => renderCard(G, hooks));
 }
 
 function renderCard(G, hooks) {
   const card = document.getElementById('nodeCard');
-  const n = LATTICE.find(x => x.id === selectedId);
+  // mouse hover previews without selecting (app.md); touch never sets hoverId
+  const n = LATTICE.find(x => x.id === (hoverId ?? selectedId));
   if (!n) { card.classList.add('hidden'); return; }
   card.classList.remove('hidden');
   const state = nodeState(n, G.meta);
@@ -282,7 +295,7 @@ let dragMoved = false;
 function applyView(pan) {
   pan.setAttribute('transform', `translate(${view.x} ${view.y}) scale(${view.k})`);
 }
-function wireGestures(svg, pan, onTapBg) {
+function wireGestures(svg, pan, onTap, onHover) {
   if (wired) { applyView(pan); return; }
   wired = true;
   const pointers = new Map();
@@ -321,11 +334,29 @@ function wireGestures(svg, pan, onTapBg) {
     }
     pointers.set(ev.pointerId, cur);
   });
-  const up = ev => { pointers.delete(ev.pointerId); pinchD = 0; };
-  svg.addEventListener('pointerup', up);
-  svg.addEventListener('pointercancel', up);
-  svg.addEventListener('click', () => {
-    if (!dragMoved && selectedId !== null) { selectedId = null; onTapBg(); }
+  // Taps resolve HERE, not in click handlers: setPointerCapture retargets the
+  // derived click to the svg, so per-node listeners never fire (app.md — this
+  // made every node unselectable until 2026-07-24). elementFromPoint sees the
+  // real element under the finger regardless of capture.
+  svg.addEventListener('pointerup', ev => {
+    const wasSolo = pointers.size === 1;
+    pointers.delete(ev.pointerId); pinchD = 0;
+    if (wasSolo && !dragMoved) {
+      const t = document.elementFromPoint(ev.clientX, ev.clientY);
+      const g = t && t.closest ? t.closest('.latNode') : null;
+      onTap(g ? g.getAttribute('data-id') : null);
+    }
+  });
+  svg.addEventListener('pointercancel', ev => { pointers.delete(ev.pointerId); pinchD = 0; });
+  // mouse-only hover preview; guarded so re-entering descendants is a no-op
+  svg.addEventListener('pointerover', ev => {
+    if (ev.pointerType !== 'mouse' || pointers.size) return;
+    const g = ev.target.closest ? ev.target.closest('.latNode') : null;
+    const id = g ? g.getAttribute('data-id') : null;
+    if (id !== hoverId) { hoverId = id; onHover(); }
+  });
+  svg.addEventListener('pointerleave', ev => {
+    if (ev.pointerType === 'mouse' && hoverId !== null) { hoverId = null; onHover(); }
   });
   svg.addEventListener('wheel', ev => {
     ev.preventDefault();
