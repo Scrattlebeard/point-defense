@@ -79,3 +79,21 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
 - **Why:** Every 5th wave currently differs only in hp scale; names deserve behaviors.
 - **Where:** `src/app/enemies.js` (boss branch), spec first in `src/core/core.md` Enemies.
 - **Context:** Keep decisions in core (a `BOSS_MOVES` table), execution in shell, per pillar 5.
+
+## The Armory: human-hands balance pass (ADR-0004 shipped 2026-07-24 overnight)
+- **What:** All ten new weapons (scatter/burst/heavy/boomer · flame/meteor/blades ·
+  catapult/caltrop/cascade) are sim-verified only — numbers in `config.js` are
+  first-draft tuning. Also provisional: Armory/Arsenal node costs, and the whole
+  gesture-slot *feel* (does locking beam out after picking flame read as a choice
+  or a trap?).
+- **Why:** Daniel + playtester are the balance authority; the calibrate band only
+  guards the fresh-run curve (all ten are tech-locked, so onboarding is untouched —
+  verified in band, median 10, 2026-07-24).
+- **Where:** `src/core/config.js` weapon stats; specs in `core.md`; ADR-0004.
+- **Context / watch-list from the builder:** boomerang turn range is a fixed
+  ~484px (speed²/2·decel) regardless of screen — may feel short on desktop
+  ultrawide, long on phone; catapult targets a random living shape (may read as
+  aimless — candidate: bias toward the densest bearing); cascade cd 5.5s is
+  deliberately long (the weapon is a timing play), may frustrate before it
+  clicks; flame burn numbers are suppressed (fire flicker is the feedback) —
+  check that damage still feels attributable.
