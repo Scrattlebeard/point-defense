@@ -14,8 +14,8 @@ const SECTOR_COLOR = {
   Salvage: '#ffd24d', Arsenal: '#4de8ff', Armory: '#ff7fb0', Towers: '#ff9c59',
 };
 const COL_W = 185; // one column per ring, left→right (ADR-0005)
-const PITCH = 58;  // vertical pitch between nodes inside a (sector, ring) cell
-const BOX_W = 110, BOX_H = 46; // square node cards (app.md)
+const PITCH = 76;  // vertical pitch between nodes inside a (sector, ring) cell
+const BOX_W = 128, BOX_H = 64; // square node cards (app.md: name + effect + cost)
 const VIEW = 1000; // viewBox half-extent × 2
 
 // ---- computed layout: ring column × sector band + even spread (app.md) ----
@@ -136,6 +136,17 @@ const el = (tag, attrs = {}) => {
   return e;
 };
 
+// split a label into two lines at the space nearest its middle
+function splitBalanced(s) {
+  const words = s.split(' ');
+  let best = 1, diff = 1e9;
+  for (let i = 1; i < words.length; i++) {
+    const d = Math.abs(words.slice(0, i).join(' ').length - words.slice(i).join(' ').length);
+    if (d < diff) { diff = d; best = i; }
+  }
+  return [words.slice(0, best).join(' '), words.slice(best).join(' ')];
+}
+
 function nodeState(n, meta) {
   const owned = meta.tech.includes(n.id);
   if (owned) return 'owned';
@@ -225,28 +236,32 @@ export function renderLattice(G, hooks) {
     g.appendChild(el('rect', {
       x: -BOX_W / 2, y: -BOX_H / 2, width: BOX_W, height: BOX_H, rx: 8, class: 'latDot',
     }));
-    const words = n.name.split(' ');
-    let lines = [n.name];
-    if (n.name.length > 12 && words.length > 1) {
-      let best = 1, diff = 1e9;
-      for (let i = 1; i < words.length; i++) {
-        const d = Math.abs(words.slice(0, i).join(' ').length - words.slice(i).join(' ').length);
-        if (d < diff) { diff = d; best = i; }
-      }
-      lines = [words.slice(0, best).join(' '), words.slice(best).join(' ')];
-    }
-    const name = el('text', {
-      y: lines.length > 1 ? -10 : -4, class: 'latName', 'text-anchor': 'middle',
-    });
-    lines.forEach((ln, i) => {
-      const ts = el('tspan', { x: 0, dy: i === 0 ? 0 : 11 });
-      ts.textContent = ln;
-      name.appendChild(ts);
-    });
-    g.appendChild(name);
-    const sub = el('text', {
-      y: lines.length > 1 ? 15 : 13, class: 'latSub', 'text-anchor': 'middle',
-    });
+    // effect line (app.md): desc verbatim when it fits; unlock nodes say UNLOCK —
+    // their name already names the weapon, the sentence lives in the detail card
+    const isUnlock = n.effect && (n.effect.unlockWeapon || n.effect.unlockTower);
+    const descTxt = isUnlock ? 'UNLOCK' : n.desc;
+    const nameLines = n.name.length > 12 && n.name.includes(' ') ? splitBalanced(n.name) : [n.name];
+    const descLines = descTxt.length > 20 && descTxt.includes(' ') ? splitBalanced(descTxt) : [descTxt];
+    // baseline table per (name lines, desc lines) within the 64px card
+    const Y = {
+      '1,1': { name: -16, desc: 0, cost: 17 },
+      '2,1': { name: -22, desc: 3, cost: 19 },
+      '1,2': { name: -20, desc: -6, cost: 19 },
+      '2,2': { name: -24, desc: -1, cost: 23 },
+    }[`${nameLines.length},${descLines.length}`];
+    const tight = nameLines.length + descLines.length === 4;
+    const addLines = (cls, y, ls, dy) => {
+      const t = el('text', { y, class: cls, 'text-anchor': 'middle' });
+      ls.forEach((ln, i) => {
+        const ts = el('tspan', { x: 0, dy: i === 0 ? 0 : dy });
+        ts.textContent = ln;
+        t.appendChild(ts);
+      });
+      g.appendChild(t);
+    };
+    addLines('latName', Y.name, nameLines, tight ? 10 : 11);
+    addLines('latDesc', Y.desc, descLines, 10);
+    const sub = el('text', { y: Y.cost, class: 'latSub', 'text-anchor': 'middle' });
     sub.textContent = state === 'owned' ? '✓' : `◆ ${n.cost}`;
     g.appendChild(sub);
     if (n.id === selectedId) g.classList.add('selected');
@@ -288,6 +303,27 @@ function renderCard(G, hooks) {
   if (buy) buy.addEventListener('click', () => {
     if (canBuy(n.id, G.meta.tech, G.meta.shards)) hooks.onBuy(n.id);
   });
+  placeCard(card, n.id);
+}
+
+// Responsive card placement (app.md): wide wraps float the card beside the
+// node (flip left near the right edge, clamp vertically); narrow screens keep
+// the bottom-sheet CSS untouched.
+function placeCard(card, id) {
+  const wrap = document.getElementById('latticeWrap');
+  const wb = wrap.getBoundingClientRect();
+  const wide = wb.width >= 640;
+  card.classList.toggle('float', wide);
+  if (!wide) { card.style.left = ''; card.style.top = ''; return; }
+  const g = document.querySelector(`#latticeSvg [data-id="${id}"]`);
+  if (!g) return;
+  const gb = g.getBoundingClientRect();
+  const cw = card.offsetWidth, ch = card.offsetHeight;
+  let left = gb.right - wb.left + 12;
+  if (left + cw > wb.width - 8) left = gb.left - wb.left - cw - 12;
+  const top = Math.max(8, Math.min(wb.height - ch - 8, (gb.top + gb.bottom) / 2 - wb.top - ch / 2));
+  card.style.left = left + 'px';
+  card.style.top = top + 'px';
 }
 
 // ---- pan / pinch / wheel ----
@@ -345,6 +381,8 @@ function wireGestures(svg, pan, onTap, onHover) {
       const t = document.elementFromPoint(ev.clientX, ev.clientY);
       const g = t && t.closest ? t.closest('.latNode') : null;
       onTap(g ? g.getAttribute('data-id') : null);
+    } else {
+      onHover(); // pan/pinch ended — re-anchor a floating card (app.md)
     }
   });
   svg.addEventListener('pointercancel', ev => { pointers.delete(ev.pointerId); pinchD = 0; });
@@ -362,5 +400,6 @@ function wireGestures(svg, pan, onTap, onHover) {
     ev.preventDefault();
     view.k = Math.min(3, Math.max(0.5, view.k * (ev.deltaY < 0 ? 1.12 : 0.89)));
     applyView(document.getElementById('latPan'));
+    onHover(); // re-anchor a floating card after zoom (app.md)
   }, { passive: false });
 }
