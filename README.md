@@ -150,6 +150,7 @@ parameter, or a new URL is silently minted and the old link goes stale.
 
 | Path | What lives there |
 |------|------------------|
+| `gdd/index.html` | **The Game Design Document** — the experience spec, top of the `.md` tier (GDD > README/core.md). Living HTML, cross-linked |
 | `src/core/` | Pure domain core — see `src/core/core.md` |
 | `src/app/`  | Browser shell: loop, rendering, input, UI, audio — see `src/app/app.md` |
 | `test/`     | node:test suites over `src/core` (the enforceable spec) |
