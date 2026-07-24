@@ -62,6 +62,11 @@ Each pin carries: **what** (the change), **why it's worth doing**, **where** (fi
 - **Lifetime:** worktree = branch = task. More than ~3 alive means intentions are piling up unfinished — merge or kill.
 - Harness-spawned isolation worktrees manage their own lifecycle and don't count.
 - The human may work directly in main's tree; the invariant exists to isolate writers who can't see each other.
+- *Agent cwd discipline:* `land` removes the worktree and leaves the shell's cwd
+  either dead or reset to the repo root — so an agent's next relative-path command
+  silently targets main's tree (this bit four times on 2026-07-24 alone). Rule:
+  **agents start every shell command with an absolute `cd` into their worktree**;
+  relative paths never ride on inherited cwd.
 - *Load-bearing prerequisite:* worktree spin-up must be near-free. A discipline that costs two minutes per one-line fix gets skipped, and a skipped discipline is worse than no rule. No script, no rule.
 
 ## Working agreement
