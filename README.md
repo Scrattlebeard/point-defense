@@ -127,16 +127,24 @@ parameter, or a new URL is silently minted and the old link goes stale.
 
 ## Design pillars (the .md-level truths of the game)
 
-1. **Gestures are weapon classes — and the pointer is the aim.** The bolt (every tower
-   has it) auto-fires toward the standing aim point: the live cursor on desktop, the
-   last touch position on mobile. Aim lines show the volley directions. Swipe =
-   force wall, hold = channeled beam — unlocked in-run via level-ups, so the gesture
-   vocabulary teaches itself. Every tap and swipe also updates the aim — no gesture is
-   ever a dead input. *(v1 fired bolts per tap; replaced after the 2026-07-23 playtest
-   because spam-clicking out-damaged every auto weapon.)*
-2. **Skill is aim, power is auto.** Auto weapons (orbitals, nova, seekers, tesla, frost,
-   turrets) are the level-up economy; the bolt's max level adds a second, self-targeting
-   volley. Attention early, idle power fantasy late — the Vampire Survivors curve.
+1. **Gestures are weapon classes — and the pointer is the aim.** Every run starts with a
+   **gun**, and bolt is the default one *(amended by ADR-0006: a tower may open with a
+   different gun — never with none)*. Guns auto-fire toward the standing aim point: the
+   live cursor on desktop, the last touch position on mobile. Aim lines show the volley
+   directions. Swipe = force wall, hold = channeled beam — unlocked in-run via level-ups,
+   so the gesture vocabulary teaches itself. Every tap and swipe also updates the aim — no
+   gesture is ever a dead input. *(v1 fired bolts per tap; replaced after the 2026-07-23
+   playtest because spam-clicking out-damaged every auto weapon.)*
+2. **Skill is prioritization; power is delegation.** Auto weapons are the level-up economy
+   and absorb the *bottom* of the kill chain — never the player's attention. Autos are
+   **deliberately insufficient alone**: what they buy is not rest, it is the freedom to
+   spend every second of focus on the decisions that matter. The veteran is a conductor,
+   hands busy every few seconds, all of it high-leverage. Build scarcity (ADR-0006's slot
+   budget) and threats that cannot be delegated are what keep this true.
+   *(Rewritten 2026-07-25. This pillar previously read "attention early, idle power fantasy
+   late — the Vampire Survivors curve," which GDD §3 contradicts and outranks. Taken
+   seriously, the old pillar produced a measurable result: a full-gear run with the aim
+   parked and never touched again reached wave 58 at full HP. Hands were worth one wave.)*
 3. **Variants are read at a glance.** Enemy difficulty variations are *color/highlight
    grammar* on the same base shapes — outline = armor, white-hot glow = speed, pulsing
    core = volatile, green ring = regenerating, rotating ring = shielded. Shape says

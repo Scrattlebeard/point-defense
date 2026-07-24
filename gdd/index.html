@@ -43,6 +43,12 @@
   .badge.open { background: rgba(255,92,108,.15); color: var(--red); border: 1px solid rgba(255,92,108,.4); }
   .badge.tentative { background: rgba(255,184,77,.12); color: var(--amber); border: 1px solid rgba(255,184,77,.4); }
   .badge.future { background: rgba(122,134,153,.15); color: var(--dim); border: 1px solid rgba(122,134,153,.4); }
+  .badge.shipped { background: rgba(77,255,136,.12); color: var(--green); border: 1px solid rgba(77,255,136,.4); }
+  .badge.proto { background: rgba(255,184,77,.12); color: var(--amber); border: 1px solid rgba(255,184,77,.4); }
+  .badge.unbuilt { background: rgba(255,92,157,.12); color: var(--magenta); border: 1px solid rgba(255,92,157,.4); }
+  p.status { font-family: ui-monospace, monospace; font-size: .78rem; color: var(--dim);
+    margin: -.4rem 0 1.2rem; letter-spacing: .02em; }
+  p.status .badge { margin-right: .4em; }
   nav.toc, nav.laws {
     background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
     padding: 1rem 1.2rem; margin: 1.4rem 0;
@@ -101,7 +107,8 @@
 
 <h1>POINT DEFENSE</h1>
 <p class="subtitle">Game Design Document — the experience spec. A living document.</p>
-<p class="meta-line">v0.1 · 2026-07-24 · design authority: Daniel · drafted from the vision talk of the same date</p>
+<p class="meta-line">v0.2 · 2026-07-25 · design authority: Daniel · drafted from the vision talk of 2026-07-24;
+status axis + §11 Route added after the prototype audit of 2026-07-25</p>
 
 <div class="tierbox">
   <strong>Where this document sits.</strong> The GDD is the top of the spec stack:
@@ -112,6 +119,14 @@
   Marked passages: <span class="badge tentative">TENTATIVE</span> = stated once, not yet
   ratified hard · <span class="badge open">OPEN</span> = deliberately undecided, and the
   silence is load-bearing · <span class="badge future">FUTURE</span> = named organ, not designed.
+  <br><br><strong>Two axes, deliberately separate.</strong> Those badges say how settled the
+  <em>design</em> is. A second, orthogonal set says how <em>built</em> it is:
+  <span class="badge shipped">SHIPPED</span> in the player's hands ·
+  <span class="badge proto">PROTOTYPE</span> exists but not as described here ·
+  <span class="badge unbuilt">UNBUILT</span> no code surface at all.
+  A settled design can be unbuilt and a shipped mechanic can be unsettled; conflating the
+  two is how a spec quietly becomes a wish. Section status lines carry this axis, and
+  <a href="#route">§11 The Route</a> carries the order we close the gap in.
   <br><br><strong>This page takes inline comments.</strong> Hit 💬 on any block —
   select text first to quote it precisely. Comments live only in this browser
   (<code>localStorage</code>); the bar at bottom-right counts them and <em>export</em>
@@ -126,6 +141,7 @@
     <a href="#law-delegation">delegation</a>
     <a href="#law-legibility">legibility</a>
     <a href="#law-bosses">bosses</a>
+    <a href="#law-base-form">base-vs-form</a>
     <a href="#law-no-meta-accel">no-meta-accel</a>
     <a href="#law-qol">qol-milestone</a>
   </div>
@@ -144,10 +160,14 @@
     <li><a href="#visual-audio">Visual &amp; Audio Language</a></li>
     <li><a href="#onboarding">Onboarding</a></li>
     <li><a href="#futures">Futures &amp; Open Questions</a></li>
+    <li><a href="#route">The Route</a> — prototype → this document</li>
   </ol>
 </nav>
 
 <h2 id="vision"><span class="secnum">1</span>Vision</h2>
+<p class="status"><span class="badge proto">PROTOTYPE</span> The power fantasy lands; the
+horde does not credibly threaten it past the midgame, and the stand cannot yet hold
+(no win state exists). Focus — the core resource — is not scarce in code.</p>
 
 <p><strong>Point Defense is a Last Stand power fantasy.</strong> Your weapons tear
 through the horde — and the horde keeps coming. The odds are grim, new bullshit keeps
@@ -177,6 +197,11 @@ and accessibility assumptions.</p>
 <p class="backtop"><a href="#top">↑ top</a></p>
 
 <h2 id="the-run"><span class="secnum">2</span>The Run</h2>
+<p class="status"><span class="badge shipped">SHIPPED</span> escalation · death pays ·
+<span class="badge unbuilt">UNBUILT</span> end boss · win state · endless encore ·
+the level-up heal (the only free heal is 4% on wave clear, a different trigger on a
+different clock) · <span class="badge proto">PROTOTYPE</span> death-shape: measured
+full-bar deaths run 54–195s, of which the last 4–15s is the actual drowning.</p>
 
 <p>The anatomy of a stand:</p>
 <ul>
@@ -209,6 +234,11 @@ the signal business and out of the death business.</p>
 <p class="backtop"><a href="#top">↑ top</a></p>
 
 <h2 id="focus-economy"><span class="secnum">3</span>The Focus Economy</h2>
+<p class="status"><span class="badge unbuilt">UNBUILT</span> The delegation law does not
+hold. Measured 2026-07-25: a full-gear run with the aim point set once and never touched
+again survived 40 minutes to wave 58 at 100% HP, with zero enemies ever reaching the rim.
+Against a robot retargeting every 0.2s, hands were worth <em>one wave</em>. The veteran's
+ninety seconds below is a target, not a description.</p>
 
 <div class="law" id="law-delegation">
   <span class="law-name">Law · Delegation</span><br>
@@ -258,6 +288,10 @@ sentence contains a tradeoff. Tower choice may bend this archetype
 <p class="backtop"><a href="#top">↑ top</a></p>
 
 <h2 id="combat-grammar"><span class="secnum">4</span>Combat Grammar</h2>
+<p class="status"><span class="badge shipped">SHIPPED</span> the gesture vocabulary · no
+dead inputs · hold and swipe exclusivity · <span class="badge unbuilt">UNBUILT</span> the
+slot budget (autos are capped nowhere — a run can own all 15) · the gun slot · forms.
+Taxonomy ratified 2026-07-25, <a href="../adr/0006-weapon-taxonomy.md">ADR-0006</a>.</p>
 
 <h3>Gestures are weapon classes</h3>
 <p>Tap/aim ("gun"), hold (channel), swipe (field) — plus autos. The gesture vocabulary
@@ -277,11 +311,32 @@ the aim point).</p>
 </table></div>
 
 <h3>Slot grammar</h3>
-<p>A build fields at most <strong>1 gun · 1 hold · 1 swipe · up to 3 autos</strong>
-(numbers tunable, and <em>tower-bendable</em> — see <a href="#builds">§7</a>). The caps
-are <a href="#law-focus">the focus law</a> applied to builds: you cannot own everything,
-so identity is forced by scarcity. Power comes from depth, not collection.
-<span class="badge tentative">TENTATIVE</span> on exact numbers.</p>
+<p>A build fields <strong>at most 6 weapons, of which at most 1 gun, 1 hold and 1
+swipe</strong>. Autos have no cap of their own — they fill whatever the budget has left, so
+"up to 3 autos" is simply the maximally-diverse build, and skipping the hold buys you a
+fourth auto instead. The ceiling is <a href="#law-focus">the focus law</a> applied to builds:
+you cannot own everything, so identity is forced by scarcity, and power comes from depth
+rather than collection. <span class="badge tentative">TENTATIVE</span> on the exact numbers;
+the budget-with-ceilings <em>shape</em> is ratified
+(<a href="../adr/0006-weapon-taxonomy.md">ADR-0006</a>).</p>
+
+<p><strong>The slot count is tower-bent, never bought.</strong> A "+1 slot" purchase would
+be the best node in the game and would un-scarce the thing scarcity is holding up. Towers
+bend the grammar instead — the gunslinger's 2 guns + 2 autos is a chassis, not a shop item
+(<a href="#builds">§7</a>).</p>
+
+<h3>Guns, holds, swipes, autos</h3>
+<p>Two axes, deliberately separate. <strong>Input</strong> is how you drive a weapon —
+aim, hold, swipe, or nothing. <strong>Category</strong> is what it costs you, and it is the
+load-bearing one. The test that sorts them is in the "judged by" column above:
+<strong>a gun's output scales with your attention; an auto's does not.</strong> Point a
+howitzer better and it hits harder; point a boomerang better and it still sweeps out and
+back on its own geometry — so the boomerang is infrastructure that happens to read the aim,
+and it sits with the autos. A beam is aim-driven too, and is a hold, not a gun.</p>
+
+<p><strong>Every run starts with a gun; bolt is the default one.</strong> Not every tower
+need start with bolt — a chassis that opens with a howitzer is a legible identity
+(this amends README pillar 1, which said every tower taps bolt).</p>
 
 <h3>Forms are texture</h3>
 <p>Mastery-unlocked weapon <strong>forms</strong> (<a href="#builds">§7</a>) change a
@@ -289,9 +344,67 @@ weapon's <em>rhythm and behavior</em>, not just its numbers — burst-fire's
 <em>ratatatata-pause-ratatatata</em> versus the default's <em>bang-pause-bang</em>. The
 mastery reward should be audible and felt, not merely arithmetic.</p>
 
+<div class="law" id="law-base-form">
+  <span class="law-name">Law · Base vs form</span><br>
+  A <strong>base</strong> is a different answer to <em>what this weapon is for</em>; a
+  <strong>form</strong> is a different answer to <em>how it feels doing it</em>. Bases trade
+  in the focus economy — range, target selection, what they can and cannot kill. Forms trade
+  in the hands — cadence, delivery, sound. If you would choose between two candidates based
+  on what else is in your build, they are bases; if you would choose based on what you want
+  to be holding, they are forms. A "form" that is only bigger-slower-more is a stat wearing
+  a name.
+</div>
+
+<p><strong>Forms belong to the weapons you hold</strong> — gun, hold, swipe. Autos do not get
+them, at least not before the held weapons do: an orbital's cadence is not in your hands, so
+a form there would be a stat in a costume. Autos deepen through levels and the lattice
+instead. Depth otherwise follows universality — every run holds a gun, so the gun slot
+carries the most content.</p>
+
+<div class="overflow"><table>
+  <tr><th>Slot</th><th>Base — the job it buys</th><th>Forms</th></tr>
+  <tr><td rowspan="4"><strong>gun</strong></td><td><strong>Bolt</strong> — generalist chip,
+    always-on (<em>bang-pause-bang</em>)</td><td>Burst · Fan</td></tr>
+  <tr><td><strong>Howitzer</strong> — elite-cracker; rewards committing to a line</td>
+    <td>Double</td></tr>
+  <tr><td><strong>Scattergun</strong> — the rim sweep, crowd control at knife range</td>
+    <td>Autoloader · Dragonsbreath</td></tr>
+  <tr><td><strong>Rail</strong> <span class="badge unbuilt">UNBUILT</span> — interdiction:
+    kill it <em>before</em> it arrives</td><td>Fork</td></tr>
+  <tr><td rowspan="3"><strong>hold</strong></td><td><strong>Beam</strong> — sustained
+    single-target with a ramp; the scalpel</td><td>Pulse · Lance</td></tr>
+  <tr><td><strong>Flame</strong> — paint the crowd, walk away, let it cook</td>
+    <td>Backdraft</td></tr>
+  <tr><td><strong>Meteor</strong> — charged placement: you choose <em>where</em>, not
+    <em>what</em></td><td>Cluster</td></tr>
+  <tr><td rowspan="2"><strong>swipe</strong></td><td><strong>Wall</strong> — deny ground,
+    buy seconds</td><td>Spikewall · Repulsor</td></tr>
+  <tr><td><strong>Blades</strong> — the gesture inverted; offense along the line</td>
+    <td>Cyclone</td></tr>
+</table></div>
+
+<p>Nine bases, thirteen forms. The <strong>Rail</strong> is the one new base: nothing in the
+game currently rewards killing at distance, and <a href="#focus-economy">§3</a>'s canonical
+ninety seconds requires it outright — <em>"elites with armor or regen will easily make their
+way to the tower if I don't focus them from further out."</em> A long-charge, punishing-to-miss
+gun makes "further out" a real axis and gives the armored and regen modifiers their
+counter-play.</p>
+
+<p><strong>Bolt's ladder gives ricochet; the fan is a form.</strong> They compose — max bolt
+in fan form throws a spread of bolts that each kick to a second shape. This moves the
+fan volleys out of bolt's current level ladder, where they would otherwise sell at mastery
+what levelling already gives away.</p>
+
 <p class="backtop"><a href="#top">↑ top</a></p>
 
 <h2 id="threat-design"><span class="secnum">5</span>Threat Design</h2>
+<p class="status"><span class="badge shipped">SHIPPED</span> five species · five modifiers
+in disjoint channels · boss epithets on recirculation ·
+<span class="badge unbuilt">UNBUILT</span> modifier stacking · boss signature moves (there
+is exactly one boss behaviour: the ram) · <span class="badge proto">PROTOTYPE</span> species
+composition: the wave roll ignores cost, so the mix is frozen at 20/20/20/20/20 from wave 14
+forever — elites are 52% of wave HP, grunts 6%. Every composition lever is inert past wave
+29; a boss decays from 31% of the wave's HP to 4.9% by wave 45.</p>
 
 <div class="law" id="law-legibility">
   <span class="law-name">Law · Legibility</span><br>
@@ -351,6 +464,12 @@ designed now.</p>
 <p class="backtop"><a href="#top">↑ top</a></p>
 
 <h2 id="meta-loop"><span class="secnum">6</span>The Meta Loop</h2>
+<p class="status"><span class="badge shipped">SHIPPED</span> death → shards → lattice · free
+respec · <span class="badge unbuilt">UNBUILT</span> mastery exp · weapon trees · tower trees ·
+milestone-granted QoL (no mechanism exists) · <span class="badge proto">PROTOTYPE</span> the
+organizing principle: 15 of 70 lattice nodes author the draft (21%); the rest are flat stats.
+Two live law violations: six Salvage nodes (×2.35 shard income) break no-meta-accel, and the
+whole 70-node lattice costs ~22 runs — about four hours, not "weeks of play."</p>
 
 <p>Death → shards → lattice → next stand. Weapon use → mastery exp → weapon trees.
 Tower use → tower trees. Three currencies, one destination:</p>
@@ -388,6 +507,12 @@ choices, not sunk costs.</p>
 <p class="backtop"><a href="#top">↑ top</a></p>
 
 <h2 id="builds"><span class="secnum">7</span>Builds</h2>
+<p class="status"><span class="badge shipped">SHIPPED</span> lattice passives · pool unlocks ·
+three cards on level-up · <span class="badge unbuilt">UNBUILT</span> forms and form cards ·
+weapon priority · starting form · towers that bend the slot grammar (all four are stat profile
++ one extra starting weapon) · <span class="badge proto">PROTOTYPE</span> the mature-tree
+start: it tops out at <em>level 3</em> with 2 banked picks, against a spec asking for ~level
+20, and no wave-skip exists at all.</p>
 
 <p>A build is <strong>lattice passives + tower abilities + selected weapons + their
 upgrades</strong>, decided across three layers: the workshop authors who you are; the
@@ -403,7 +528,7 @@ weapon trees (forms, behavior changes) and tower trees (special abilities).</p>
     "gunslinger" runs 2 guns + 2 autos — and carry tree-unlocked abilities. Tower
     identity is "how does this tower change the ninety seconds."</li>
   <li><strong>Starting form</strong>, when unlocked: begin the run with your bolt
-    already in buckshot form.</li>
+    already in fan form.</li>
   <li><strong>Weapon priority</strong>, when unlocked
     <span class="badge tentative">TENTATIVE</span>: deterministic slot resolution — you
     don't control <em>when</em> a hold-weapon offer appears, but when one does, it is
@@ -442,7 +567,7 @@ max-level and the form is mastery-unlocked; rare but recurring within a run.</p>
 <ul>
   <li><strong>Power now</strong> — the crit card, the DPS patch, the heal you need.</li>
   <li><strong>Build completion</strong> — flamethrower 6; the engine coming online.</li>
-  <li><strong>The form gamble</strong> — decline burst, hold out for buckshot: paying
+  <li><strong>The form gamble</strong> — decline burst, hold out for the fan: paying
     present power for preferred identity, a bet placed against the dice mid-drowning.
     Pure !FUN!.</li>
 </ul>
@@ -452,6 +577,11 @@ max-level and the form is mastery-unlocked; rare but recurring within a run.</p>
 <p class="backtop"><a href="#top">↑ top</a></p>
 
 <h2 id="visual-audio"><span class="secnum">8</span>Visual &amp; Audio Language</h2>
+<p class="status"><span class="badge shipped">SHIPPED</span> the Tron/cyber grammar · juice
+with restraint · <span class="badge unbuilt">UNBUILT</span> rhythm-as-loot (needs forms) ·
+haptics · <span class="badge proto">PROTOTYPE</span> radials as the motif — the lattice went
+rectilinear in ADR-0005 and is pinned to come back · the fill law already leaks: the white
+hit-flash fills every damaged shape, so volatile's core is not the only fill on the field.</p>
 
 <ul>
   <li><strong>Tron/cyber: simple, shiny, geometric.</strong> Neon strokes on dark;
@@ -471,6 +601,12 @@ max-level and the form is mastery-unlocked; rare but recurring within a run.</p>
 <p class="backtop"><a href="#top">↑ top</a></p>
 
 <h2 id="onboarding"><span class="secnum">9</span>Onboarding</h2>
+<p class="status"><span class="badge shipped">SHIPPED</span> first death at player level 5–10
+(CI-gated by <code>scripts/calibrate</code>) · introduction banners + highlight rings ·
+<span class="badge proto">PROTOTYPE</span> the drip bunches three beats into waves 4-5-6 —
+squarely on the wave where ~45% of fresh runs die — leaves a 4-wave gap at 17→21, and stops
+dead at wave 23 of a run the GDD aims at wave 50–100 ·
+<span class="badge unbuilt">UNBUILT</span> the veteran skip.</p>
 
 <ul>
   <li><strong>First death arrives within player levels ~5–10</strong> — the first
@@ -513,8 +649,56 @@ max-level and the form is mastery-unlocked; rare but recurring within a run.</p>
   </ul>
 </div>
 
+<p class="backtop"><a href="#top">↑ top</a></p>
+
+<h2 id="route"><span class="secnum">11</span>The Route</h2>
+<p>The prototype came first, and this document came out of playing it — so the gap between
+the two is the design working, not failing. This section is the honest distance and the
+order we close it in. It is the one part of the GDD that is about <em>us</em> rather than
+the player, and it expires when it reaches zero.</p>
+
+<div class="tierbox" id="box-route-thesis">
+  <strong>Scarcity before content.</strong> Nearly every gap below reduces to one thing:
+  nothing in the game is scarce. You can own fifteen autos, park your aim, and buy the whole
+  lattice in an afternoon. The focus law is this document's spine, and the prototype has no
+  spine because it never says no to the player. Adding weapons, nodes, species or bosses
+  before that is fixed makes the pile bigger, not the game deeper — every one of the ten
+  Armory weapons currently makes the do-nothing run <em>stronger</em>.
+</div>
+
+<div class="overflow"><table>
+  <tr><th>#</th><th>Phase</th><th>Design outcome</th><th>Closes</th></tr>
+  <tr><td>1</td><td><strong>Slots</strong></td><td>The build cannot have everything. The
+    budget, the categories, bases and forms as distinct kinds of content.</td>
+    <td><a href="#combat-grammar">§4</a></td></tr>
+  <tr><td>2</td><td><strong>The conductor gate</strong></td><td>Delegation stops being a
+    paragraph and becomes an enforced number: hands must be worth ≥ N waves, measured, in
+    CI, forever.</td><td><a href="#focus-economy">§3</a></td></tr>
+  <tr><td>3</td><td><strong>Threats that bid</strong></td><td>Composition escalates past
+    wave 29; chaff is chaff again; the rim is a real place; bosses force focus rather than
+    joining the crowd.</td><td><a href="#threat-design">§5</a>, <a href="#the-run">§2</a></td></tr>
+  <tr><td>4</td><td><strong>The authored draft</strong></td><td>The account changes what
+    cards <em>exist</em>, not just how big they are. Mastery, forms, priority.</td>
+    <td><a href="#meta-loop">§6</a>, <a href="#builds">§7</a></td></tr>
+  <tr><td>5</td><td><strong>The stand holds</strong></td><td>An end boss, a win state, and
+    the encore behind it.</td><td><a href="#the-run">§2</a></td></tr>
+</table></div>
+
+<p><strong>Why this order.</strong> Phase 1 is the cheapest change with the largest design
+payoff, and it is upstream of everything: capping autos is itself most of the delegation fix,
+because fifteen autos to three is roughly a fivefold cut to the layer that plays the game for
+you. Phase 2 exists so phase 1 cannot silently rot — the same trick
+<code>scripts/calibrate</code> plays for the onboarding band. Phase 3 only becomes
+<em>visible</em> after 1 and 2: with three autos, enemies actually reach the rim, and several
+of the audit's findings may dissolve or change shape once they do. Phase 4 is the
+architectural one and wants a settled combat layer under it. Phase 5 needs a wave 50 worth
+arriving at, which is phase 3's job.</p>
+
+<p><strong>What the route deliberately does not do:</strong> add species, weapons, nodes or
+bosses ahead of its own order. Content is the reward for scarcity, not a substitute for it.</p>
+
 <hr>
-<p class="meta-line">Point Defense GDD v0.1 · living document · edits land like any
+<p class="meta-line">Point Defense GDD v0.2 · living document · edits land like any
 spec change: this file first, then tests, then code. <a href="#top">↑ top</a></p>
 
 </main>
