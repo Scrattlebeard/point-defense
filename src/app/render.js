@@ -615,10 +615,12 @@ function drawEnemies(G) {
       ctx.beginPath(); ctx.arc(e.x, e.y, e.r * (0.35 + 0.12 * pulse), 0, TAU); ctx.fill();
     }
     if (e.variant === 'regen') {
-      // pulsating green plus inside the shape (core.md variants, 2026-07-24)
+      // pulsating green plus inside the shape (core.md variants, 2026-07-24);
+      // own half-speed phase — a calm breath, not the shared hit-pulse jitter
+      const slow = Math.sin(S.time * 4 + e.rot * 3);
       ctx.strokeStyle = e.vdef.color;
       ctx.lineWidth = 2.5;
-      const pr = e.r * (0.42 + 0.1 * pulse);
+      const pr = e.r * (0.42 + 0.1 * slow);
       ctx.beginPath();
       ctx.moveTo(e.x - pr, e.y); ctx.lineTo(e.x + pr, e.y);
       ctx.moveTo(e.x, e.y - pr); ctx.lineTo(e.x, e.y + pr);
