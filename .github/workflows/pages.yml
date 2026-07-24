@@ -45,6 +45,8 @@ jobs:
           npm test
           # onboarding-band gate (README Deployment, ADR-0003): out of band = no ship
           node scripts/calibrate.mjs 32
+          # conductor gate (README balance tooling, GDD §3): delegation law enforced
+          node scripts/conductor.mjs
           npm run build
           mkdir -p site
           cp dist/index.html site/index.html
@@ -59,6 +61,7 @@ jobs:
           npm ci
           npm test
           node scripts/calibrate.mjs 32
+          node scripts/conductor.mjs
           npm run build
           mkdir -p site/beta
           cp dist/index.html site/beta/index.html

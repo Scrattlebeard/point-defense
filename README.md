@@ -51,6 +51,20 @@ runs to death and checks the median against the onboarding band (ADR-0003
 guardrail: re-run before landing early-difficulty or player-power changes; exits
 non-zero when out of band).
 
+Delegation tooling: `node scripts/conductor.mjs [pairs]` is the **conductor
+gate** (GDD §3 Law·Delegation; ADR-0006/0007 consequences): same-seed pairs of
+40-sim-minute headless runs on the strongest slot-budget-legal delegation build
+(`--scan` re-derives it) — one with the aim parked at t=0 and never touched, one
+with the 0.2s-retargeting robot. Two ratchets, both required, raised on
+re-measure and never quietly lowered: **hands worth ≥ 3 waves** (median robot −
+parked), and **the parked run must die ≥ 2 times per set** — "autos are
+deliberately insufficient alone" as a number; this second clause is what catches
+a future weapon quietly re-automating the game. Measured 2026-07-25 post-slot-
+budget: hands 4–11 waves at depth, parked deaths 7–9 of 11 (pre-cap baseline:
+parked survived to wave 58 at 100% HP — the do-nothing run could not die at
+all). Deterministic given the code (every rng call seeded), so a trip always
+means the sim changed. Wired into the prod gate beside calibrate.
+
 ## Deployment (GitHub Pages — canonical)
 
 The phone-playable build is **GitHub Pages**, one site with three **release

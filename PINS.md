@@ -155,24 +155,6 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
 breadcrumbs for GDD §11's Route; the phase tags say where each one belongs in the order.
 Numbers are measured (headless spikes over the real sim), not estimated.*
 
-## [phase 2] The conductor gate — make the delegation law a CI number
-- **What:** A headless harness that runs the sim twice from the same seed — once with the
-  aim point set at t=0 and never moved, once with the 0.2s-retargeting robot — and asserts
-  **hands are worth ≥ N waves**. Same shape as `scripts/calibrate`: exits non-zero out of
-  band, wired into the prod gate.
-- **Why:** Measured 2026-07-25, before the slot budget: parked aim + full gear survived the
-  40-minute cap to **wave 58 at 100% HP with zero enemies ever reaching the rim** (twice),
-  while the robot reached 32 vs the parked run's 31 in a 15-minute head-to-head. Hands were
-  worth **one wave**. GDD §3's delegation law is the game's spine and nothing enforces it;
-  without a gate, one future weapon quietly re-automates the game and no test notices.
-- **Where:** new `scripts/conductor.mjs` (crib `scripts/calibrate.mjs` + `test/sim.test.mjs`
-  for the headless loop), `.github/workflows/pages.yml` prod gate, README balance-tooling
-  section, ADR-0006 Consequences.
-- **Context:** Run it *after* ADR-0006's slot budget lands — the cap alone is expected to do
-  most of the work (15 autos → ≤5 is roughly a fivefold cut to the layer that plays itself),
-  and N should be calibrated against a capped build, not the current one. Pick N from
-  measurement, then treat it as a ratchet.
-
 ## [phase 4] Burst rides as an interim auto — make it a true form of bolt
 - **What:** ADR-0006 demoted `burst` (Repeater) from base to a form of bolt. Interim
   state (2026-07-25, taxonomy landing): `category: 'auto'`, `formOf: 'bolt'` — offered

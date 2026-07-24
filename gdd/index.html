@@ -243,11 +243,15 @@ the signal business and out of the death business.</p>
 <p class="backtop"><a href="#top">↑ top</a></p>
 
 <h2 id="focus-economy"><span class="secnum">3</span>The Focus Economy</h2>
-<p class="status"><span class="badge unbuilt">UNBUILT</span> The delegation law does not
-hold. Measured 2026-07-25: a full-gear run with the aim point set once and never touched
-again survived 40 minutes to wave 58 at 100% HP, with zero enemies ever reaching the rim.
-Against a robot retargeting every 0.2s, hands were worth <em>one wave</em>. The veteran's
-ninety seconds below is a target, not a description.</p>
+<p class="status"><span class="badge proto">PROTOTYPE</span> The delegation law now holds
+<em>at depth</em>, and is enforced (<code>scripts/conductor.mjs</code>, in the prod gate).
+Measured 2026-07-25 post-slot-budget: the strongest do-nothing build dies in most
+40-minute runs (median death ~wave 48; hands are worth 4–11 waves at the wave-45+ crack),
+where the pre-cap baseline survived to wave 58 at 100% HP — the do-nothing run could not
+die at all. Still false in the first ~30 waves: parked and robot both clear everything
+until the crack, so the veteran's ninety seconds below remains a target — phase 3's
+threats-that-bid is what closes that gap. The gate ratchets: hands ≥ 3 waves, parked must
+die ≥ 2 of 11 pairs.</p>
 
 <div class="law" id="law-delegation">
   <span class="law-name">Law · Delegation</span><br>
