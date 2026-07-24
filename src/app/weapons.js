@@ -20,7 +20,8 @@ export function resetWeapons(G) {
     mineT: 1.0, mortT: 1.5,
     scatT: 0.15, burstT: 0.1, burstLeft: 0, burstGapT: 0,
     heavyPhase: 0, heavyPhaseT: 0.1, boomT: 1.4,
-    beamOwner: null, beamAim: null,
+    bladeCd: 0, flamePatchT: 0, metCharge: 0, metCd: 0,
+    holdOwner: null, holdAim: null, // one hold-slot weapon per run (ADR-0004)
   };
   G.aim = { x: G.cx, y: G.cy - 160 }; // standing aim point; input moves it
   G.aura = null;
@@ -44,6 +45,37 @@ function fireFan(G, tx, ty, st) {
       dmg: st.dmg, pierce: st.pierce, r: 3.5, life: 6, color: '#9ff3ff', hit: new Set(),
     });
   }
+}
+
+// ---------- manual: force blades (swipe slot, ADR-0004) ----------
+export function fireBlades(G, from, to) {
+  const S = G.S;
+  if (lvl(S, 'blades') < 1) return false;
+  if (G.wt.bladeCd > 0) return false; // cooling: swipe degrades to re-aim (wall rule)
+  const st = stats(S, 'blades');
+  G.wt.bladeCd = st.cd;
+  // segment trimmed toward the start (wall rule); blades ride its outward normal
+  let { x: ax, y: ay } = from, { x: bx, y: by } = to;
+  const len = dist(ax, ay, bx, by) || 1;
+  if (len > st.len) {
+    bx = ax + ((bx - ax) / len) * st.len;
+    by = ay + ((by - ay) / len) * st.len;
+  }
+  let nx = -(by - ay), ny = bx - ax;
+  const nl = Math.hypot(nx, ny) || 1;
+  nx /= nl; ny /= nl;
+  const mx = (ax + bx) / 2, my = (ay + by) / 2;
+  if (nx * (G.cx - mx) + ny * (G.cy - my) > 0) { nx = -nx; ny = -ny; }
+  for (let i = 0; i < st.n; i++) {
+    const t = st.n === 1 ? 0.5 : i / (st.n - 1);
+    S.blades.push({
+      x: ax + (bx - ax) * t, y: ay + (by - ay) * t,
+      vx: nx * st.speed, vy: ny * st.speed,
+      dmg: st.dmg, r: st.r, a: Math.atan2(ny, nx), hit: new Set(), life: 4,
+    });
+  }
+  sfx('wave');
+  return true;
 }
 
 // ---------- manual: force wall (swipe) ----------
@@ -108,7 +140,50 @@ export function updateWeapons(G, dt) {
   const S = G.S;
   const wt = G.wt;
   wt.wallCd = Math.max(0, wt.wallCd - dt);
+  wt.bladeCd = Math.max(0, wt.bladeCd - dt);
   updateWalls(G, dt);
+
+  // force blades in flight (ADR-0004 wave B): pierce all, die at the wall
+  if (S.blades.length) {
+    const EDGE = 4;
+    for (const bl of S.blades) {
+      bl.life -= dt;
+      bl.x += bl.vx * dt; bl.y += bl.vy * dt;
+      if (bl.x < EDGE || bl.x > G.W - EDGE || bl.y < EDGE || bl.y > G.H - EDGE || bl.life <= 0) {
+        addFlare(G.fx, Math.min(Math.max(bl.x, EDGE), G.W - EDGE),
+          Math.min(Math.max(bl.y, EDGE), G.H - EDGE),
+          bl.x < EDGE ? 1 : bl.x > G.W - EDGE ? -1 : 0,
+          bl.y < EDGE ? 1 : bl.y > G.H - EDGE ? -1 : 0);
+        bl.dead = true; continue;
+      }
+      for (const e of S.enemies) {
+        if (e.dead || bl.hit.has(e)) continue;
+        if (dist(bl.x, bl.y, e.x, e.y) < e.r + bl.r) {
+          bl.hit.add(e);
+          damageEnemy(G, e, bl.dmg);
+        }
+      }
+    }
+    S.blades = S.blades.filter(b => !b.dead);
+  }
+
+  // burning ground (flame + meteor scorch): patches gutter out, tick on a
+  // per-patch clock — a shield loses one charge per tick, beam precedent
+  if (S.fires.length) {
+    for (const f of S.fires) {
+      f.life -= dt;
+      f.tickT -= dt;
+      if (f.tickT <= 0) {
+        f.tickT += 0.4;
+        for (const e of S.enemies) {
+          if (!e.dead && dist(f.x, f.y, e.x, e.y) <= f.r + e.r) {
+            damageEnemy(G, e, f.dps * 0.4, { silent: true });
+          }
+        }
+      }
+    }
+    S.fires = S.fires.filter(f => f.life > 0);
+  }
 
   // bolt: auto-fires toward the standing aim; L6 adds a nearest-target volley
   if (lvl(S, 'bolt') >= 1) {
@@ -126,8 +201,10 @@ export function updateWeapons(G, dt) {
     }
   }
 
-  // beam (hold)
+  // hold-slot weapons (at most one owned — ADR-0004)
   updateBeam(G, dt);
+  updateFlame(G, dt);
+  updateMeteor(G, dt);
 
   // frost aura (passive; read by enemies.js)
   G.aura = lvl(S, 'frost') >= 1
@@ -352,11 +429,24 @@ export function updateWeapons(G, dt) {
     sh.t += dt;
     if (sh.t >= sh.flight) {
       sh.dead = true;
-      burst(G.fx, sh.tx, sh.ty, '#ffd24d', 18, 240, 0.45, 3);
-      burst(G.fx, sh.tx, sh.ty, '#fff3d0', 8, 100, 0.25, 1.5);
-      shake(G.fx, 2);
+      const big = sh.kind === 'meteor';
+      burst(G.fx, sh.tx, sh.ty, '#ffd24d', big ? 28 : 18, big ? 300 : 240, 0.45, 3);
+      burst(G.fx, sh.tx, sh.ty, '#fff3d0', big ? 14 : 8, big ? 140 : 100, 0.25, 1.5);
+      shake(G.fx, big ? 5 : 2);
       for (const e of S.enemies) {
-        if (!e.dead && dist(sh.tx, sh.ty, e.x, e.y) <= sh.blast + e.r) damageEnemy(G, e, sh.dmg);
+        if (e.dead || dist(sh.tx, sh.ty, e.x, e.y) > sh.blast + e.r) continue;
+        damageEnemy(G, e, sh.dmg);
+        if (sh.knock && !e.dead) {
+          // radial shove scaling with charge (core.md meteor row)
+          const d = dist(sh.tx, sh.ty, e.x, e.y) || 1;
+          applyKnock(e, ((e.x - sh.tx) / d) * sh.knock, ((e.y - sh.ty) / d) * sh.knock);
+        }
+      }
+      if (sh.scorch && S.fires.length < 40) {
+        S.fires.push({
+          x: sh.tx, y: sh.ty, r: sh.blast * 0.5, dps: sh.scorch.dps,
+          life: sh.scorch.life, max: sh.scorch.life, tickT: 0.2,
+        });
       }
       sfx('nova');
     }
@@ -550,9 +640,12 @@ function updateBeam(G, dt) {
   const S = G.S;
   const wt = G.wt;
   const l = lvl(S, 'beam');
+  // heat belongs to the weapon channeling it: an unowned beam must not bleed
+  // the flamethrower's heat away (test: "flamethrower overheats like the beam")
+  if (l < 1) { G.beamEnd = null; return; }
   // at max level the beam is always-on, tracking the standing aim (core.md beam row)
   const st = l >= 1 ? stats(S, 'beam') : null;
-  const target = wt.beamAim || (st?.alwaysOn ? G.aim : null);
+  const target = wt.holdAim || (st?.alwaysOn ? G.aim : null);
   const beaming = l >= 1 && target && !S.overheated;
   let inBeam = null;
   if (beaming) {
@@ -599,4 +692,105 @@ function updateBeam(G, dt) {
       e.beamTick = 0; // re-entry ticks immediately
     }
   }
+}
+
+// ---------- flamethrower (hold slot, ADR-0004): cone + burn stacks + ground ----
+function updateFlame(G, dt) {
+  const S = G.S;
+  const wt = G.wt;
+  const l = lvl(S, 'flame');
+  const st = l >= 1 ? stats(S, 'flame') : null;
+  const target = wt.holdAim || (st?.alwaysOn ? G.aim : null);
+  const on = l >= 1 && target && !S.overheated;
+  G.flameCone = null;
+  if (on) {
+    const dx = target.x - G.cx, dy = target.y - G.cy;
+    const len = Math.hypot(dx, dy);
+    if (len > 4) {
+      const base = Math.atan2(dy, dx);
+      G.flameCone = { a: base, range: st.range, arc: st.arc }; // render reads this
+      if (st.heatRate > 0) {
+        S.heat = Math.min(1, S.heat + st.heatRate * dt);
+        if (S.heat >= 1) S.overheated = true;
+      }
+      // per-target cone ticks reuse the beam's tick fields (slot-exclusive, no clash)
+      for (const e of S.enemies) {
+        if (e.dead) continue;
+        const d = dist(e.x, e.y, G.cx, G.cy);
+        let da = Math.atan2(e.y - G.cy, e.x - G.cx) - base;
+        da = Math.atan2(Math.sin(da), Math.cos(da)); // wrap to [-pi, pi]
+        if (d <= st.range + e.r && Math.abs(da) <= st.arc) {
+          e.beamTick -= dt;
+          if (e.beamTick <= 0) {
+            e.beamTick += st.tick;
+            damageEnemy(G, e, st.direct, { silent: true });
+            e.burnStacks = Math.min(st.maxStacks, e.burnStacks + 1);
+            e.burnLeft = st.burnDur;
+          }
+        }
+      }
+      // burning ground drops in the cone's mid-far zone (app.md register)
+      wt.flamePatchT -= dt;
+      if (wt.flamePatchT <= 0 && S.fires.length < 40) {
+        wt.flamePatchT += st.patchEvery;
+        const fa = base + (Math.random() * 2 - 1) * st.arc * 0.8;
+        const fr = st.range * (0.35 + Math.random() * 0.6);
+        S.fires.push({
+          x: G.cx + Math.cos(fa) * fr, y: G.cy + Math.sin(fa) * fr,
+          r: st.patchR, dps: st.patchDps, life: st.patchLife, max: st.patchLife, tickT: 0.2,
+        });
+      }
+    }
+  } else if (l >= 1 && st.heatRate > 0) {
+    S.heat = Math.max(0, S.heat - 0.45 * dt);
+    if (S.overheated && S.heat < BEAM_REARM) S.overheated = false;
+  }
+  // burn DoT keeps cooking wherever the shape goes (core.md flame row)
+  if (l >= 1) {
+    for (const e of S.enemies) {
+      if (e.dead || e.burnStacks <= 0) continue;
+      e.burnLeft -= dt;
+      e.burnTick -= dt;
+      if (e.burnTick <= 0) {
+        e.burnTick += 0.5;
+        damageEnemy(G, e, st.burnDps * e.burnStacks * 0.5, { silent: true });
+      }
+      if (e.burnLeft <= 0) { e.burnStacks = 0; e.burnTick = 0; }
+    }
+  }
+}
+
+// ---------- meteor (hold slot, ADR-0004): charge, release, auto-release ----
+function updateMeteor(G, dt) {
+  const S = G.S;
+  const wt = G.wt;
+  const l = lvl(S, 'meteor');
+  if (l < 1) return;
+  wt.metCd = Math.max(0, wt.metCd - dt);
+  const st = stats(S, 'meteor');
+  if (wt.holdAim && wt.metCd <= 0) {
+    wt.metCharge = Math.min(1, wt.metCharge + dt / st.chargeTime);
+    if (wt.metCharge >= 1) releaseHold(G); // auto-release at max (core.md)
+  }
+}
+
+/** Hold released (input seam or auto at full charge): the meteor drops. */
+export function releaseHold(G) {
+  const S = G.S;
+  const wt = G.wt;
+  if (lvl(S, 'meteor') < 1 || wt.metCharge <= 0 || !wt.holdAim) { wt.metCharge = 0; return; }
+  const st = stats(S, 'meteor');
+  const c = wt.metCharge;
+  wt.metCharge = 0;
+  wt.metCd = st.cd * S.cdMult;
+  S.shells.push({
+    kind: 'meteor',
+    x0: G.cx, y0: G.cy, tx: wt.holdAim.x, ty: wt.holdAim.y,
+    t: 0, flight: st.fall,
+    dmg: st.dmg * (st.minDmgFrac + (1 - st.minDmgFrac) * c),
+    blast: st.blast * (st.minBlastFrac + (1 - st.minBlastFrac) * c),
+    knock: st.knock * (0.4 + 0.6 * c),
+    scorch: { dps: st.scorchDps, life: st.scorchLife },
+  });
+  sfx('seek');
 }

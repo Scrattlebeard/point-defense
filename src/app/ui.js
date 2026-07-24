@@ -234,6 +234,9 @@ function statLine(id, l) {
     case 'burst':  return `${st.n}-bolt salvo · DMG ${st.dmg} · ${st.cd.toFixed(1)}s`;
     case 'heavy':  return `3× DMG ${st.lightDmg} + shell DMG ${st.heavyDmg}`;
     case 'boomer': return `DMG ${st.dmg}×2 legs${st.n > 1 ? ' · twin' : ''} · ${st.cd.toFixed(1)}s`;
+    case 'flame':  return `BURN ${st.burnDps}/stack ×${st.maxStacks} · R ${st.range}${st.alwaysOn ? ' · always on' : ''}`;
+    case 'meteor': return `DMG ≤${st.dmg} · R ≤${st.blast} · charge ${st.chargeTime}s`;
+    case 'blades': return `${st.n} blades · DMG ${st.dmg}`;
     default: return '';
   }
 }

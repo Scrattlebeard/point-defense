@@ -146,21 +146,118 @@ function drawField(G) {
     }
   }
 
-  // mortar shells — arcing dot with fake height over a ground-shadow telegraph
+  // burning ground (flame/meteor scorch) — soft warm circles guttering out,
+  // dimmer than nova by decree (app.md "Hold & swipe variants")
+  for (const f of S.fires) {
+    const a = clamp(f.life / f.max, 0, 1);
+    const flick = 0.8 + 0.2 * Math.sin(S.time * 11 + f.x);
+    const g = ctx.createRadialGradient(f.x, f.y, 2, f.x, f.y, f.r);
+    g.addColorStop(0, `rgba(255, 176, 64, ${0.30 * a * flick})`);
+    g.addColorStop(0.7, `rgba(255, 110, 40, ${0.16 * a})`);
+    g.addColorStop(1, 'rgba(255, 90, 30, 0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, TAU); ctx.fill();
+    // a few licks of flame, stateless (hash on index-ish coords + time)
+    for (let i = 0; i < 3; i++) {
+      const fa = (Math.sin(f.x * 0.37 + i * 2.1) * 43758.55) % TAU;
+      const rr = f.r * 0.55 * ((Math.sin(f.y * 0.29 + i * 3.7) * 9871.3 % 1 + 1) % 1);
+      const hgt = (2 + 3 * ((Math.sin(S.time * (3 + i) + f.x + i) + 1) / 2)) * a;
+      const lx = f.x + Math.cos(fa) * rr, ly = f.y + Math.sin(fa) * rr;
+      ctx.strokeStyle = `rgba(255, 200, 90, ${0.35 * a * flick})`;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx, ly - hgt * 2); ctx.stroke();
+    }
+  }
+
+  // mortar shells & falling meteors — arcing dot with fake height over a
+  // ground-shadow telegraph; the meteor is the same grammar, scaled up
   for (const sh of S.shells) {
     const p = Math.min(1, sh.t / sh.flight);
+    const met = sh.kind === 'meteor';
     const px = sh.x0 + (sh.tx - sh.x0) * p;
     const py = sh.y0 + (sh.ty - sh.y0) * p;
-    const h = Math.sin(Math.PI * p) * 110;
+    const h = met ? (1 - p) * 260 : Math.sin(Math.PI * p) * 110;
     // shadow marks the true impact point as the shell closes in
     ctx.fillStyle = `rgba(255, 210, 77, ${0.10 + 0.25 * p})`;
-    ctx.beginPath(); ctx.arc(sh.tx, sh.ty, 7 - 3 * p, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(sh.tx, sh.ty, (met ? 10 : 7) - 3 * p, 0, TAU); ctx.fill();
     ctx.strokeStyle = `rgba(255, 210, 77, ${0.2 + 0.3 * p})`;
-    ctx.lineWidth = 1.2;
+    ctx.lineWidth = met ? 2 : 1.2;
     ctx.beginPath(); ctx.arc(sh.tx, sh.ty, sh.blast * p, 0, TAU); ctx.stroke();
-    // the shell itself, lofted
-    ctx.fillStyle = '#ffd24d';
-    ctx.beginPath(); ctx.arc(px, py - h, 3 + 1.5 * Math.sin(Math.PI * p), 0, TAU); ctx.fill();
+    // the shell itself, lofted (meteor: fat rock + ember trail, falling straight in)
+    if (met) {
+      ctx.strokeStyle = 'rgba(255, 150, 60, 0.5)';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(px, py - h - 26); ctx.lineTo(px, py - h); ctx.stroke();
+      ctx.fillStyle = '#ffb84d';
+      ctx.beginPath(); ctx.arc(px, py - h, 7 + 3 * p, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#fff3d0';
+      ctx.beginPath(); ctx.arc(px, py - h, 3, 0, TAU); ctx.fill();
+    } else {
+      ctx.fillStyle = '#ffd24d';
+      ctx.beginPath(); ctx.arc(px, py - h, 3 + 1.5 * Math.sin(Math.PI * p), 0, TAU); ctx.fill();
+    }
+  }
+
+  // meteor charge telegraph — the growing circle IS the blast preview (app.md)
+  if (S.weapons.meteor >= 1 && G.wt.metCharge > 0 && G.wt.holdAim) {
+    const st = WEAPONS.meteor.stats(S.weapons.meteor);
+    const c = G.wt.metCharge;
+    const r = st.blast * (st.minBlastFrac + (1 - st.minBlastFrac) * c);
+    const pulse = 0.75 + 0.25 * Math.sin(S.time * 9);
+    ctx.strokeStyle = `rgba(255, 176, 64, ${(0.35 + 0.45 * c) * pulse})`;
+    ctx.lineWidth = 2 + 2 * c;
+    ctx.setLineDash([8, 6]);
+    ctx.beginPath(); ctx.arc(G.wt.holdAim.x, G.wt.holdAim.y, r, 0, TAU); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = `rgba(255, 210, 77, ${0.15 + 0.3 * c})`;
+    ctx.beginPath(); ctx.arc(G.wt.holdAim.x, G.wt.holdAim.y, 5 + 9 * c, 0, TAU); ctx.fill();
+  }
+
+  // flamethrower cone — warm register, layered haze→body→core (app.md)
+  if (G.flameCone) {
+    const fc = G.flameCone;
+    const flick = 0.85 + 0.15 * Math.sin(S.time * 17);
+    const layers = [
+      [fc.arc, 'rgba(255, 90, 30, 0.10)'],
+      [fc.arc * 0.7, 'rgba(255, 140, 50, 0.16)'],
+      [fc.arc * 0.4, `rgba(255, 205, 100, ${0.22 * flick})`],
+    ];
+    for (const [arc, color] of layers) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(G.cx, G.cy);
+      ctx.arc(G.cx, G.cy, fc.range * flick, fc.a - arc, fc.a + arc);
+      ctx.closePath();
+      ctx.fill();
+    }
+    // forward-drifting flame particles, stateless
+    for (let i = 0; i < 9; i++) {
+      const ph = ((S.time * (1.3 + 0.31 * i)) + i * 0.618) % 1;
+      const pa = fc.a + Math.sin(i * 12.9898) * fc.arc * 0.8;
+      const pr = 20 + ph * (fc.range - 30);
+      ctx.fillStyle = `rgba(255, ${170 + i * 8}, 70, ${0.5 * (1 - ph)})`;
+      ctx.beginPath();
+      ctx.arc(G.cx + Math.cos(pa) * pr, G.cy + Math.sin(pa) * pr, 2 + 3 * ph, 0, TAU);
+      ctx.fill();
+    }
+  }
+
+  // force blades — solid cyan crescents sweeping outward (player fill law)
+  for (const bl of S.blades) {
+    ctx.save();
+    ctx.translate(bl.x, bl.y);
+    ctx.rotate(bl.a);
+    // thin motion trail
+    ctx.strokeStyle = 'rgba(159, 243, 255, 0.25)';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-16, 0); ctx.lineTo(-4, 0); ctx.stroke();
+    // crescent: arc stroked thick with butt ends, player cyan
+    ctx.strokeStyle = '#9ff3ff';
+    ctx.lineWidth = 4.5;
+    ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(-6, 0, bl.r, -1.15, 1.15); ctx.stroke();
+    ctx.lineCap = 'butt';
+    ctx.restore();
   }
 
   // nova rings — bright and SOLID; frost stays dim and dashed (app.md legibility note)
@@ -469,6 +566,20 @@ function drawEnemies(G) {
       }
     }
 
+    // burning shapes flicker with small flame licks — the fire IS the damage
+    // feedback (app.md wave B: burn numbers are suppressed)
+    if (e.burnStacks > 0) {
+      for (let i = 0; i < Math.min(4, e.burnStacks); i++) {
+        const fa = S.time * (2.2 + i * 0.7) + i * 2.4;
+        const lx = e.x + Math.cos(fa) * e.r * 0.6;
+        const ly = e.y + Math.sin(fa) * e.r * 0.6;
+        const hgt = 3 + 3 * ((Math.sin(S.time * (6 + i) + i * 1.7) + 1) / 2);
+        ctx.strokeStyle = `rgba(255, ${160 + i * 20}, 60, 0.7)`;
+        ctx.lineWidth = 1.8;
+        ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx, ly - hgt * 1.8); ctx.stroke();
+      }
+    }
+
     // introduction highlight: a fading dashed ring around a first-ever sighting
     if (e.introduce > 0) {
       const a = Math.min(1, e.introduce / 1.5);
@@ -549,7 +660,8 @@ function drawBossBar(G) {
 // re-arm notch at BEAM_REARM, flashing OVERHEATED label while locked out.
 function drawHeat(G) {
   const { ctx, S, W, H } = G;
-  if (S.weapons.beam < 1 || (S.heat <= 0.01 && !S.overheated)) return;
+  // the gauge serves whichever hot hold weapon is owned (app.md wave B note)
+  if ((S.weapons.beam < 1 && S.weapons.flame < 1) || (S.heat <= 0.01 && !S.overheated)) return;
   const bw = 170, bh = 8;
   const x = (W - bw) / 2, y = H - 34;
   ctx.fillStyle = 'rgba(10, 13, 21, 0.65)';

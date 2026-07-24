@@ -62,6 +62,20 @@ simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not un
   plus run modifiers (dmg/cd/crit/regen) and a run line (wave · kills · time · HP).
   The level-up screen keeps its compact one-line strip of the same, so picks are made
   in context without burying the three cards.
+- **Hold & swipe variants** (ADR-0004 wave B): the flamethrower renders as a
+  layered cone (deep orange haze → amber body → pale core) with forward-drifting
+  flame particles — warm register, unmistakably not the beam's cyan. Burning
+  shapes carry small flame flickers (their damage numbers are suppressed — the
+  fire IS the feedback). **Burning ground patches** are soft warm circles that
+  gutter out (alpha follows remaining life); they share the mortar's
+  warm-family register and must stay dimmer than nova. The meteor telegraphs
+  twice: while charging, a **growing warm circle at the aim point** (radius =
+  what you'll get — the charge meter is the blast preview itself); while
+  falling, the mortar's shadow-dot + growing outline grammar, scaled up, then
+  a big warm double-burst + shake on impact. Force blades are **solid cyan
+  crescents** (player fill law) sweeping outward with a thin motion trail;
+  their wall death fires the standard flare. The heat gauge (below) serves
+  whichever hot hold weapon is owned — beam or flamethrower.
 - **Beam heat gauge** (2026-07-23, second playtester: beam triggering "feels wonky" —
   the real culprit was an *illegible lockout*: overheat silently ignores the hold):
   bottom-center canvas bar, visible whenever the beam is owned and heat > 0 or

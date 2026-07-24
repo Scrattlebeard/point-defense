@@ -172,7 +172,10 @@ Manual (gesture) weapons:
 | id | gesture | max | levels |
 |----|---------|-----|--------|
 | bolt | aim | 6 | auto-fires toward the aim point every 0.34−0.02L s (needs a live enemy); dmg 9+4L; L4: pierce 1. **Two streams, fan volleys.** The *manual stream* fires at your aim; from L3 an *auto stream* fires at the nearest shape *inside the arena walls* (bullets die at the wall — an outside target eats bolts for nothing, 2026-07-23; no in-bounds shape → the auto stream holds fire, the manual stream always fires). **Fans are center-true:** a volley of n = one bolt exactly on the target line + flanks at +0.11/−0.11 rad (n=2: single flank) — the center bolt never straddles the aim point (the 2026-07-23 complaint stays fixed at every level). Ladder: **L3 +auto stream (1+1), L5 both streams fire 2-bolt fans (2+2), L6 MAX 3-bolt fans (3+3)**. *(Rebalanced 2026-07-24: the previous max — 1 aimed + 4 independently-auto-aimed bolts — was "way overpowered" (playtest): independent auto-aims hit near-guaranteed, fan flanks can miss, so five sure hits beat six maybes. Max power returns to fans "like before", one fan per stream. L5 = 2-bolt fans is interpolation — Daniel specified L3 and L6; a smooth 2→4→6 bullet ramp beats a 2→6 cliff at max.)* |
+| blades | swipe | 5 | **Force Blades** (swipe slot, ADR-0004): the swipe hurls 2/3/3/4/5 crescent blades, spawned evenly along the swipe segment (trimmed to 200px toward the start, wall rule), all traveling along the segment's tower-away normal at 400 px/s; dmg 15+7L, pierce everything (once per shape per blade), die at the arena wall with the standard flare; cd 0.45s. The wall's defensive cousin inverted: the same gesture, pushed *outward* as pure offense |
 | wall | swipe | 5 | **Force Wall** (reworked twice, 2026-07-23): the swipe conjures a stationary wall **anchored at the gesture's start** (length 150+40L; longer swipes trimmed toward the start — overshooting the tail must not move the wall). The wall is *siegeable*: it has **80+40L HP** that degens passively over ~5s, and shapes in contact **attack it** (their dmg every 0.9s) while being pushed along its tower-away normal at (100+25L)÷mass px/s and taking 5+2L dmg per 0.4s tick. Wall dies at 0 HP, whichever clock runs out first. Active walls: **1 until max level, 2 at L5**; swiping past the cap replaces the oldest; cd 0.4s |
+| flame | hold | 5 | **Flamethrower** (hold slot, ADR-0004): channels a cone toward the hold aim (range 230+18L, half-angle 0.3 rad); every 0.3s each shape in the cone takes 4+1.5L direct AND gains a **burn stack** (max 5): each stack ticks 3+1.5L dps for 2.5s, refreshed per application — the DoT keeps cooking after the shape leaves the cone (that's the weapon's identity: paint the crowd, let it burn). Burn damage is player-sourced but renders flame flicker, not damage-number spam. While channeling, drops **burning ground patches** in the cone (~every 0.35s, r 26, ~2.2s life, 6+3L dps, field-capped ~40) — area denial persists briefly where the cone swept. Heat like beam (slower at L3); **L5: no overheat, always-on toward the standing aim**. Bosses burn like everything else — no stack resistance (frost precedent: the counter-boss tools keep their teeth) |
+| meteor | hold | 5 | **Meteor** (hold slot, ADR-0004): holding **charges** a meteor (0→full in 1.5s, shown growing at the aim); release drops it on the aim point — 0.45s fall behind a warm ground telegraph (mortar's grammar), then impact: dmg (24+12L)·(0.45+0.55·charge), blast (60+8L)·(0.55+0.45·charge), radial knockback scaling with charge, and a **scorch patch** (burning-ground register, ~2s). **Auto-releases at full charge** — keep holding and it keeps raining, one meteor per 0.9−0.05L s. A tap-short hold still throws a pebble: min charge is a real (weak) strike, never a dead input |
 | beam | hold | 5 | ticks **per-target every 0.25s** at dps 34+20L (damage = dps×0.25 per tick) — so a shield loses one charge per *tick*, never per frame (playtest 2026-07-23: frame-rate ticking erased shields on touch); **per-target damage ramp** ×1→×2.5 over 2s of continuous exposure, decaying back over ~1.5s once out of the beam — sustained tracking is rewarded, field-flicking isn't; heat 0→1 in ~3.5s, forced cooldown at 1, **re-arms at 0.35** (the heat gauge marks this threshold — the lockout must be legible, see app.md "Beam heat gauge"); L3: slower heat; **L5: no overheat and always-on — channels toward the standing aim point with no hold needed** (a no-overheat beam that still demanded holding would just be a finger tax) |
 
 Aim ordnance (kind `auto`, chip AIM — auto-fires toward the standing aim like
@@ -204,7 +207,10 @@ stacking additively on the run's damage multiplier).
 
 Level-up choice generation (`state.js: levelChoices(state, rng)`): 3 distinct options
 drawn from {each owned weapon below max, each unowned *pool-unlocked* weapon, generic
-cards}. **Card chips are a control-scheme vocabulary, nothing else:** AIM / SWIPE /
+cards}. **Gesture-slot filter (ADR-0004):** a weapon whose `slot` is already
+occupied by a *different* owned weapon is never offered — owning the beam means
+never being offered the flamethrower or meteor that run, and vice versa; same for
+wall vs force blades. No tower's starting loadout may violate this (test-pinned). **Card chips are a control-scheme vocabulary, nothing else:** AIM / SWIPE /
 HOLD / AUTO on weapons, PASSIVE on generic cards. A new weapon keeps its control chip
 — newness is marked in the level line ("NEW — Level 1"), never in the chip slot
 (2026-07-23 second playtester: NEW-as-chip hid *how the weapon fires* on exactly the
@@ -256,7 +262,7 @@ schema version lands with stage 2's nested fields — recorded in ADR-0003).
 | Arms | Overcharge I/II/III (+8% dmg; 15/30/60, chained) · Precision (10% crit ×2; 50, req Overcharge II) · Haste I/II (−6% cooldowns; 40/80, req Overcharge I then chained) |
 | Mind | Quick Study I/II (+10% xp; 15/35, chained) · Head Start (start at level 2 with a free pick; 45, req Quick Study I) · Salvage I/II (+20% shards; 30/60, req Quick Study I then chained) |
 | Arsenal | Unlock Tesla (25) → Unlock Seekers (45) → Unlock Turrets (70) — chained |
-| Armory | Scattergun (r1) → Repeater → Howitzer gun trunk; Scattergun → Boomerang throw trunk; hold/swipe unlocks arrive with ADR-0004 wave B; Ballistics cross-links to Arms |
+| Armory | Two entries: Scattergun (r1) → Repeater → Howitzer gun trunk + Boomerang branch; Force Blades (r1) → Flamethrower → Meteor close-quarters trunk → Siegecraft (r4 stats) → Master-at-Arms capstone (r5, any-req from either trunk); Ballistics cross-links to Arms |
 | Towers | Tempest (40) → Warden (75) → Lance (120) — chained |
 
 Tuning intent: a first run reaching wave 5–8 pays ~20–40◆ — enough for one node.
@@ -276,8 +282,10 @@ A trace is `{t0, points: [{x, y, t}], holdEngaged}`. Classification:
   gesture's past instead of its present.)* Deliberate consequence: freezing
   mid-swipe for 0.28s converts the gesture to a hold — stopping and holding *is*
   holding, and the abandoned wall would have anchored at a start point the finger
-  left long ago. Only engages if the run owns a hold weapon. Once engaged, moving
-  the finger aims the beam (movement no longer reclassifies). Ends on release.
+  left long ago. Only engages if the run owns a hold-slot weapon (at most one —
+  gesture slots, ADR-0004). Once engaged, moving the finger aims the channel
+  (movement no longer reclassifies). Ends on release; for the meteor, **release
+  IS the trigger** (`releaseHold` seam) — beam and flame simply stop channeling.
 - **swipe** — on release, if not hold-engaged and total path length ≥ 30px. Payload:
   first→last point segment.
 - **tap** — anything else on release. Payload: release point.

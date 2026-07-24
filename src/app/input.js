@@ -1,7 +1,7 @@
 // Pointer events → traces → core gesture classification → weapon triggers.
-// Multi-touch: one hold (beam) at a time; other pointers still tap/swipe.
+// Multi-touch: one hold-slot channel at a time; other pointers still tap/swipe.
 import { newTrace, addPoint, shouldEngageHold, classifyRelease } from '../core/gestures.js';
-import { fireWall } from './weapons.js';
+import { fireWall, fireBlades, releaseHold } from './weapons.js';
 import { initAudio } from './audio.js';
 
 export function initInput(G, canvas) {
@@ -40,15 +40,23 @@ export function initInput(G, canvas) {
     const tr = G.traces.get(e.pointerId);
     if (!tr) return;
     G.traces.delete(e.pointerId);
-    if (G.wt.beamOwner === e.pointerId) { G.wt.beamOwner = null; G.wt.beamAim = null; }
+    if (G.wt.holdOwner === e.pointerId) {
+      // meteor: release IS the trigger; beam/flame just stop (core.md Gestures)
+      if (G.mode === 'play') releaseHold(G);
+      G.wt.holdOwner = null;
+      G.wt.holdAim = null;
+    }
     if (G.mode !== 'play') return;
     const g = classifyRelease(tr);
     if (g.type === 'tap') G.aim = { x: g.x, y: g.y };
     else if (g.type === 'swipe') {
-      // graceful degrade (README pillar 1): no force wall → the swipe still re-aims
-      if (!fireWall(G, g.from, g.to)) G.aim = { x: g.to.x, y: g.to.y };
+      // one swipe-slot weapon per run (ADR-0004); graceful degrade (README
+      // pillar 1): no swipe weapon → the swipe still re-aims
+      if (!fireWall(G, g.from, g.to) && !fireBlades(G, g.from, g.to)) {
+        G.aim = { x: g.to.x, y: g.to.y };
+      }
     }
-    // hold: damage already applied while channeling; release just ends it
+    // hold: handled above — channel damage was live; meteor dropped on release
   };
   canvas.addEventListener('pointerup', finish);
   canvas.addEventListener('pointercancel', finish);
@@ -57,22 +65,22 @@ export function initInput(G, canvas) {
   document.addEventListener('gesturestart', e => e.preventDefault()); // iOS pinch
 }
 
-/** Poll per frame while playing: engage/aim the beam. */
+/** Poll per frame while playing: engage/aim the hold-slot channel. */
 export function updateInput(G) {
   const S = G.S;
-  const ownsHold = S.weapons.beam >= 1;
+  const ownsHold = S.weapons.beam >= 1 || S.weapons.flame >= 1 || S.weapons.meteor >= 1;
   for (const [id, tr] of G.traces) {
-    if (!tr.holdEngaged && G.wt.beamOwner === null && shouldEngageHold(tr, S.time, ownsHold)) {
+    if (!tr.holdEngaged && G.wt.holdOwner === null && shouldEngageHold(tr, S.time, ownsHold)) {
       tr.holdEngaged = true;
-      G.wt.beamOwner = id;
+      G.wt.holdOwner = id;
     }
-    if (tr.holdEngaged && G.wt.beamOwner === id) {
-      G.wt.beamAim = { x: tr.x, y: tr.y };
+    if (tr.holdEngaged && G.wt.holdOwner === id) {
+      G.wt.holdAim = { x: tr.x, y: tr.y };
     }
   }
 }
 
 export function clearInput(G) {
   G.traces.clear();
-  if (G.wt) { G.wt.beamOwner = null; G.wt.beamAim = null; }
+  if (G.wt) { G.wt.holdOwner = null; G.wt.holdAim = null; }
 }

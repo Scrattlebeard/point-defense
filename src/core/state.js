@@ -48,7 +48,7 @@ export function newRun(meta, towerId) {
     introduced: { enemies: new Set(), variants: new Set() },
     // sim entity arrays, owned here so a run is one object; the shell fills them
     enemies: [], bullets: [], missiles: [], rings: [], zaps: [], mines: [], shells: [],
-    boomers: [],
+    boomers: [], blades: [], fires: [],
     heat: 0, overheated: false,
   };
   for (let i = 1; i < fx.startLevel; i++) {
@@ -73,8 +73,16 @@ export function addXp(S, amount) {
 /** Three distinct options: upgradeable/ownable weapons from the pool + generic cards. */
 export function levelChoices(S, rng) {
   const opts = [];
+  // gesture-slot filter (core.md, ADR-0004): a slot occupied by a DIFFERENT
+  // owned weapon locks its rivals out of the pool for the run
+  const slotTaken = {};
+  for (const id in S.weapons) {
+    if (S.weapons[id] > 0 && WEAPONS[id].slot) slotTaken[WEAPONS[id].slot] = id;
+  }
   for (const id of S.pool) {
     const l = S.weapons[id];
+    const slot = WEAPONS[id].slot;
+    if (slot && slotTaken[slot] && slotTaken[slot] !== id) continue;
     if (l < WEAPONS[id].max) opts.push({ type: 'weapon', id, lvl: l });
   }
   for (const id of Object.keys(GENERICS)) {

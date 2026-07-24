@@ -135,7 +135,7 @@ test('a max-level beam channels on its own — no hold input ever given', () => 
   const G = makeG();
   G.S.weapons.bolt = 0;
   G.S.weapons.beam = 5;
-  simulate(G, 30); // robot only aims; nothing ever sets wt.beamAim
+  simulate(G, 30); // robot only aims; nothing ever sets wt.holdAim
   assert.ok(G.S.kills > 0, 'always-on beam killed nothing');
 });
 
@@ -153,7 +153,7 @@ test('beam ticks discretely: a brushing touch cannot strip a shield, sustained f
   G.S.weapons.beam = 1;
   const e = spawnEnemy(G, 'grunt', 'shielded', G.cx, G.cy - 220);
   e.shield = 3;
-  G.wt.beamAim = { x: G.cx, y: G.cy - 300 }; // beam straight through the grunt
+  G.wt.holdAim = { x: G.cx, y: G.cy - 300 }; // beam straight through the grunt
   for (let i = 0; i < 18; i++) updateGame(G, 1 / 60); // ~0.3s of contact
   assert.ok(e.shield >= 1, `0.3s of beam stripped the whole shield (left: ${e.shield})`);
   for (let i = 0; i < 60; i++) updateGame(G, 1 / 60); // ~1.3s total

@@ -51,12 +51,12 @@ export const WEAPONS = {
     stats: l => ({ dmg: 9 + 4 * l, volley: l >= 6 ? 3 : l >= 5 ? 2 : 1, auto: l >= 3 ? 1 : 0, pierce: l >= 4 ? 1 : 0, cd: 0.34 - 0.02 * l }),
   },
   wall: {
-    name: 'Force Wall', kind: 'manual', gesture: 'swipe', max: 5, tag: 'SWIPE',
+    name: 'Force Wall', kind: 'manual', gesture: 'swipe', slot: 'swipe', max: 5, tag: 'SWIPE',
     descs: ['Swipe a wall into being — shapes must break through it', '+length & wall HP', '+push & damage', '+wall HP & length', 'MAX: two walls'],
     stats: l => ({ len: 150 + 40 * l, hp: 80 + 40 * l, dur: 5, push: 100 + 25 * l, dmg: 5 + 2 * l, tick: 0.4, maxWalls: l >= 5 ? 2 : 1, cd: 0.4 }),
   },
   beam: {
-    name: 'Lance Beam', kind: 'manual', gesture: 'hold', max: 5, tag: 'HOLD',
+    name: 'Lance Beam', kind: 'manual', gesture: 'hold', slot: 'hold', max: 5, tag: 'HOLD',
     descs: ['Hold to channel a beam — damage ramps as it cooks a target', '+damage', '+width, runs cooler', '+damage', 'MAX: always on, aims itself at your reticle'],
     stats: l => ({
       dps: 34 + 20 * l, width: 9 + 2.5 * l, heatRate: l >= 5 ? 0 : (l >= 3 ? 0.22 : 0.29), alwaysOn: l >= 5,
@@ -125,6 +125,31 @@ export const WEAPONS = {
     name: 'Boomerang', kind: 'auto', max: 5, tag: 'AIM', techLock: true,
     descs: ['A returning blade — bites going out and coming back', '+damage', 'Faster throws', '+damage', 'MAX: twin blades'],
     stats: l => ({ dmg: 13 + 6 * l, cd: 2.6 - 0.2 * l, speed: 440, decel: 200, retAccel: 1100, retSpeed: 560, r: 11, n: l >= 5 ? 2 : 1 }),
+  },
+  // ---- Gesture-slot variants (ADR-0004 wave B) ----
+  flame: {
+    name: 'Flamethrower', kind: 'manual', gesture: 'hold', slot: 'hold', max: 5, tag: 'HOLD', techLock: true,
+    descs: ['Hold to sweep a cone of fire — burns stack and linger', '+burn damage', '+range, runs cooler', '+burn damage & hotter ground', 'MAX: never overheats, aims itself'],
+    stats: l => ({
+      range: 230 + 18 * l, arc: 0.3, tick: 0.3, direct: 4 + 1.5 * l,
+      burnDps: 3 + 1.5 * l, burnDur: 2.5, maxStacks: 5,
+      patchEvery: 0.35, patchR: 26, patchLife: 2.2, patchDps: 6 + 3 * l,
+      heatRate: l >= 5 ? 0 : (l >= 3 ? 0.16 : 0.22), alwaysOn: l >= 5,
+    }),
+  },
+  meteor: {
+    name: 'Meteor', kind: 'manual', gesture: 'hold', slot: 'hold', max: 5, tag: 'HOLD', techLock: true,
+    descs: ['Hold to grow a meteor, release to drop it on your aim', '+damage', '+blast radius', '+damage, faster cycle', 'MAX: cataclysm'],
+    stats: l => ({
+      chargeTime: 1.5, dmg: 24 + 12 * l, blast: 60 + 8 * l,
+      minDmgFrac: 0.45, minBlastFrac: 0.55, knock: 220, fall: 0.45,
+      cd: 0.9 - 0.05 * l, scorchDps: 8, scorchLife: 2.0,
+    }),
+  },
+  blades: {
+    name: 'Force Blades', kind: 'manual', gesture: 'swipe', slot: 'swipe', max: 5, tag: 'SWIPE', techLock: true,
+    descs: ['Swipe to hurl piercing crescents outward', '+1 blade', '+damage', '+1 blade', 'MAX: 5 blades'],
+    stats: l => ({ n: [0, 2, 3, 3, 4, 5][l], dmg: 15 + 7 * l, speed: 400, r: 12, len: 200, cd: 0.45 }),
   },
 };
 
@@ -242,6 +267,11 @@ export const LATTICE = [
   { id: 'heavy',      sector: 'Armory', ring: 3, name: 'Howitzer',   desc: 'Adds the Howitzer to the level-up pool',   cost: 110, req: ['burst'],   effect: { unlockWeapon: 'heavy' } },
   { id: 'boomer',     sector: 'Armory', ring: 2, name: 'Boomerang',  desc: 'Adds the Boomerang to the level-up pool',  cost: 60,  req: ['scatter'], effect: { unlockWeapon: 'boomer' } },
   { id: 'ballistics', sector: 'Armory', ring: 3, name: 'Ballistics', desc: '+6% damage', cost: 100, req: ['burst', 'over2'], reqMode: 'any', effect: { dmgAdd: 0.06 } },
+  { id: 'blades',     sector: 'Armory', ring: 1, name: 'Force Blades',  desc: 'Adds Force Blades to the level-up pool',    cost: 35,  req: [],         effect: { unlockWeapon: 'blades' } },
+  { id: 'flame',      sector: 'Armory', ring: 2, name: 'Flamethrower',  desc: 'Adds the Flamethrower to the level-up pool', cost: 65, req: ['blades'], effect: { unlockWeapon: 'flame' } },
+  { id: 'meteor',     sector: 'Armory', ring: 3, name: 'Meteor',        desc: 'Adds the Meteor to the level-up pool',      cost: 120, req: ['flame'],  effect: { unlockWeapon: 'meteor' } },
+  { id: 'siegecraft', sector: 'Armory', ring: 4, name: 'Siegecraft',    desc: '+6% damage & −3% cooldowns', cost: 250, req: ['meteor'], effect: { dmgAdd: 0.06, cdAdd: -0.03 } },
+  { id: 'masteratarms', sector: 'Armory', ring: 5, name: 'Master-at-Arms', desc: '+8% damage & −5% cooldowns', cost: 600, req: ['heavy', 'siegecraft'], reqMode: 'any', effect: { dmgAdd: 0.08, cdAdd: -0.05 } },
   // ---- Towers (unlocks + keel) ----
   { id: 'tower_tempest', sector: 'Towers', ring: 2, name: 'Tempest', desc: 'Unlock the Tempest tower', cost: 40,  req: [],                effect: { unlockTower: 'tempest' } },
   { id: 'tower_warden',  sector: 'Towers', ring: 3, name: 'Warden',  desc: 'Unlock the Warden tower',  cost: 75,  req: ['tower_tempest'], effect: { unlockTower: 'warden' } },

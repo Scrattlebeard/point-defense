@@ -130,3 +130,142 @@ test('boomerang bounces off the arena wall and comes home', () => {
   assert.equal(everOut, false, 'boomerang escaped the arena');
   assert.equal(G.S.boomers.length, 0, 'boomerang never came home (leaked)');
 });
+
+// ---- Wave B (ADR-0004): gesture slots + flamethrower, meteor, force blades ----
+import { levelChoices } from '../src/core/state.js';
+import { TOWERS } from '../src/core/config.js';
+import { fireBlades, releaseHold } from '../src/app/weapons.js';
+import { mulberry32 } from '../src/core/rng.js';
+
+test('wave B config contract: slots declared, tech-locked, manual', () => {
+  assert.equal(WEAPONS.beam.slot, 'hold');
+  assert.equal(WEAPONS.flame.slot, 'hold');
+  assert.equal(WEAPONS.meteor.slot, 'hold');
+  assert.equal(WEAPONS.wall.slot, 'swipe');
+  assert.equal(WEAPONS.blades.slot, 'swipe');
+  for (const id of ['flame', 'meteor', 'blades']) {
+    const w = WEAPONS[id];
+    assert.equal(w.techLock, true, `${id} must be tech-locked`);
+    assert.equal(w.kind, 'manual');
+    assert.equal(w.max, 5);
+    assert.equal(w.descs.length, 5);
+  }
+});
+
+test('gesture slots: an occupied slot is never offered again (ADR-0004)', () => {
+  const S = newRun(defaultMeta(), 'bastion');
+  for (const id of ['flame', 'meteor', 'blades', 'beam', 'wall']) S.pool.add(id);
+  S.weapons.beam = 1; // hold slot occupied
+  S.weapons.wall = 1; // swipe slot occupied
+  const rng = mulberry32(7);
+  for (let i = 0; i < 300; i++) {
+    for (const c of levelChoices(S, rng)) {
+      assert.ok(!['flame', 'meteor', 'blades'].includes(c.id),
+        `${c.id} offered while its slot is occupied`);
+    }
+  }
+});
+
+test('gesture slots: a free slot still offers its weapons', () => {
+  const S = newRun(defaultMeta(), 'bastion');
+  for (const id of ['flame', 'meteor', 'blades']) S.pool.add(id);
+  const rng = mulberry32(11);
+  const seen = new Set();
+  for (let i = 0; i < 400; i++) for (const c of levelChoices(S, rng)) seen.add(c.id);
+  for (const id of ['flame', 'meteor', 'blades']) {
+    assert.ok(seen.has(id), `${id} never offered despite free slot`);
+  }
+});
+
+test('no tower starts with two weapons in one gesture slot', () => {
+  for (const [tid, t] of Object.entries(TOWERS)) {
+    const bySlot = {};
+    for (const wid of Object.keys(t.start)) {
+      const slot = WEAPONS[wid].slot;
+      if (!slot) continue;
+      assert.ok(!bySlot[slot], `${tid} starts two ${slot}-slot weapons`);
+      bySlot[slot] = wid;
+    }
+  }
+});
+
+test('flamethrower: burn stacks keep cooking after the shape leaves the cone', () => {
+  const G = makeG('flame', 2);
+  G.wt.holdAim = { x: 600, y: 300 };
+  const e = anvil(G, 520, 300); // inside the cone
+  simulate(G, 1.0); // paint it
+  const cooked = e.maxHp - e.hp;
+  assert.ok(cooked > 0, 'cone never burned the target');
+  assert.ok(e.burnStacks >= 1, 'no burn stacks applied');
+  // leave the cone: stop channeling entirely
+  G.wt.holdAim = null;
+  const hpAtExit = e.hp;
+  simulate(G, 1.2);
+  assert.ok(e.hp < hpAtExit, 'burn stopped the instant the cone left — DoT is the identity');
+});
+
+test('flamethrower leaves burning ground that hurts a latecomer', () => {
+  const G = makeG('flame', 3);
+  G.wt.holdAim = { x: 600, y: 300 };
+  anvil(G, 560, 300);
+  simulate(G, 1.5); // sweep long enough to drop patches
+  assert.ok(G.S.fires.length >= 1, 'no ground patches dropped');
+  G.wt.holdAim = null;
+  const f = G.S.fires[G.S.fires.length - 1];
+  const late = anvil(G, f.x, f.y); // walks in AFTER the cone is gone
+  simulate(G, 0.9);
+  assert.ok(late.hp < late.maxHp, 'burning ground did not burn');
+});
+
+test('meteor: auto-releases at full charge, hits harder than a pebble', () => {
+  // full charge: hold until auto-release
+  const G1 = makeG('meteor', 1);
+  const e1 = anvil(G1, 600, 300);
+  G1.wt.holdAim = { x: 600, y: 300 };
+  simulate(G1, 3.0); // charge 1.5s + fall + impact, no release call ever
+  const fullDmg = e1.maxHp - e1.hp;
+  assert.ok(fullDmg > 0, 'auto-release never fired');
+  // pebble: brief hold, manual release
+  const G2 = makeG('meteor', 1);
+  const e2 = anvil(G2, 600, 300);
+  G2.wt.holdAim = { x: 600, y: 300 };
+  simulate(G2, 0.3);
+  releaseHold(G2);
+  G2.wt.holdAim = null;
+  simulate(G2, 1.5);
+  const pebbleDmg = e2.maxHp - e2.hp;
+  assert.ok(pebbleDmg > 0, 'min-charge release was a dead input');
+  assert.ok(fullDmg > pebbleDmg * 1.5, `charge must matter: full ${fullDmg} vs pebble ${pebbleDmg}`);
+});
+
+test('force blades: swipe hurls piercing crescents outward', () => {
+  const G = makeG('blades', 2);
+  // swipe across, above the Point: outward normal points up (away from tower)
+  const a = anvil(G, 400, 150);
+  const b = anvil(G, 400, 80); // second shape further along the SAME path: pierce proof
+  const ok = fireBlades(G, { x: 300, y: 220 }, { x: 500, y: 220 });
+  assert.equal(ok, true, 'owned blades refused to fire');
+  simulate(G, 1.2);
+  assert.ok(a.hp < a.maxHp, 'first shape untouched');
+  assert.ok(b.hp < b.maxHp, 'blade did not pierce to the second shape');
+  assert.equal(G.S.blades.length, 0, 'blades must die at the wall (leaked)');
+});
+
+test('force blades: not owned → returns false (swipe degrades to re-aim)', () => {
+  const G = makeG('bolt', 1);
+  assert.equal(fireBlades(G, { x: 300, y: 220 }, { x: 500, y: 220 }), false);
+});
+
+test('flamethrower overheats like the beam: sustained channel forces a lockout', () => {
+  const G = makeG('flame', 1);
+  G.wt.holdAim = { x: 600, y: 300 };
+  anvil(G, 520, 300);
+  let overheated = false;
+  const dt = 1 / 60;
+  for (let t = 0; t < 8; t += dt) {
+    updateWeapons(G, dt);
+    G.S.time += dt;
+    if (G.S.overheated) { overheated = true; break; }
+  }
+  assert.ok(overheated, 'flame never overheated — another weapon is bleeding its heat');
+});

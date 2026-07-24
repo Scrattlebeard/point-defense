@@ -37,6 +37,7 @@ export function spawnEnemy(G, kind, variantId = null, x = null, y = null) {
     shield: v?.shield || 0,
     kbx: 0, kby: 0, contactCd: 0, flash: 0, orbHit: 0, age: 0, wallAtk: 0,
     beamHeat: 0, beamTick: 0,
+    burnStacks: 0, burnLeft: 0, burnTick: 0, // flamethrower DoT (core.md flame row)
     boss: isBoss, dead: false,
   };
   S.enemies.push(e);
