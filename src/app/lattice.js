@@ -1,7 +1,8 @@
-// The Lattice view (app.md `lattice.js` row, ADR-0003 stage 1): renders LATTICE
-// as a radial SVG web — the Point at center, six sector wedges, ring guides at
-// cost tiers. Pure view: all purchases go through the hooks object (onBuy), the
-// same contract ui.js uses. Pan/zoom state lives here and survives re-renders.
+// The Lattice view (app.md `lattice.js` row, ADR-0003 stage 1, ADR-0005): renders
+// LATTICE as a horizontal rectilinear circuit — hub at the left, one column per
+// ring (cost tier), sectors as horizontal bands, right-angle elbow edges. Pure
+// view: all purchases go through the hooks object (onBuy), the same contract
+// ui.js uses. Pan/zoom state lives here and survives re-renders.
 import { LATTICE } from '../core/config.js';
 import { canBuy, reqsMet } from '../core/tech.js';
 
@@ -12,11 +13,15 @@ const SECTOR_COLOR = {
   Hull: '#59ff9c', Arms: '#ff5c6c', Mind: '#c06bff',
   Salvage: '#ffd24d', Arsenal: '#4de8ff', Armory: '#ff7fb0', Towers: '#ff9c59',
 };
-const RING_R = [0, 120, 200, 280, 360, 440];
+const COL_W = 185; // one column per ring, left→right (ADR-0005)
+const PITCH = 58;  // vertical pitch between nodes inside a (sector, ring) cell
 const VIEW = 1000; // viewBox half-extent × 2
 
-// ---- computed layout: sector wedge + ring radius + even spread (app.md) ----
+// ---- computed layout: ring column × sector band + even spread (app.md) ----
 const POS = new Map();
+const BANDS = []; // per-sector { y, half } — band centers and half-heights
+const X0 = -(5 * COL_W) / 2; // hub column; ring r sits at X0 + r*COL_W
+let Y0 = 0, Y1 = 0; // vertical extent of the band stack
 {
   const bySR = new Map();
   for (const n of LATTICE) {
@@ -24,19 +29,38 @@ const POS = new Map();
     if (!bySR.has(k)) bySR.set(k, []);
     bySR.get(k).push(n);
   }
-  const span = (Math.PI * 2) / SECTOR_ORDER.length;
-  const pad = 0.12; // wedge-edge margin (radians)
-  for (const [, nodes] of bySR) {
+  // band height from the sector's most crowded cell — computed, never hand-tuned
+  for (const s of SECTOR_ORDER) {
+    let m = 1;
+    for (const [k, v] of bySR) if (k.startsWith(s + ':')) m = Math.max(m, v.length);
+    BANDS.push({ y: 0, half: ((m - 1) * PITCH) / 2 + 48 });
+  }
+  const total = BANDS.reduce((a, b) => a + 2 * b.half, 0);
+  let y = -total / 2;
+  Y0 = y; Y1 = total / 2;
+  for (const b of BANDS) { b.y = y + b.half; y += 2 * b.half; }
+  for (const [k, nodes] of bySR) {
+    const [sector, ring] = k.split(':');
+    const band = BANDS[SECTOR_ORDER.indexOf(sector)];
     nodes.forEach((n, i) => {
-      const si = SECTOR_ORDER.indexOf(n.sector);
-      const start = -Math.PI / 2 + si * span + pad;
-      const width = span - 2 * pad;
-      const a = start + ((i + 1) / (nodes.length + 1)) * width;
-      // radial stagger inside crowded cells so neighbors never collide
-      const r = RING_R[n.ring] + (nodes.length > 1 ? (i % 2 === 0 ? -17 : 17) : 0);
-      POS.set(n.id, { x: Math.cos(a) * r, y: Math.sin(a) * r });
+      POS.set(n.id, {
+        // x-stagger in crowded cells keeps labels off the neighbor's dot
+        x: X0 + Number(ring) * COL_W + (nodes.length > 1 ? (i % 2 === 0 ? -20 : 20) : 0),
+        y: band.y + (i - (nodes.length - 1) / 2) * PITCH,
+      });
     });
   }
+}
+
+// Right-angle elbow (ADR-0005): cross-column edges run horizontal-first so the
+// vertical segment lives in the gutter between columns, never inside one.
+function elbow(a, b) {
+  if (Math.abs(b.x - a.x) < 50) {
+    const my = (a.y + b.y) / 2;
+    return `M${a.x},${a.y} L${a.x},${my} L${b.x},${my} L${b.x},${b.y}`;
+  }
+  const mx = (a.x + b.x) / 2;
+  return `M${a.x},${a.y} L${mx},${a.y} L${mx},${b.y} L${b.x},${b.y}`;
 }
 
 // ---- pan/zoom state (module-scoped: survives re-renders, resets per session) ----
@@ -62,9 +86,16 @@ export function renderLattice(G, hooks) {
   const svg = document.getElementById('latticeSvg');
   svg.setAttribute('viewBox', `${-VIEW / 2} ${-VIEW / 2} ${VIEW} ${VIEW}`);
   if (!zoomInit) {
-    // phones start zoomed to the inner rings; desktops see the whole web
+    // phones open zoomed on the hub columns; desktops open width-fitted and
+    // pan the tall band stack (app.md: bigger than any screen on purpose)
     const w = svg.getBoundingClientRect().width || window.innerWidth;
-    view.k = Math.min(2.2, Math.max(1, 780 / w));
+    if (w < 600) {
+      view.k = 1.5;
+      view.x = -(X0 + 180) * view.k;
+      view.y = 0;
+    } else {
+      view.k = Math.min(1, (VIEW - 40) / (5 * COL_W + 260));
+    }
     zoomInit = true;
   }
   svg.innerHTML = '';
@@ -72,42 +103,49 @@ export function renderLattice(G, hooks) {
   svg.appendChild(pan);
   applyView(pan);
 
-  // ring guides
-  for (let r = 1; r < RING_R.length; r++) {
-    pan.appendChild(el('circle', {
-      cx: 0, cy: 0, r: RING_R[r], class: 'latRing', fill: 'none',
+  // tier guides: one vertical line per ring column
+  for (let r = 1; r <= 5; r++) {
+    pan.appendChild(el('line', {
+      x1: X0 + r * COL_W, y1: Y0 - 20, x2: X0 + r * COL_W, y2: Y1 + 20,
+      class: 'latRing',
+    }));
+  }
+  // band separators between sectors
+  for (let i = 1; i < BANDS.length; i++) {
+    const y = BANDS[i].y - BANDS[i].half;
+    pan.appendChild(el('line', {
+      x1: X0 - 130, y1: y, x2: X0 + 5 * COL_W + 60, y2: y, class: 'latRing',
     }));
   }
 
-  // sector labels at the rim
+  // sector labels at the left rim of each band
   SECTOR_ORDER.forEach((s, si) => {
-    const a = -Math.PI / 2 + (si + 0.5) * (Math.PI * 2 / 6);
     const t = el('text', {
-      x: Math.cos(a) * 478, y: Math.sin(a) * 478,
+      x: X0 - 40, y: BANDS[si].y,
       class: 'latSector', fill: SECTOR_COLOR[s],
-      'text-anchor': 'middle', 'dominant-baseline': 'middle',
+      'text-anchor': 'end', 'dominant-baseline': 'middle',
     });
     t.textContent = s.toUpperCase();
     pan.appendChild(t);
   });
 
-  // edges under nodes; dashed for any-mode cross-links
+  // edges under nodes: rectilinear elbows (ADR-0005); dashed for any-mode
   for (const n of LATTICE) {
     const p = POS.get(n.id);
     for (const r of n.req) {
       const q = POS.get(r);
       if (!q) continue;
       const bothOwned = G.meta.tech.includes(n.id) && G.meta.tech.includes(r);
-      const line = el('line', {
-        x1: q.x, y1: q.y, x2: p.x, y2: p.y,
+      const path = el('path', {
+        d: elbow(q, p), fill: 'none', 'stroke-linejoin': 'round',
         class: 'latEdge' + (bothOwned ? ' lit' : '') + (n.reqMode === 'any' ? ' any' : ''),
       });
-      pan.appendChild(line);
+      pan.appendChild(path);
     }
   }
 
-  // the Point at center
-  const hub = el('g', { class: 'latHub' });
+  // the Point at the hub column, vertical center
+  const hub = el('g', { class: 'latHub', transform: `translate(${X0} 0)` });
   for (const [r, w] of [[26, 3], [16, 2.4], [7, 2]]) {
     hub.appendChild(el('circle', { cx: 0, cy: 0, r, fill: 'none', stroke: '#4de8ff', 'stroke-width': w }));
   }

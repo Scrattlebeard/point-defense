@@ -14,3 +14,9 @@
   keeping: a square drawn vertex-up reads as the *mine diamond* register (rotate
   squares π/4), and long `.clvl` text wraps vertically in narrow flex cards.
 - Project: "Point Defense", https://claude.ai/design/p/748badd5-66ca-467a-9dbc-655a71ef8703
+- Design-side templates are **upstream references, not synced code**:
+  `templates/weapon-icons` → `assets/icons/` (re-retrieve, never hand-edit) and
+  `templates/tech-tree` → layout/edge exploration whose **horizontal +
+  rectilinear** variant became the in-game Lattice presentation (ADR-0005,
+  2026-07-24). Its ranks/perk-toggles/respec concepts are ADR-0003 stage-2
+  reference material, deliberately not adopted yet.

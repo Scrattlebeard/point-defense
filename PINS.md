@@ -33,6 +33,8 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
   per-weapon trees, behavior-changing aspects — XP shown post-game + mastery
   screens only, switching free). Stage 3 = tower identity paths. Decisions all
   recorded in the ADR; each stage is one overnight, independently shippable.
+  Design reference for stage 2: the design project's `templates/tech-tree`
+  (per-weapon tabs, multi-rank nodes, perk toggles, respec — see ADR-0005 Notes).
 - **Context:** Economy curve is explicitly provisional — Daniel plays, we re-cut.
   Deep-merge + meta schema version owed when stage 2 adds nested meta fields.
 
