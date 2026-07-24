@@ -91,6 +91,12 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
 - **Where:** `src/app/lattice.js`, ADR-0005 (supersede via new ADR if done); GDD visual-language section once it exists.
 - **Context:** "Probably" — a candidate, not a commitment. Revisit against whatever made 0005 abandon radial (check the ADR's alternatives before re-deciding).
 
+## Variant stacking past wave ~40 (GDD session, 2026-07-24)
+- **What:** From roughly the epithet threshold (wave 40, where recirculating bosses gain guaranteed variants), regular spawns should begin rolling **multiple stacked variants** ("armor + fast + regen is going to be hell" — Daniel). Escalating composition is the lategame content doctrine; stacking is its deepest gear.
+- **Why:** GDD-level: the bullshit generator is composition, not (yet) random events; the modifier pool compounds so run depth stays structurally surprising. Legibility holds because highlights occupy distinct visual channels (outline / glow / inner glyph / ring / core) — verify all pairs on one silhouette before shipping.
+- **Where:** `src/core/waves.js` rollVariant (single-roll today), `core.md` Variants, xp mults need a stacking rule (multiplicative?).
+- **Context:** Future work, deliberately unscheduled. GDD threat-design section will carry the intent; this pin is the mechanical breadcrumb.
+
 ## Haptics + better sound design
 - **What:** `navigator.vibrate` on tower hit / boss spawn; richer synth (noise bursts for explosions, filter sweeps).
 - **Why:** Phone-first game, big cheap juice win.
