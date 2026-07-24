@@ -80,6 +80,21 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
 - **Where:** `src/app/enemies.js` (boss branch), spec first in `src/core/core.md` Enemies.
 - **Context:** Keep decisions in core (a `BOSS_MOVES` table), execution in shell, per pillar 5.
 
+## Wire the weapon icons into the UI
+- **What:** `assets/icons/` (retrieved 2026-07-24 from the Claude Design project's
+  `templates/weapon-icons` — provenance in `assets/icons/icons.md`) holds one SVG
+  per `WEAPONS` id, currently used by nothing. Candidate consumers: level-up
+  cards (`.chead`, next to the chip), pause stats panel rows, Lattice node
+  detail card, and eventually the mastery screens (ADR-0003 stage 2).
+- **Why:** 21 weapons now share a text-only picker; icons make picks scannable
+  mid-fight, which matters most on the phone where reading is slowest.
+- **Where:** `src/app/ui.js` (cards + statpanel), maybe `lattice.js`; spec first
+  in `app.md`. Decide inline-`<img>` vs fetch-and-inline-SVG (Pages serves the
+  files fine; `<img>` is simplest and the glow filter travels inside each file).
+- **Context:** Icon ids are the seam (`weaponId → assets/icons/<id>.svg`).
+  Frost's file is `frost.svg` — the design template calls it "Frost Aura" but
+  the config id rules the filename.
+
 ## The Armory: human-hands balance pass (ADR-0004 shipped 2026-07-24 overnight)
 - **What:** All ten new weapons (scatter/burst/heavy/boomer · flame/meteor/blades ·
   catapult/caltrop/cascade) are sim-verified only — numbers in `config.js` are
