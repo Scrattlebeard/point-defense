@@ -16,6 +16,7 @@ npm install
 
 # test:
 npm test              # = node --test test/
+TEST_SEED=7 npm test  # same suite on a different random stream (see below)
 
 # run (ES modules require http, file:// won't do):
 npm run dev           # = python3 -m http.server 8123, then open http://localhost:8123/
@@ -56,6 +57,18 @@ a live screenshot almost always lands in the quiet part of the cycle. These are 
 tools the legibility checks use; eyeballing a live wave-40 fight is how the channel
 collisions got shipped in the first place. Magnify it with the
 dpr profile trick above (`devPixelsPerPx = 3`).
+
+**Test determinism.** Most of the sim runs on bare `Math.random` (spawn bearings,
+crit rolls, variant rolls, weapon jitter), so every test that drives the sim used to
+inherit that — those tests were not deterministic, they were *comfortably inside
+their margins*, which is a weaker property that decays every time balance moves. One
+of them (a form neutrality check carrying ~20% crit noise) failed about one run in
+seven and was only caught by running the suite twenty times after an unrelated
+landing. Sim rigs now call `seedRandom()` from `test/seed.mjs`, so a thin-margin test
+fails *every* time instead of *sometimes* — you find out at the keyboard rather than
+in CI next week. **The cost, stated plainly:** a fixed seed also removes the
+incidental coverage that random variation gave. `TEST_SEED=<n> npm test` buys it back
+deliberately — sweep it after balance changes. Swept 1–8 and 11–30 at landing: clean.
 
 Balance tooling: `node scripts/calibrate.mjs [trials]` runs fresh no-tech robot
 runs to death and checks the median against the onboarding band (ADR-0003

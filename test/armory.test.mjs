@@ -9,6 +9,7 @@ import { resetWeapons, updateWeapons } from '../src/app/weapons/index.js';
 import { spawnEnemy } from '../src/app/enemies.js';
 
 function makeG(weaponId, lvl) {
+  seedRandom(); // deterministic sim (test/seed.mjs)
   const meta = defaultMeta();
   const G = {
     W: 800, H: 600, cx: 400, cy: 300,
@@ -360,4 +361,5 @@ test('cascade: a primed shape that dies early still detonates (fuse OR death)', 
 
 // tiny helper: route through the real damage path so death side-effects fire
 import { damageEnemy } from '../src/app/enemies.js';
+import { seedRandom } from './seed.mjs';
 function damageEnemy_(G, e) { damageEnemy(G, e, 1, { noMult: true, silent: true }); }

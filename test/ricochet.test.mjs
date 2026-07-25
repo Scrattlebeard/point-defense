@@ -8,8 +8,10 @@ import { defaultMeta, newRun } from '../src/core/state.js';
 import { makeFx, updateFx } from '../src/app/fx.js';
 import { resetWeapons, updateWeapons } from '../src/app/weapons/index.js';
 import { spawnEnemy } from '../src/app/enemies.js';
+import { seedRandom } from './seed.mjs';
 
 function rig(boltLvl, form = null) {
+  seedRandom(); // deterministic sim (test/seed.mjs)
   const meta = { ...defaultMeta(), tech: LATTICE.map(n => n.id) };
   const G = { W: 800, H: 600, cx: 400, cy: 300, S: newRun(meta, 'bastion'), fx: makeFx(), meta };
   for (const id of Object.keys(G.S.weapons)) G.S.weapons[id] = 0;

@@ -8,8 +8,10 @@ import { makeFx } from '../src/app/fx.js';
 import { resetWeapons } from '../src/app/weapons/index.js';
 import { resetWaveDirector, updateGame } from '../src/app/game.js';
 import { spawnEnemy, applyKnock } from '../src/app/enemies.js';
+import { seedRandom } from './seed.mjs';
 
 function makeG() {
+  seedRandom(); // deterministic sim (test/seed.mjs)
   const meta = defaultMeta();
   const G = { W: 430, H: 900, cx: 215, cy: 450, S: newRun(meta, 'bastion'), fx: makeFx(), meta };
   resetWeapons(G);

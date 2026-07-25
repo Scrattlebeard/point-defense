@@ -7,8 +7,10 @@ import { defaultMeta, newRun } from '../src/core/state.js';
 import { BOSS_KNOCK_RESIST } from '../src/core/balance.js';
 import { makeFx } from '../src/app/fx.js';
 import { spawnEnemy, applyKnock } from '../src/app/enemies.js';
+import { seedRandom } from './seed.mjs';
 
 function makeG() {
+  seedRandom(); // deterministic sim (test/seed.mjs)
   const meta = defaultMeta();
   const G = { W: 800, H: 600, cx: 400, cy: 300, S: newRun(meta, 'bastion'), fx: makeFx(), meta };
   G.S.wave = 5; // boss waves exist from 5

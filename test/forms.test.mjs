@@ -11,6 +11,7 @@ import { spawnEnemy } from '../src/app/enemies.js';
 import { mulberry32 } from '../src/core/rng.js';
 
 function rig(form) {
+  seedRandom(); // deterministic sim (test/seed.mjs)
   const meta = { ...defaultMeta(), tech: LATTICE.map(n => n.id) };
   const G = { W: 800, H: 600, cx: 400, cy: 300, S: newRun(meta, 'bastion'), fx: makeFx(), meta };
   G.S.weapons.bolt = WEAPONS.bolt.max;
@@ -132,6 +133,7 @@ test('an unlocked-but-unowned form stays out of a fresh account draft', () => {
 
 // ---- Loadout visibility (core.md Forms: "rhythm is loot") ----
 import { loadout } from '../src/core/state.js';
+import { seedRandom } from './seed.mjs';
 
 test('loadout() reports owned weapons, their level, and the form each wears', () => {
   const meta = { ...defaultMeta(), tech: LATTICE.map(n => n.id) };

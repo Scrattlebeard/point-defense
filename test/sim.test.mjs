@@ -9,8 +9,10 @@ import { makeFx, updateFx } from '../src/app/fx.js';
 import { resetWeapons, fireWall } from '../src/app/weapons/index.js';
 import { resetWaveDirector, updateGame } from '../src/app/game.js';
 import { nearestEnemy, spawnEnemy, damageEnemy } from '../src/app/enemies.js';
+import { seedRandom } from './seed.mjs';
 
 function makeG(towerId = 'bastion', tech = []) {
+  seedRandom(); // deterministic sim (test/seed.mjs)
   const meta = { ...defaultMeta(), tech };
   const G = {
     W: 430, H: 900, cx: 215, cy: 450,

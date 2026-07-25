@@ -9,8 +9,10 @@ import { defaultMeta, newRun } from '../src/core/state.js';
 import { makeFx } from '../src/app/fx.js';
 import { resetWeapons, updateWeapons } from '../src/app/weapons/index.js';
 import { spawnEnemy } from '../src/app/enemies.js';
+import { seedRandom } from './seed.mjs';
 
 function makeG(boltLvl) {
+  seedRandom(); // deterministic sim (test/seed.mjs)
   const meta = defaultMeta();
   const G = {
     W: 800, H: 600, cx: 400, cy: 300,
