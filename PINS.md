@@ -502,43 +502,38 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
   with Law·QoL-milestone — this is arguably the flagship milestone grant rather than a
   purchase, which would mean retiring `head`/`head2` as buyable nodes.
 
-## [phase 4] MEASURED: the slot budget makes every gun but bolt dead content
-- **What:** measured 2026-07-25 over 60 mature-account runs (every lattice node owned,
-  robot picks). The pin below used to say "watch for this in playtest" — it does not need
-  watching, it needs a decision. Numbers:
-  - **Guns are offered 0% of the time.** `scatter` 0%, `heavy` 0%. Not rare — *never*.
-    (`burst` was also 0%; it has since been fixed by a different route — it became a real
-    FORM, which costs no slot, and now appears in 45% of runs. That fix does **not**
-    generalise: Scattergun and Howitzer are gun *bases*, not forms, so they stay locked out.)
-  - **All six slots fill by level ~8.6, in 60 runs out of 60**, while runs reach level ~37.
-    So the build is decided in roughly the first 90 seconds and the remaining ~28 level-ups
-    can only upgrade what luck already handed you.
-  - Distinct weapons ever offered as new: **10.8 of 21**.
-- **Why the guns are at zero, and it is structural, not luck:** ADR-0006's ceiling says a
-  category held by a *different* owned weapon locks its rivals out of the draft
-  (test-pinned, correct). **Every one of the four towers starts with bolt.** So the gun slot
-  is occupied at t=0 in every run that has ever been played, and Scattergun, Howitzer and
-  the Repeater form-pilot can never be drawn by anyone. Two individually-correct decisions
-  compose into dead content: ADR-0006 anticipated *dilution*, not *lockout*.
-- **The fix is already sanctioned in writing, which is why this is a decision and not a
-  bug report.** ADR-0006 Decision 4: *"A chassis that opens with a Howitzer is a legible
-  identity, and the gun slot is only interesting if something can occupy it besides bolt."*
-  ADR-0007 Decision 1: a tower may open with a different gun, or none. Three candidate
-  routes, not mutually exclusive:
-  1. **Tower loadout diversity** — give one unlockable tower a different starting gun. The
-     tower IS the unlock (core.md Towers), so it needs no lattice change. Cheapest, and it
-     converts dead content into tower identity, which is what towers are for.
-  2. **Weapon priority** (GDD section 7, the original subject of this pin) — a pre-run
-     loadout surface that fixes slot identity so the draft offers *your* gun.
-  3. **Let a rival gun be offered as a REPLACEMENT** rather than an addition — a swap card.
-     New mechanic, most expensive, but the only one that lets a build change its mind
-     mid-run, and it would also loosen the level-8.6 lock-in above.
-- **Where:** `config.js` TOWERS (route 1), `state.js` levelChoices (route 3), new pre-run
-  surface + `core.md`/GDD section 7 (route 2). The lockout itself is pinned by
-  `test/taxonomy.test.mjs` "gun ceiling" — that test is correct and should stay.
-- **Context:** I did not pick a route. Re-identifying a tower is design, and the measurement
-  is the thing worth handing over; the reproduction is `scratchpad/dilution.mjs`-shaped —
-  run mature-account sims, record which weapons are ever OFFERED (not taken).
+## The guns are reachable now — and that exposes the balance question behind the door
+- **RESOLVED 2026-07-25 by ADR-0011** (Daniel: *"let's just allow 2 guns for now to unlock
+  them. We'll deal with other towers and stuff later"*). `SLOT_BUDGET.gun` 1 → 2, and
+  `levelChoices` now counts per category instead of tracking a single held slot. Measured,
+  same 60-run mature-account census before and after:
+
+  | | Scattergun | Howitzer | distinct weapons offered | slots full by level |
+  |---|---|---|---|---|
+  | gun: 1 | **0%** | **0%** | 17 of 20 | 7 |
+  | gun: 2 | **57%** offered / 28% taken | **62%** / 23% | 19 of 20 | 7 |
+
+  *(These are this spike's numbers end to end. The earlier "10.8 of 21 distinct / level 8.6"
+  figures came from a different picker policy and must not be mixed with this row — the
+  before/after above is internally consistent, which is the only property that matters here.)*
+- **What it exposed, which is the actual open work:** the Armory census puts Scattergun at
+  **5.3%** and Howitzer at **4.5%** of a pair's damage — the two weakest non-dead weapons —
+  against a bolt doing 55–70%. They were never balanced because they were never reachable.
+  Now a player can take one, and taking one costs an auto slot. **Do not tune them blind:**
+  the census script is the instrument, and the question is what a second gun is *for*
+  (burst? crowd? a bolt alternative rather than a supplement?) before any number moves.
+- **Untouched on purpose, still open:** all six slots still fill by level ~7 of ~37, so the
+  build is decided in the first ninety seconds and the remaining ~30 level-ups can only
+  upgrade what luck handed you. ADR-0011 explicitly does not address this; the routes are
+  a pre-run weapon-priority surface (GDD §7) or a **replacement/swap card**, the only one
+  that lets a build change its mind mid-run.
+- **Also still open, and now cheaper:** tower loadout diversity — a chassis that opens with a
+  Howitzer is a legible identity (ADR-0006 Decision 4). Deferred by Daniel, not rejected, and
+  it composes with the ceiling of 2 rather than competing with it.
+- **Where:** `config.js` SLOT_BUDGET + TOWERS, `state.js` levelChoices, `core.md` "The slot
+  budget", `test/taxonomy.test.mjs` (the ceiling test was LOOSENED — called out in its own
+  comment), ADR-0011.
+
 ## [phase 3] Stacked legibility on a real phone (the plate says yes; thumbs haven't)
 - **What:** Variant stacking shipped 2026-07-25 with an annulus allocator (outer channels
   claim successive slots) and an armored contrast fix (a dark backing stroke — it was the

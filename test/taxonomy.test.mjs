@@ -1,7 +1,7 @@
 // Weapon taxonomy + slot budget (ADR-0006, corrected by ADR-0007; core.md
 // "Taxonomy" / "The slot budget"). Two orthogonal axes on every weapon —
 // input (how you drive it) and category (what it costs the build) — and the
-// budget: ≤ 6 weapons, ≤ 1 gun, ≤ 1 hold, ≤ 1 swipe, autos capped only by the
+// budget: ≤ 6 weapons, ≤ 2 guns (ADR-0011), ≤ 1 hold, ≤ 1 swipe, autos capped only by the
 // total. Deliberately NOT pinned here: "every tower has a gun" — the gun slot
 // may sit empty (ADR-0007 Decision 1).
 import { test } from 'node:test';
@@ -84,12 +84,36 @@ test('budget: at 6 owned weapons no new weapon is offered; upgrades continue', (
   assert.ok(upgrades > 0, 'a full build must still be offered upgrades');
 });
 
-test('gun ceiling: owning any gun locks the other guns out of the draft', () => {
-  const S = newRun(defaultMeta(), 'bastion'); // bolt L2 — the gun slot is held
+// LOOSENED 2026-07-25, called out per CLAUDE.md review protocol. This used to assert
+// that owning ANY gun locked out the rest. ADR-0011 raises the gun ceiling to 2 — the
+// old rule made Scattergun and Howitzer unreachable in 0 of 60 measured runs, because
+// every tower opens with bolt. The ceiling still bites, one gun later.
+test('gun ceiling: the SECOND gun is allowed, the third is not (ADR-0011)', () => {
+  const S = newRun(defaultMeta(), 'bastion'); // bolt L2 — one gun owned
   for (const id of ['scatter', 'heavy']) S.pool.add(id);
-  const seen = offeredNew(S);
-  assert.ok(!seen.has('scatter') && !seen.has('heavy'),
-    'a second gun was offered while bolt holds the slot');
+  assert.ok(offeredNew(S).has('scatter'),
+    'a second gun must be draftable — that is the whole point of ADR-0011');
+
+  S.weapons.scatter = 1; // two guns owned: the ceiling is now held
+  assert.ok(!offeredNew(S).has('heavy'),
+    'a third gun was offered past the ceiling');
+});
+
+// The ceilings are a table, not a set of special cases. This is what stops the next
+// ceiling change from needing its own bespoke test.
+test('every category ceiling binds at exactly its own number', () => {
+  for (const cat of ['gun', 'hold', 'swipe']) {
+    const ids = Object.keys(WEAPONS).filter(id => WEAPONS[id].category === cat && !WEAPONS[id].formOf);
+    if (ids.length <= SLOT_BUDGET[cat]) continue; // not enough content to test the edge
+    const S = newRun(defaultMeta(), 'bastion');
+    for (const id of Object.keys(WEAPONS)) if (WEAPONS[id].category === cat) S.weapons[id] = 0;
+    for (const id of ids) S.pool.add(id);
+    for (let i = 0; i < SLOT_BUDGET[cat]; i++) S.weapons[ids[i]] = 1; // fill the ceiling
+    const seen = offeredNew(S);
+    for (const id of ids.slice(SLOT_BUDGET[cat])) {
+      assert.ok(!seen.has(id), `${id} offered with the ${cat} ceiling (${SLOT_BUDGET[cat]}) already full`);
+    }
+  }
 });
 
 test('the gun slot may sit empty — and an empty slot still offers guns (ADR-0007)', () => {

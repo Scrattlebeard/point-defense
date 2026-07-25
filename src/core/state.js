@@ -92,16 +92,17 @@ export function addXp(S, amount) {
 /** Three distinct options: upgradeable/ownable weapons from the pool + generic cards. */
 export function levelChoices(S, rng) {
   const opts = [];
-  // slot budget (core.md "The slot budget", ADR-0006): ≤ total weapons per run;
-  // a gun/hold/swipe ceiling held by an owned weapon locks its rivals out of the
-  // draft. Upgrades to owned weapons always flow — the budget prices NEW weapons.
+  // slot budget (core.md "The slot budget", ADR-0006/0011): ≤ total weapons per
+  // run; a gun/hold/swipe category already AT its ceiling locks its remaining
+  // rivals out of the draft — counts, not a single held slot, since guns allow 2.
+  // Upgrades to owned weapons always flow — the budget prices NEW weapons.
   let owned = 0;
-  const catTaken = {};
+  const catCount = {};
   for (const id in S.weapons) {
     if (S.weapons[id] > 0) {
       owned++;
       const cat = WEAPONS[id].category;
-      if (SLOT_BUDGET[cat]) catTaken[cat] = id;
+      if (SLOT_BUDGET[cat]) catCount[cat] = (catCount[cat] || 0) + 1;
     }
   }
   for (const id of S.pool) {
@@ -110,7 +111,7 @@ export function levelChoices(S, rng) {
     if (l >= w.max) continue;
     if (l === 0) {
       if (owned >= SLOT_BUDGET.total) continue;
-      if (SLOT_BUDGET[w.category] && catTaken[w.category]) continue;
+      if (SLOT_BUDGET[w.category] && (catCount[w.category] || 0) >= SLOT_BUDGET[w.category]) continue;
       // a form pilot is a card you draw at max level (ADR-0006 Alt-4)
       if (w.formOf && S.weapons[w.formOf] < WEAPONS[w.formOf].max) continue;
     }

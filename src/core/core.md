@@ -483,13 +483,26 @@ which is why the boomerang (input `aim`, category `auto`) is infrastructure that
 happens to read the aim.
 
 **The slot budget (`config.js: SLOT_BUDGET`, enforced in `levelChoices`):** a run
-fields **at most 6 weapons — of which at most 1 gun, 1 hold, 1 swipe**. Autos have
+fields **at most 6 weapons — of which at most 2 guns, 1 hold, 1 swipe**. Autos have
 no cap of their own; they fill whatever the budget leaves. At 6/6 no new weapon is
-ever offered (upgrades and generics continue); a gun/hold/swipe category occupied
-by a *different* owned weapon locks its rivals out of the draft (a gesture must
-mean exactly one thing mid-fight — the ADR-0004 rule, generalized to guns). The
-gun slot **may sit empty** — bolt is the default weapon, not a guaranteed one
-(ADR-0007); no rule requires a loadout to contain a gun.
+ever offered (upgrades and generics continue); a category already holding its
+ceiling locks its remaining rivals out of the draft. The gun slot **may sit
+empty** — bolt is the default weapon, not a guaranteed one (ADR-0007); no rule
+requires a loadout to contain a gun.
+
+**Why guns get two and gestures get one (ADR-0011).** The ceiling of 1 came from
+ADR-0004, whose reason was **gesture ambiguity**: a gesture must mean exactly one
+thing mid-fight, so two hold weapons make a hold a question and two swipe weapons
+make a swipe a question. That argument never applied to guns, which consume no
+gesture at all — they auto-fire toward the **standing aim point**, which is shared,
+singular, and updated by every tap and swipe. Two guns firing at one aim is not
+ambiguous, it is two guns. The old ceiling was a rule about gestures applied to the
+one category that has none. It also produced measurable dead content: since every
+tower opens with bolt, the gun slot was occupied at t=0 in *every run ever played*,
+and Scattergun and Howitzer were offered in **0 of 60** mature-account runs. The
+second gun still costs an auto slot — `total` is unchanged at 6 — so the new
+question ("is a second gun worth more than a fifth auto?") is a real trade, and one
+the build could not previously ask.
 
 Held weapons (input = the player's hands; categories: bolt = gun, wall/blades =
 swipe, beam/flame/meteor = hold):

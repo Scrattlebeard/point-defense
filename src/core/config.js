@@ -80,7 +80,7 @@ export const VARIANTS = {
 
 /** A run fields at most `total` weapons; gun/hold/swipe are ceilings, autos fill
  *  the rest (ADR-0006 Decision 3). Tower-bent someday, never bought (Decision 5). */
-export const SLOT_BUDGET = { total: 6, gun: 1, hold: 1, swipe: 1 };
+export const SLOT_BUDGET = { total: 6, gun: 2, hold: 1, swipe: 1 };
 
 /** Card chip = display of input (ADR-0006 Decision 1). */
 export function chipOf(w) {
