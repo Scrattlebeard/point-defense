@@ -30,11 +30,65 @@ export function waveTrashHp(w) {
   return bodies * (hpSum / wSum) * enemyHpMult(w);
 }
 
-/** A boss is always the same fraction of its wave's total HP — Law·Bosses, and
- *  the fix for a curve that decayed from 31% to 4.9% by wave 45 (core.md).
- *  Bounded above by the stall constraint: the director waits for an empty field. */
-export const BOSS_HP_SHARE = 0.31;
-export const bossHp = w => (BOSS_HP_SHARE / (1 - BOSS_HP_SHARE)) * waveTrashHp(w);
+/** How far into the spawn queue the boss enters (ADR-0012). Not 1.0: a boss
+ *  appended last fights an empty field, because the wave it belongs to has already
+ *  been cleared by the time it arrives. A third of the way in leaves two thirds of
+ *  the wave still landing during the fight. */
+export const BOSS_ENTRY = 0.33;
+
+// ---------- The boss is sized in SECONDS (ADR-0012) ----------
+// A boss fight is a designed event with a length. Sizing it as a share of the
+// wave's HP (ADR-0008) fixed a decay bug but controlled the wrong quantity: the
+// share knows the enemy budget and nothing about player damage, so the fight
+// length was free to run away. Measured on a fresh account playing naturally, the
+// boss stayed alive 19s at wave 5 and 212s at wave 45 — because `bossHp` grew as
+// w^2.19 while natural player dps grows as w^1.15.
+
+/** How long a boss should stay alive, in seconds: a ramp to the target, then flat.
+ *  The first boss is a short, legible wall — it teaches what a boss is, and it is
+ *  where ~45% of fresh runs end, so lengthening it would move the onboarding band.
+ *  By `BOSS_TTK_WAVE` they are full-length events and stay there. */
+export const BOSS_TTK_FIRST = 15;
+/** DESIGN INTENT is 60s (Daniel, 2026-07-25: "around 60s events as the default").
+ *  100 is what Law·Delegation currently permits, and the gap is measured, not
+ *  guessed — see ADR-0012. Below ~90s the conductor gate fails outright, because
+ *  delegation pressure in this game rests almost entirely on boss HP. Closing the
+ *  gap needs undelegatable pressure that is NOT a boss health bar; until then this
+ *  constant is a compromise and is labelled as one. */
+export const BOSS_TTK_TARGET = 100;
+export const BOSS_TTK_WAVE = 25;
+export const bossTargetTtk = w => BOSS_TTK_FIRST + (BOSS_TTK_TARGET - BOSS_TTK_FIRST) *
+  Math.min(1, Math.max(0, (w - 5) / (BOSS_TTK_WAVE - 5)));
+
+/** Damage per second a fresh account playing naturally brings to a boss at wave w.
+ *  Fitted to measurement (`scripts/bosstime.mjs` is the instrument that keeps it
+ *  honest), NOT derived: player power comes from level-ups, weapon ladders and
+ *  build luck, none of which has a closed form. The gate exists because a fitted
+ *  constant rots the moment weapons change — it is allowed to rot, loudly. */
+export const REF_DPS_K = 8.0;
+export const REF_DPS_EXP = 1.15;
+export const referenceDps = w => REF_DPS_K * Math.pow(w, REF_DPS_EXP);
+
+/** Delegated damage lands at this fraction on a BOSS (ADR-0012). Law·Delegation
+ *  says autos are deliberately insufficient alone; before this, the only thing
+ *  making that true of a boss was its HP bar — so sizing the fight in seconds
+ *  broke the delegation gate outright (hands x1.000, parked deaths 1/11). The two
+ *  concerns are now separate: HP says how LONG the fight is, this says whether
+ *  hands are REQUIRED. Aim, hold and swipe all count as hands. */
+export const BOSS_AUTO_RESIST = 0.5;
+
+/** A presence floor, not the definition (ADR-0012 supersedes ADR-0008 Decision 2).
+ *  The share is still doing one job nothing else does: keeping the boss visible
+ *  against its own wave, so it cannot decay into one chunky elite among forty —
+ *  which is the bug ADR-0008 was written to fix and which must not come back. */
+export const BOSS_HP_SHARE = 0.10;
+
+/** Sized in seconds, floored on presence. Bounded above by the stall constraint:
+ *  the director waits for an empty field, so an unkillable boss freezes the run. */
+export const bossHp = w => Math.max(
+  bossTargetTtk(w) * referenceDps(w),
+  (BOSS_HP_SHARE / (1 - BOSS_HP_SHARE)) * waveTrashHp(w),
+);
 
 /** A shape shows an HP sliver when it is beefy *for its wave* (app.md "fill
  *  encodes allegiance"). Wave-relative on purpose: the old absolute `maxHp > 40`

@@ -683,6 +683,56 @@ headroom is left, and once vsync-locked the gap alone cannot tell those apart.**
 design timed only the gap and I wrote a paragraph justifying it — right about detection,
 wrong about diagnosis.
 
+## The 60s boss target is 40s away, and the gap is not tuning
+
+**ADR-0012 landed 2026-07-25.** Boss HP is sized in seconds now, the boss enters at 33% of
+its wave's spawn queue instead of last, and `BOSS_AUTO_RESIST = 0.5` makes undelegatability
+a mechanism rather than a side effect of the health bar. Fresh-account boss events went from
+a **142s median (19→212s) to 104s (14→134s)**.
+
+**Daniel asked for 60s. It ships at 100s, and the difference is measured, not conceded.**
+Swept against the conductor (band ≥1.12): **60s → ×1.109, fails. 90s → ×1.125, passes by
+0.4% and was refused as a coin-flip margin. 100s → ×1.227, holds. 120s → ×3.046.**
+
+**Why, and this is the finding worth carrying:** below ~90s the do-nothing run stops dying,
+because **Law·Delegation is currently enforced almost entirely by boss health bars.** Nothing
+else in the game reliably kills a hands-off run. `BOSS_AUTO_RESIST` was added to attack this
+directly and it half-works: it restores parked *deaths* (4–5 of 7) but not the *ratio*
+(×1.086–1.109), because the conductor's parked arm still carries an aimed bolt, so the gate
+measures **aim accuracy**, not hands-vs-autos.
+
+**Three routes to 60s, in ascending order of honesty:**
+1. **Lower the conductor band.** Fastest, and Daniel's to take — but weakening a gate to fit
+   a change is how laws rot, so it was refused as an assistant decision, not as an option.
+2. **Teach the conductor's robot to hold and swipe** (already its own pin). If "hands" means
+   only aim, the gate under-measures every non-aim mechanism, `BOSS_AUTO_RESIST` included.
+   This may move the number without any design change at all — cheapest real answer.
+3. **Build undelegatable pressure that is not a boss.** ADR-0008 already named the successor
+   lever and it is still unbuilt: **modifiers, regen especially** — autos deal chip damage,
+   and partial damage on a regenerating elite is wasted damage. This is the route that makes
+   60s *correct* rather than *permitted*.
+
+**Where:** `balance.js` BOSS_TTK_TARGET / referenceDps / BOSS_AUTO_RESIST / BOSS_ENTRY,
+`scripts/bosstime.mjs` (the instrument), `core.md` Balance formulas, ADR-0012.
+
+## The fresh-vs-geared spread means no single boss curve serves both
+- **Measured 2026-07-25** alongside ADR-0012. Boss alive-time, same wave, same code:
+  **fresh account 104s median (waves ≥15); full lattice 20s.** A ~5× spread in player dps
+  between a new save and a fully-invested one.
+- **Why it matters:** a 60s design target cannot be true for both. Targeting the fresh
+  account (what ADR-0012 does) leaves veterans with 20s bosses — not a 60s event either, and
+  arguably Law·Bosses failing quietly at the top end. Targeting veterans would give a fresh
+  account ~300s bosses, which is unplayable.
+- **This is a LATTICE question, not a boss question.** ADR-0003 already records the economy
+  curve as provisional. The honest framing: how much raw damage *should* the meta layer sell?
+  Every point of it widens this spread and makes any single balance target less meaningful.
+  A lattice that sold utility, unlocks and options rather than multipliers would not have
+  this problem — which is also GDD §6's own stated principle ("the account changes what cards
+  *exist*, not just how big they are"), currently honoured by 16 of 70 nodes.
+- **Where:** `config.js` LATTICE, ADR-0003, `scripts/bosstime.mjs` shows both arms side by side.
+- **Do not** fix this by tuning boss HP — that is the lever that was just taken away from
+  this job for exactly this reason.
+
 ## Bosses are HP sponges, and the force wall can shove them — FOUND BY THUMB, 2026-07-25
 
 Daniel, after the wave-45 run: *"I'd died to hp sponge bosses much earlier if I couldn't
@@ -690,7 +740,9 @@ cheese them by spawning force walls inside them to push them back."*
 
 **Two findings in one sentence, and they are not the same problem.**
 
-**1. Bosses take too long, and there is an independent measurement agreeing.** Building the
+**1. Bosses take too long — RESOLVED 2026-07-25 by ADR-0012** (fresh-account median 142s →
+104s; see the 60s-target pin above for what remains). Original entry kept because the
+reasoning is still the clearest statement of why: Building the
 signature-move killability test the same day, a **full-HP armored wave-40 boss under
 continuously focused fire from a maxed six-weapon build took 195 seconds to kill** — over
 three minutes, with no tech tree. That number was collected to calibrate a guard floor and

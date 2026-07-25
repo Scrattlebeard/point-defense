@@ -169,3 +169,39 @@ test('rollVariants respects per-variant debut waves', () => {
   }
   assert.equal(seen.size, Object.keys(VARIANTS).length, 'full pool never surfaced at wave 30');
 });
+
+// The boss arrives during the CRUNCH, not the mop-up (core.md "Wave composition",
+// ADR-0012). Daniel, 2026-07-25: "I would like to move the boss timing up so it
+// spawns during the high-intensity part, not as one of the last enemies."
+// Appended last, a boss fought a wave that was already over: a solo duel with the
+// field empty, which is the opposite of a focus-forcer.
+test('the boss enters mid-wave, with trash still arriving behind it', () => {
+  for (const w of [5, 10, 20, 40]) {
+    const plan = composeWave(w, mulberry32(7 + w));
+    const at = plan.spawns.indexOf('boss');
+    assert.ok(at >= 0, `wave ${w} has no boss`);
+    const frac = at / plan.spawns.length;
+    assert.ok(frac > 0.15 && frac < 0.6,
+      `wave ${w}: boss enters at ${(frac * 100).toFixed(0)}% of the queue — ` +
+      'it must land in the busy middle, not at either end');
+    assert.ok(plan.spawns.length - at > 3,
+      `wave ${w}: only ${plan.spawns.length - at - 1} shapes arrive after the boss — ` +
+      'nothing is competing for attention');
+  }
+});
+
+test('exactly one boss, and only on boss waves', () => {
+  assert.equal(composeWave(20, mulberry32(3)).spawns.filter(s => s === 'boss').length, 1);
+  assert.equal(composeWave(21, mulberry32(3)).spawns.filter(s => s === 'boss').length, 0);
+});
+
+test('the debut index still points at a non-boss spawn once the boss moved inward', () => {
+  // The debut marker is an index into `spawns`. With the boss appended last, any
+  // index was safely non-boss; inserting it mid-list makes that an assumption.
+  for (let w = 1; w <= 45; w++) {
+    const plan = composeWave(w, mulberry32(w * 31));
+    if (plan.debutAt === null) continue;
+    assert.notEqual(plan.spawns[plan.debutAt], 'boss',
+      `wave ${w}: the guaranteed debut landed on the boss, so no shape carries it`);
+  }
+});

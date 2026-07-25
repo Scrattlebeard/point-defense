@@ -88,30 +88,51 @@ prereqs enforced), not exact constants, so tuning stays cheap.
   total HP of a wave's non-boss bodies, where `E[hp per cost]` follows the same mix
   weights `composeWave` uses (Enemies → "Wave composition"). Exists so the boss
   curve can be *derived from* the wave rather than drifting against it.
-- `bossHp(w) = BOSS_HP_SHARE/(1−BOSS_HP_SHARE) · waveTrashHp(w)` — **a boss is
-  always the same fraction of its wave's total HP** (`BOSS_HP_SHARE`, currently
-  0.31 — the measured wave-5 value, which playtesting validated as the onboarding
-  wall, and independently a **measured threshold**. Re-measured 2026-07-25 in
-  survival units (ADR-0010) on the conductor's own build: share 0.22 → hands buy
-  **×1.084** survival time (below the ≥1.12 band, parked deaths 8/11); 0.26 →
-  **×1.189**; 0.31 → **×1.176**. So the crossing sits between 0.22 and 0.26, and
-  0.26 vs 0.31 is inside set-to-set noise (±0.03) — 0.31 is *above* the threshold,
-  not measurably optimal within it. Note the refinement the old unit could not
-  express: at 0.22 hands are not worth **nothing**, they are worth 8% and that is
-  simply not enough. Somewhere in that band the boss crosses from "the autos grind
-  it down eventually" to "you must point at it" — that crossing *is* Law·Bosses.
-  ADR-0008 has the original sweep, in the retired wave-delta unit). *(Re-sloped 2026-07-25. The old curve `1500·(1+0.3(w−5))` was **linear
-  against a quartic wave-HP curve**: measured, a named boss was 31% of its wave's
-  HP at wave 5 and **4.9% by wave 45** — Law·Bosses ("focus-forcers that cannot be
-  delegated") decaying into one chunky elite among forty-four. Deriving the boss
-  from `waveTrashHp` makes the decay structurally impossible: change the budget or
-  the mix and the boss follows.)*
+- `bossHp(w) = max( bossTargetTtk(w) · referenceDps(w), presenceFloor(w) )` — **a boss
+  fight is an event with a designed length, and its HP is whatever produces that
+  length** (ADR-0012, superseding ADR-0008's fixed share).
+  - `bossTargetTtk(w)` ramps **15s → `BOSS_TTK_TARGET` by wave 25**, then holds. The
+    first boss stays short on purpose: it is the onboarding wall where ~45% of fresh
+    runs end, so lengthening it moves the calibrate band. Sizing in seconds *kept*
+    the band (median 8) where a flat target would have wrecked it.
+  - `referenceDps(w) = 8.0 · w^1.15` — **fitted to measurement, not derived.** Player
+    power comes from level-ups, weapon ladders and build luck; none has a closed
+    form. The reference is a **fresh account playing naturally**, because a maxed
+    loadout is not what anyone holds at wave 20. `scripts/bosstime.mjs` is the
+    instrument that makes this constant rot loudly when weapons change.
+  - **Presence floor** — `BOSS_HP_SHARE = 0.10` survives from ADR-0008 as a *floor*,
+    not a definition, so a boss can never decay into one chunky elite among forty.
+    It binds past roughly wave 55, where a fresh account's dps has plateaued and only
+    the tech tree can keep the fight bounded. That is the lattice doing its job.
+  - **`BOSS_TTK_TARGET = 100` is a compromise and is labelled as one in the source.**
+    The design intent is **60s** (Daniel). Measured, 60s is not currently reachable:
+    the conductor gate reads ×1.109 at 60s (fails), ×1.125 at 90s (a 0.4% margin,
+    refused as a coin flip), **×1.227 at 100s** (holds). Below ~90s the do-nothing run
+    stops dying, because **Law·Delegation was being enforced almost entirely by boss
+    health bars** — the finding that forced the next bullet.
+  - *(Why the share was wrong, kept because the reasoning outlives the numbers: a
+    share normalises the boss against the **enemy** budget, but whether a boss is a
+    focus-forcer or a sponge is time-to-kill, which depends on **player damage** —
+    absent from that formula. Measured on a fresh account, boss alive-time ran 19s at
+    wave 5 and **212s at wave 45**, because `bossHp` grew as **w^2.19** while natural
+    player dps grows as **w^1.15**. Two curves that were never compared. The tell was
+    already in ADR-0008, which had to bolt on "any future increase must re-check
+    time-to-kill": a lever needing a manual check of a different quantity is a proxy,
+    not a control.)*
   - **Bounded above by the stall constraint, which is load-bearing:** the wave
     director will not start wave w+1 until the field is empty (`game.js`, phase
     `clear`), so a boss too tanky to kill does not raise difficulty — it *freezes
-    the run* at that wave. The share is therefore tuning with a hard ceiling that
-    playtest and the conductor gate must both respect, and any future increase must
-    re-check time-to-kill, not just the share.
+    the run* at that wave. This is why the fight length is now the thing being
+    controlled directly rather than inferred.
+- `BOSS_AUTO_RESIST = 0.5` — **delegated damage lands at half on a boss** (ADR-0012).
+  Aim, hold and swipe all count as hands. This exists so that *how long a fight is*
+  and *whether hands are required* are separate mechanisms: sizing the boss in
+  seconds broke the conductor outright (hands ×1.000, parked deaths 1/11) precisely
+  because the health bar had been doing both jobs at once.
+- `BOSS_ENTRY = 0.33` — where the boss enters its wave's spawn queue. Appended last
+  (the old behaviour) it fought an **empty field**, because the wave was already
+  cleared by the time it arrived — a solo duel, which is the opposite of a
+  focus-forcer. A third of the way in leaves two thirds of the wave still landing.
 - `shardPayout(wave, kills, bossKills) = round(2.5*wave + kills/9 + 9*bossKills +
   0.18*wave²)`, minimum 1 — **losing must always buy something** (pillar 4). Salvage
   tech multiplies. *(Superlinear term added with the Lattice, ADR-0003 stage 1: the

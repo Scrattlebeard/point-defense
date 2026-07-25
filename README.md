@@ -106,6 +106,16 @@ gap:** the robot only *aims*, so the gate proves one of Law·Delegation's three
 input dimensions; hold and swipe are unmeasured. The metric no longer inverts if
 the robot is taught them, which is what makes that work possible.
 
+Boss tooling: `node scripts/bosstime.mjs` reports how long a boss is **alive during
+a real wave**, on the build a player actually holds at that depth (natural
+level-ups), for both a fresh account and a full lattice. This is the instrument that
+keeps `referenceDps` honest — that constant is *fitted* to measurement, so it rots
+whenever weapons change, and this makes it rot loudly. Deliberately **not** in CI: a
+useful reading takes minutes, and a gate slow enough to skip is worse than none.
+Current: fresh account **104s** median over waves ≥15 against a `BOSS_TTK_TARGET` of
+100s; full lattice 20s. See ADR-0012 for why the target is 100 and not the intended
+60.
+
 Performance tooling: `node scripts/perf.mjs [maxWave]` is the **JS-cost gate**. It
 runs a seeded headless game against a stub 2D context and times `updateGame` +
 `renderFrame` per frame, bucketed by wave, then fails if the worst wave's JS

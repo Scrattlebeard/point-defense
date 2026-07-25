@@ -52,17 +52,36 @@ test('the hp-bar gate stays meaningful as the HP curve climbs', () => {
     'an armored grunt is beefy and should earn a bar');
 });
 
-test('a boss holds its share of the wave: never decays into the crowd', () => {
-  // core.md bossHp: Law·Bosses says a boss is a focus-forcer. The regression this
-  // replaces had bossHp linear against a quartic wave curve — 31% of wave HP at
-  // wave 5, 4.9% by wave 45. Share, not the constant, is the pinned truth.
+// REWRITTEN 2026-07-25 (ADR-0012), and CALLED OUT as a loosening of the drift
+// clause. This used to assert the boss share was near-CONSTANT (spread < 5%)
+// because ADR-0008 defined bossHp as a fixed share. ADR-0012 sizes the boss in
+// SECONDS instead, so the share is now an output and legitimately varies — the
+// old assertion would forbid the fix. What survives is the property the original
+// regression actually violated: the boss must never decay into the crowd.
+test('a boss never decays into the crowd, at any depth', () => {
+  // The regression this guards: bossHp linear against a quartic wave curve — 31%
+  // of wave HP at wave 5, 4.9% by wave 45, Law·Bosses dissolving into one chunky
+  // elite among forty-four. The presence FLOOR is what makes that impossible now.
   const share = w => B.bossHp(w) / (B.bossHp(w) + B.waveTrashHp(w));
-  const shares = [5, 10, 15, 20, 30, 40, 50, 60].map(share);
-  for (const s of shares) {
-    assert.ok(s > 0.2 && s < 0.45, `boss share ${(100 * s).toFixed(1)}% left the band`);
+  for (const w of [5, 10, 15, 20, 30, 40, 50, 60, 80, 120]) {
+    const s = share(w);
+    assert.ok(s >= B.BOSS_HP_SHARE - 0.001,
+      `wave ${w}: boss is ${(100 * s).toFixed(1)}% of its wave, under the presence floor`);
+    assert.ok(s < 0.45, `wave ${w}: boss is ${(100 * s).toFixed(1)}% of its wave — that is the wave`);
   }
-  const spread = Math.max(...shares) - Math.min(...shares);
-  assert.ok(spread < 0.05, `boss share drifts ${(100 * spread).toFixed(1)}% across the run`);
+});
+
+test('a boss is sized in seconds, and the target ramps then holds', () => {
+  // Daniel, 2026-07-25: "around 60s events as the default". The ramp is deliberate:
+  // the first boss is short because it is the onboarding wall and ~45% of fresh
+  // runs end there — lengthening it moves the calibrate band.
+  assert.ok(B.bossTargetTtk(5) < B.BOSS_TTK_TARGET, 'the first boss must be shorter');
+  assert.equal(B.bossTargetTtk(B.BOSS_TTK_WAVE), B.BOSS_TTK_TARGET);
+  assert.equal(B.bossTargetTtk(120), B.BOSS_TTK_TARGET, 'and it holds, rather than growing');
+  // monotone: no wave should be a shorter designed fight than an earlier one
+  for (let w = 5; w < 60; w += 5) {
+    assert.ok(B.bossTargetTtk(w + 5) >= B.bossTargetTtk(w), `target dipped at wave ${w + 5}`);
+  }
 });
 
 test('bossHp grows across boss waves', () => {
