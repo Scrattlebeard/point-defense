@@ -325,7 +325,34 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
     stepped on and caltrops that never slow anything are not a tuning problem; they are two
     weapons whose job has not been decided. **Decide the job, then tune to it** — and note
     that a control weapon needs a control metric, not this damage census.
-  - **Scattergun (5.3%) and Howitzer (4.5%) are the weakest non-dead weapons** — and they are
+  - **MEASURED 2026-07-25: bolt's fire rate is a weak lever on bolt's dominance.** Daniel's
+  first playtest — *"bolt is noticeably very strong - maybe reduce firing rate slightly"* —
+  so the lever was measured before being pulled. Maxed budget-legal build, level-ups
+  deliberately unspent so the build stays fixed, crit off, 5×15-min runs:
+
+  | bolt `cd` base | L6 cadence | bolt share | calibrate median |
+  |---|---|---|---|
+  | 0.34 (was) | 0.22s | **58.7%** | 8 |
+  | **0.38 (shipped)** | **0.26s** | **57.5%** | **8** |
+  | 0.42 | 0.30s | 53.5% | 10 (top of band) |
+
+  A **36% cadence nerf buys 5 percentage points.** Kills the bolt no longer takes are
+  absorbed by the autos, so total damage is roughly conserved and only the split moves.
+  0.38 shipped because Daniel asked for "slightly" and it costs nothing in the onboarding
+  band; **but it is close to theatre on the share, and he should know that before assuming
+  the problem is addressed.** (The 0.42 row's median *rising* to 10 under a nerf is
+  backwards and is almost certainly noise at 24 trials — range was 4–20 — not a finding.)
+- **Where bolt's dominance actually lives: the L5/L6 emission collapse.** ADR-0006 Decision
+  8 moved the fan out of the ladder and folded its *emission* into a single bolt (58 = 2×29,
+  99 = 3×33). Power-neutral against the old bolt in total emission, **not** in concentration:
+  all of it now lands on one shape instead of spreading across a fan. That is the real
+  source of "very strong", and the honest levers are (a) make the collapse deliberately
+  less than power-neutral — an actual nerf to max bolt, which ADR-0006 would need amending
+  to justify, or (b) push some of the collapsed emission back into the Fan form, so the
+  spread is something you *choose* rather than something max bolt gets for free. Neither is
+  a tuning tweak; both are design calls for Daniel. **Do not keep shaving cadence** — the
+  table above shows where that road ends.
+- **Scattergun (5.3%) and Howitzer (4.5%) are the weakest non-dead weapons** — and they are
     *guns*, the category bolt already locks out. So the gun-lockout fix has a second half
     nobody had noticed: even once a rival gun can be drafted, it would be a weak replacement
     for a bolt doing 55-70%.

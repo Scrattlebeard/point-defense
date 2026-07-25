@@ -80,7 +80,7 @@ export const WEAPONS = {
     // were; ricochet replaces the fan's coverage. L1-L4 are untouched — they
     // never granted a fan, so buffing them would have moved the onboarding
     // curve for no reason (it did, in the first attempt: median 8 -> 14).
-    stats: l => ({ dmg: l >= 6 ? 99 : l >= 5 ? 58 : 9 + 4 * l, volley: 1, auto: l >= 3 ? 1 : 0, pierce: l >= 4 ? 1 : 0, ricochet: l >= 6 ? 2 : l >= 5 ? 1 : 0, cd: 0.34 - 0.02 * l }),
+    stats: l => ({ dmg: l >= 6 ? 99 : l >= 5 ? 58 : 9 + 4 * l, volley: 1, auto: l >= 3 ? 1 : 0, pierce: l >= 4 ? 1 : 0, ricochet: l >= 6 ? 2 : l >= 5 ? 1 : 0, cd: 0.38 - 0.02 * l }),
   },
   wall: {
     name: 'Force Wall', input: 'swipe', category: 'swipe', max: 5,
