@@ -20,11 +20,20 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
 - **Deliberately NOT done:** no service worker. The game is one file with no runtime deps,
   so offline caching buys nothing worth the complexity, and a stale cached build is a real
   cost on a project that ships several times a night.
+- **The fullscreen and haptics buttons shipped DEAD, fixed 2026-07-25 (Daniel's first
+  playtest: "Full screen button does nothing").** Both were wired to `H.onFullscreen` /
+  `H.onHaptics` hooks that `main.js` never defined — a `TypeError` on every click. The
+  original claim here, *"verified only in headless Firefox, where the button correctly
+  appears"*, is exactly the error: **a button appearing is not a button working**, and
+  the screenshot could only ever see the former. Now pinned by `test/uihooks.test.mjs`
+  (every `H.<name>()` in `ui.js` must have a key in the object `main.js` passes) — see
+  app.md "The hook seam is a contract".
 - **What remains, and it needs a phone:** nobody has installed it. Unverified by anything
   here: whether the icon reads at home-screen size against a real wallpaper, whether
-  `standalone` actually reclaims the URL bar on Daniel's device, whether the fullscreen
-  button behaves on Android Chrome (it is verified only in headless Firefox, where the
-  button correctly appears and haptics correctly does not).
+  `standalone` actually reclaims the URL bar on Daniel's device, and — still true even
+  after the fix — whether `requestFullscreen` actually engages on Android Chrome. The
+  seam is now proven; the *browser behaviour* cannot be, because headless has no user
+  gesture to grant. That one is a thumb, not a test.
 - **Where:** `manifest.webmanifest`, `assets/app-icon.svg` (+ `app-icon.md` for the
   regeneration recipe), `scripts/build.mjs` (emits the extra files), `.github/workflows/
   pages.yml` (each channel copies them — `dist/` is no longer a single file), `src/app/ui.js`

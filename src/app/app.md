@@ -120,6 +120,16 @@ simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not un
   on the same spot. *Deliberate test-tier silence:* this is DOM-only shell
   behavior and the repo has no DOM harness (zero runtime deps by design); the
   spec here is the review surface, like the rest of ui.js.
+- **The hook seam is a contract, and it IS tested** *(2026-07-25)*. `initUI(G, hooks)`
+  takes a hooks object; every `H.<name>()` call site in `ui.js` must have a matching
+  key in the object `main.js` passes. A missing one is not a type error in vanilla JS
+  — it is a `TypeError` thrown only when a human clicks that exact button, which is
+  the one thing no headless check does. **This shipped twice on 2026-07-25**: the
+  FULLSCREEN and HAPTICS buttons were both wired to hooks that were never defined,
+  and both were "verified" by a screenshot proving the buttons *rendered*. A button
+  appearing is not a button working. `test/uihooks.test.mjs` compares the two sides
+  statically — no DOM needed, so this narrows the silence above rather than
+  contradicting it: DOM *behaviour* stays spec-reviewed, the *seam* is enforced.
 - **Hold & swipe variants** (ADR-0004 wave B): the flamethrower renders as a
   layered cone (deep orange haze → amber body → pale core) with forward-drifting
   flame particles — warm register, unmistakably not the beam's cyan. Burning

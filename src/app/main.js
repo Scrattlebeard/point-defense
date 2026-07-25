@@ -120,9 +120,23 @@ ui.initUI(G, {
   onMute: () => {
     G.meta.sound = !G.meta.sound;
     setMuted(!G.meta.sound);
-setHaptics(G.meta.haptics !== false);
     saveMeta(G.meta);
     ui.renderMenu(G);
+  },
+  onHaptics: () => {
+    G.meta.haptics = G.meta.haptics === false;
+    setHaptics(G.meta.haptics);
+    saveMeta(G.meta);
+    ui.renderMenu(G);
+  },
+  // Fullscreen must be requested inside the user gesture that asked for it, so
+  // this stays a direct click handler. The promise rejects when the browser
+  // declines (iOS Safari has no API at all — ui.js hides the button there);
+  // swallow it and re-render, because the label reads document.fullscreenElement.
+  onFullscreen: () => {
+    const done = () => ui.renderMenu(G);
+    if (document.fullscreenElement) document.exitFullscreen().then(done, done);
+    else document.documentElement.requestFullscreen().then(done, done);
   },
   onMetaChanged: () => saveMeta(G.meta),
   onReset: () => {
@@ -136,6 +150,13 @@ initInput(G, canvas);
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) pauseGame();
+});
+
+// The button's label is derived from document.fullscreenElement, and fullscreen
+// can end without the button (Esc, the system back gesture) — so re-render on the
+// event, not only on our own click, or the label lies.
+document.addEventListener('fullscreenchange', () => {
+  if (G.mode === 'menu') ui.renderMenu(G);
 });
 
 // ---------- frame loop ----------
