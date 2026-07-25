@@ -9,6 +9,7 @@ import { makeFx } from '../src/app/fx.js';
 import { resetWeapons } from '../src/app/weapons/index.js';
 import { resetWaveDirector, updateGame } from '../src/app/game.js';
 import { spawnEnemy, damageEnemy } from '../src/app/enemies.js';
+import { dist } from '../src/core/geom.js';
 import { seedRandom } from './seed.mjs';
 
 function makeG(wave) {
@@ -25,13 +26,210 @@ function makeG(wave) {
 }
 const step = (G, secs) => { for (let i = 0; i < secs * 60; i++) updateGame(G, 1 / 60); };
 
-test('every move names a real boss, and moves are the minority for now', () => {
+const bossOf = G => G.S.enemies.find(e => e.kind === 'boss' && !e.dead);
+
+function spawnBossWithMove(wave, name) {
+  const G = makeG(wave);
+  spawnEnemy(G, 'boss');
+  const b = bossOf(G);
+  b.moveId = BOSS_MOVES[name].id;
+  return { G, b };
+}
+
+// STRENGTHENED 2026-07-25 (called out per CLAUDE.md review protocol). This used to
+// assert moves were the MINORITY — a placeholder guard keeping the unbuilt ones
+// honestly unbuilt. The roster is complete now, so the honest assertion is the
+// design law itself: Law·Bosses says a boss is a focus-forcer, so a NAME without a
+// move is a difficulty step wearing a character's clothes.
+test('every noble carries a signature move, and every move names a real boss', () => {
   for (const name of Object.keys(BOSS_MOVES)) {
     assert.ok(BOSS_NAMES.includes(name), `${name} is not a boss`);
   }
-  assert.ok(Object.keys(BOSS_MOVES).length >= 1, 'no boss has a signature move');
-  assert.ok(Object.keys(BOSS_MOVES).length < BOSS_NAMES.length,
-    'every boss has a move — the unbuilt ones should stay honestly unbuilt');
+  for (const name of BOSS_NAMES) {
+    assert.ok(BOSS_MOVES[name], `${name} has no signature move — it is an HP number with a title`);
+  }
+});
+
+// Each move must pose a DIFFERENT question. Seven nobles with seven flavours of
+// "an attack happens" is a difficulty curve with names on it (core.md table).
+test('no two nobles share a move', () => {
+  const ids = BOSS_NAMES.map(n => BOSS_MOVES[n].id);
+  assert.equal(new Set(ids).size, ids.length, `duplicate dilemmas: ${ids.join(', ')}`);
+});
+
+test('charge: Lord Rhombus telegraphs, THEN crosses — a charge you cannot see is a dice roll', () => {
+  const { G, b } = spawnBossWithMove(10, 'LORD RHOMBUS');
+  const mv = BOSS_MOVES['LORD RHOMBUS'];
+  const startD = dist(b.x, b.y, G.cx, G.cy);
+
+  // the wind-up: the boss must STOP, and be marked, before anything fast happens
+  let sawTell = false, movedDuringTell = false;
+  // +1s of slack: the cycle resolves on the very last frame of its own budget,
+  // and a test sized exactly to the thing it measures fails for arithmetic
+  // reasons rather than behavioural ones.
+  for (let i = 0; i < 60 * (mv.every + mv.tell + 1); i++) {
+    const d0 = dist(b.x, b.y, G.cx, G.cy);
+    updateGame(G, 1 / 60);
+    if (b.winding) {
+      sawTell = true;
+      if (dist(b.x, b.y, G.cx, G.cy) < d0 - 0.01) movedDuringTell = true;
+    }
+    if (b.charging) break;
+  }
+  assert.ok(sawTell, 'the charge never telegraphed');
+  assert.ok(!movedDuringTell, 'the boss advanced during its own wind-up — the tell must cost it tempo');
+  assert.ok(b.charging, 'the wind-up never resolved into a charge');
+
+  // and the charge itself must actually be fast
+  const dBefore = dist(b.x, b.y, G.cx, G.cy);
+  step(G, 0.5);
+  const closed = dBefore - dist(b.x, b.y, G.cx, G.cy);
+  assert.ok(closed > b.baseSpd * 0.5 * 2,
+    `charging boss closed ${closed.toFixed(0)}px in 0.5s — barely faster than walking`);
+  assert.ok(startD > 0);
+});
+
+test('study: Grandmaster Hexley hardens under sustained fire and forgets when you stop', () => {
+  const { G, b } = spawnBossWithMove(20, 'GRANDMASTER HEXLEY');
+  const mv = BOSS_MOVES['GRANDMASTER HEXLEY'];
+  b.spd = 0;
+  const chip = () => damageEnemy(G, b, 1, { noMult: true, src: 'bolt' });
+
+  b.hp = b.maxHp = 1e9; // the boss is the subject, not its health bar
+  for (let i = 0; i < 60 * 3; i++) { chip(); updateGame(G, 1 / 60); }
+  const hardened = b.guard;
+  assert.ok(hardened < 1, `three seconds of sustained fire did not harden it (guard ${hardened})`);
+  assert.ok(hardened >= mv.floor, `guard fell through its floor (${hardened} < ${mv.floor})`);
+
+  // stop hitting it: it forgets
+  step(G, mv.forget + 0.5);
+  assert.equal(b.guard, 1, 'it never forgot — the dilemma is rhythm, not a permanent tax');
+});
+
+test('study reads attention, not damage: autos never feed the clock', () => {
+  // The load-bearing rule (core.md). Without it the clock never resets in any run
+  // fielding a single auto, the boss sits at its floor forever, and the "let it
+  // forget" half of the dilemma is unreachable — a flat tax wearing a move's name.
+  const { G, b } = spawnBossWithMove(20, 'GRANDMASTER HEXLEY');
+  b.spd = 0;
+  b.hp = b.maxHp = 1e9;
+
+  // an auto grinding away at it, forever
+  for (let i = 0; i < 60 * 4; i++) {
+    damageEnemy(G, b, 1, { noMult: true, src: 'turret' });
+    updateGame(G, 1 / 60);
+  }
+  assert.equal(b.guard, 1, 'auto fire hardened it — the study clock must ignore delegated damage');
+
+  // the same grind, by hand
+  for (let i = 0; i < 60 * 4; i++) {
+    damageEnemy(G, b, 1, { noMult: true, src: 'bolt' });
+    updateGame(G, 1 / 60);
+  }
+  assert.ok(b.guard < 1, 'hand fire did not harden it');
+});
+
+test('study counts every hand, not just the gun — hold and swipe are attention too', () => {
+  for (const src of ['beam', 'blades']) {
+    const { G, b } = spawnBossWithMove(20, 'GRANDMASTER HEXLEY');
+    b.spd = 0;
+    b.hp = b.maxHp = 1e9;
+    for (let i = 0; i < 60 * 3; i++) {
+      damageEnemy(G, b, 1, { noMult: true, src });
+      updateGame(G, 1 / 60);
+    }
+    assert.ok(b.guard < 1, `${src} is a hand and must feed the study clock`);
+  }
+});
+
+// The guard ADR-0009 wrote for epithets, extended to moves — `study` is exactly
+// the shape that produced the original bug: a boss whose effective HP multiplies
+// while the wave director refuses to advance until the field is empty. A guard
+// floor is an HP multiplier wearing a verb.
+//
+// Measured as a RATIO against a moveless control, deliberately. The first draft of
+// this test asserted "dead within 45 seconds" — an absolute threshold sitting next
+// to a scaling curve, which is the single most repeated defect in this codebase
+// (bossHp linear vs quartic, boss variants vs a wave-share pool, the hp-bar gate at
+// maxHp > 40). Time-to-kill here is dominated by how much tech the rig has, so
+// seconds are meaningless and the multiplier is the whole finding.
+const TTK_CEILING = 2.2;
+
+function timeToKill(moveId) {
+  const G = makeG(40);
+  for (const [id, l] of Object.entries({ bolt: 6, orbit: 5, nova: 5, frost: 5, tesla: 5, turret: 5 })) {
+    G.S.weapons[id] = l; G.S.pool.add(id);
+  }
+  resetWeapons(G);
+  const boss = spawnEnemy(G, 'boss', 'armored'); // the tankiest epithet
+  boss.moveId = moveId;
+  // 15%, and the fraction is load-bearing: `study` ramps in over ~4s, so a fight
+  // short enough to end during the ramp dilutes the very thing being measured.
+  // At 8% this test passed at EVERY floor including the broken one — it was
+  // theatre until the start point was measured rather than guessed.
+  boss.hp = boss.maxHp * 0.15;  // a scale, not a bar: both arms start here
+  G.S.hp = G.S.maxHp = 1e9;     // the player is not the subject
+  let t = 0;
+  for (let i = 0; i < 60 * 240 && !boss.dead; i++) {
+    G.aim = { x: boss.x, y: boss.y }; // focused fire, every frame
+    updateGame(G, 1 / 60);
+    t += 1 / 60;
+  }
+  return boss.dead ? t : Infinity;
+}
+
+test('no signature move makes a boss unkillable, even wearing an epithet', () => {
+  const control = timeToKill(null);
+  assert.ok(Number.isFinite(control), 'the control boss must die, or this test proves nothing');
+  for (const name of BOSS_NAMES) {
+    const t = timeToKill(BOSS_MOVES[name].id);
+    const ratio = t / control;
+    assert.ok(ratio <= TTK_CEILING,
+      `${name} (${BOSS_MOVES[name].id}, armored) multiplies time-to-kill ×${ratio.toFixed(2)} ` +
+      `under focused fire (ceiling ×${TTK_CEILING}). Past double, a punishment for playing ` +
+      `badly stops reading as a dilemma and starts reading as a boss that does not work — ` +
+      `and the wave director never advances while it lives.`);
+  }
+});
+
+test('study is the mirror of surge: chip-and-rotate beats commitment, and vice versa', () => {
+  // The design claim in core.md, made checkable: the two nobles must reward
+  // opposite play. Surge punishes NOT committing; study punishes committing.
+  assert.equal(BOSS_MOVES['THE OBTUSE ONE'].id, 'surge');
+  assert.equal(BOSS_MOVES['GRANDMASTER HEXLEY'].id, 'study');
+  assert.ok(BOSS_MOVES['GRANDMASTER HEXLEY'].floor > 0,
+    'a study boss must stay killable by sustained fire — it is a tax, not a wall');
+});
+
+test('devour: Polygothra eats its escort and grows, so the chaff is the fight', () => {
+  const { G, b } = spawnBossWithMove(25, 'POLYGOTHRA, DEVOURER OF VERTICES');
+  const mv = BOSS_MOVES['POLYGOTHRA, DEVOURER OF VERTICES'];
+  b.spd = 0;
+  b.hp = b.maxHp * 0.5;
+  const hp0 = b.hp;
+
+  // an escort well inside its reach
+  spawnEnemy(G, 'dart', null, b.x + mv.range * 0.4, b.y);
+  const meal = G.S.enemies[G.S.enemies.length - 1];
+  meal.spd = 0;
+
+  step(G, mv.every + 0.5);
+  assert.ok(!G.S.enemies.includes(meal), 'the escort was not eaten');
+  assert.ok(b.hp > hp0, `devouring did not heal it (${hp0} → ${b.hp})`);
+});
+
+test('devour cannot reach past its range, and never eats another boss', () => {
+  const { G, b } = spawnBossWithMove(25, 'POLYGOTHRA, DEVOURER OF VERTICES');
+  const mv = BOSS_MOVES['POLYGOTHRA, DEVOURER OF VERTICES'];
+  b.spd = 0;
+  b.hp = b.maxHp * 0.5;
+  const hp0 = b.hp;
+  spawnEnemy(G, 'dart', null, b.x + mv.range * 2, b.y); // out of reach
+  const far = G.S.enemies[G.S.enemies.length - 1];
+  far.spd = 0;
+  step(G, mv.every + 0.5);
+  assert.ok(G.S.enemies.includes(far), 'it ate a shape outside its range');
+  assert.equal(b.hp, hp0, 'and healed anyway');
 });
 
 test('Sir Cumference shakes adds out of his sides (GDD §3, verbatim)', () => {
@@ -74,16 +272,6 @@ test('the wave-5 noble stays a clean ram — one thing at a time', () => {
 // Marquis de Sides and The Final Vertex, the two names furthest down the unbuilt
 // list. "A single boss attack racing against their hp bar" was a correct report
 // of a structural gap, not a tuning complaint.
-const bossOf = G => G.S.enemies.find(e => e.kind === 'boss' && !e.dead);
-
-function spawnBossWithMove(wave, name) {
-  const G = makeG(wave);
-  spawnEnemy(G, 'boss');
-  const b = bossOf(G);
-  b.moveId = BOSS_MOVES[name].id;
-  return { G, b };
-}
-
 test('the two bosses Daniel fought at waves 30 and 35 now have moves', () => {
   // The mapping is the finding: bossIdx = wave/5 - 1, and both were ram-only.
   assert.equal(BOSS_NAMES[5], 'MARQUIS DE SIDES');

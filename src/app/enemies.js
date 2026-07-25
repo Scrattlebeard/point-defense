@@ -1,6 +1,6 @@
 // Enemy entities: spawning (base × variant), movement, contact, damage/death
 // side-effects. Rules and numbers come from core; this file executes them.
-import { ENEMIES, VARIANTS, SPLIT, BOSS_MOVES } from '../core/config.js';
+import { ENEMIES, VARIANTS, SPLIT, BOSS_MOVES, WEAPONS } from '../core/config.js';
 import { enemyHpMult, enemySpeedMult, bossHp, enemyMass, BOSS_KNOCK_RESIST } from '../core/balance.js';
 import { addXp } from '../core/state.js';
 import { dist, edgeSpawn } from '../core/geom.js';
@@ -55,7 +55,10 @@ export function spawnEnemy(G, kind, variants = null, x = null, y = null) {
     kbx: 0, kby: 0, contactCd: 0, flash: 0, orbHit: 0, age: 0, wallAtk: 0,
     // damage attribution (core.md Enemies): the shell owns these, render reads them
     sieging: false, strike: 0,
-    moveId: null, moveT: 0, // boss signature move (core.md), assigned by game.js
+    // boss signature move (core.md), assigned by game.js. `hurtT` = seconds
+    // since the last landed hit (study reads it); starts high so a freshly
+    // spawned noble is never mid-`study` before anyone has shot at it.
+    moveId: null, moveT: 0, hurtT: 9, studyT: 0, guard: 1,
     beamHeat: 0, beamTick: 0,
     burnStacks: 0, burnLeft: 0, burnTick: 0, // flamethrower DoT (core.md flame row)
     calSlowT: 0, calSlow: 0, // caltrop prick (core.md caltrop row)
@@ -230,6 +233,10 @@ export function damageEnemy(G, e, raw, { noMult = false, silent = false, src = n
   // guarded bosses (core.md "Boss signature moves"): scalar, not a shield —
   // applied before attribution so a guarded hit is recorded at what it dealt
   if (e.guard != null && e.guard < 1) dmg *= e.guard;
+  // `study` reads ATTENTION, not damage: only weapons the player drives reset the
+  // clock, or a single auto would pin the boss at its floor forever and the
+  // "let it forget" half of the dilemma could never fire (core.md).
+  if (src && WEAPONS[src] && WEAPONS[src].input !== 'none') e.hurtT = 0;
   // attribute before anything can kill the shape (core.md Run state). Damage with
   // no weapon behind it lands in 'other' rather than vanishing — a breakdown that
   // silently drops damage reads as complete and is not.
@@ -293,6 +300,58 @@ function runBossMove(G, e, dt) {
     }
     e.guard = e.planted ? mv.guard : 1;
     e.spd = e.planted ? 0 : e.baseSpd;
+  } else if (mv.id === 'charge') {
+    // wind-up, then cross. The tell is the move: it stops (costing the boss the
+    // tempo it is about to buy back) and is marked, so the player gets the
+    // decision — wall it, slow it, or commit (core.md "Boss signature moves").
+    if (e.chargeInit !== true) { e.chargeInit = true; e.moveT = mv.every; }
+    e.moveT -= dt;
+    if (e.charging) {
+      if (e.moveT <= 0) { e.charging = false; e.spd = e.baseSpd; e.moveT = mv.every; }
+    } else if (e.winding) {
+      e.spd = 0;
+      if (e.moveT <= 0) {
+        e.winding = false; e.charging = true; e.moveT = mv.dur;
+        e.spd = e.baseSpd * mv.spdMult;
+        burst(G.fx, e.x, e.y, e.color, 20, 260, 0.45, 3);
+        shake(G.fx, 5);
+        sfx('boss');
+      }
+    } else if (e.moveT <= 0) {
+      e.winding = true; e.moveT = mv.tell; e.spd = 0;
+      sfx('shield');
+    }
+  } else if (mv.id === 'study') {
+    // hardens under CONSECUTIVE fire and forgets when you stop: the mirror of
+    // surge. `hurtT` is seconds since the last landed hit (reset in damageEnemy).
+    e.hurtT += dt;
+    if (e.hurtT >= mv.forget) {
+      e.studyT = 0;
+      e.guard = 1;
+    } else if (e.hurtT < 0.3) {
+      e.studyT += dt;
+      e.guard = Math.max(mv.floor, Math.pow(mv.step, Math.floor(e.studyT)));
+    }
+  } else if (mv.id === 'devour') {
+    // eats its escort. Not a kill: no xp, no shards, no split — the shape is
+    // consumed, which is the whole point of ignoring it being a mistake.
+    e.moveT -= dt;
+    if (e.moveT <= 0) {
+      e.moveT = mv.every;
+      let meal = null, best = mv.range;
+      for (const x of G.S.enemies) {
+        if (x === e || x.dead || x.kind === 'boss') continue;
+        const d = dist(e.x, e.y, x.x, x.y);
+        if (d < best) { best = d; meal = x; }
+      }
+      if (meal) {
+        meal.dead = true;
+        e.hp = Math.min(e.maxHp, e.hp + e.maxHp * mv.healPct);
+        burst(G.fx, meal.x, meal.y, e.color, 12, 160, 0.4, 2);
+        burst(G.fx, e.x, e.y, e.color, 8, 90, 0.3, 2);
+        sfx('boss');
+      }
+    }
   }
 }
 

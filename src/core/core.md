@@ -340,7 +340,9 @@ recirculated noble brings its signature back with it. Decisions live in the tabl
 | The Obtuse One | **surge** — +60% speed below 35% hp | finish it or buy time; a wounded boss is a *faster* boss, so chip damage without commitment is the worst option |
 | Marquis de Sides | **sunder** — at 55% hp, once, sheds 4 shards and is **guarded (×0.25 damage) while any shard lives** | *stop hitting the boss.* Your DPS is now being wasted; the fight demands a target switch and a return |
 | The Final Vertex | **bulwark** — every ~9s, plants itself for 3s: **guarded (×0.25 damage) and completely stationary** | *stop hitting the boss, for a while.* It is not threatening you during the window either — the seconds are a gift you waste by dumping damage into armour instead of clearing trash or placing setups |
-| *(the other three)* | ram only, for now | deliberately unbuilt — see PINS |
+| Lord Rhombus | **charge** — winds up in place for ~1.1s, then crosses at ×4 speed until it reaches the rim | *distance is not safety.* The margin you were relying on is spent in a second; the answer is a wall, a slow, or having committed damage earlier. The wind-up is the whole move — a charge you cannot see coming is a dice roll |
+| Grandmaster Hexley | **study** — every consecutive second of ***hand*** damage hardens it one step (×0.85 each, floor ×0.4); two seconds untouched by a hand and it forgets. **Auto weapons do not feed the clock** | *sustained focus is punished.* The exact inverse of surge: here chip-and-rotate beats commitment, so the two nobles ask opposite questions and a player who learned one must unlearn it |
+| Polygothra | **devour** — every ~5s, eats the nearest trash shape within 150px, healing 4% max HP | *the escort is the boss's food.* Inverts the standing target priority: ignore the chaff here and the fight lengthens under you |
 
 **The two 2026-07-25 moves are deliberately opposite in *when* they free your attention,
 and they exist because of a playtest.** Daniel fought waves 30 and 35 — `bossIdx` 5 and 6,
@@ -352,6 +354,73 @@ target you must deal with); `bulwark` displaces it in **time** (there is a windo
 this target is the wrong one). Neither adds damage to the player — Law·Bosses asks for a
 focus-forcer, and *"deal more"* is the move a boss makes when nobody could think of one.
 
+**Every noble now carries a move (2026-07-25, second playtest), and the pin that prompted
+it was wrong about why.** Daniel, fresh account, wave 10: *"Lord Rhombus went down easy
+too, didn't see any trace of any signature move."* The pin filed from that report blamed
+the **gate** — it claimed `game.js` fired moves only on roster recirculation, so the first
+move in the game landed at wave 40. **False, and checkable in one line:** the gate has read
+`S.wave >= 10` since the moves landed, and `bossmoves.test` has pinned the wave-5 ram since
+the same commit. The real cause was duller and worse: **three of seven names had no move at
+all, and they sat at indices 1, 3 and 4 — waves 10, 20 and 25.** The first move a player
+could actually meet was The Obtuse One's surge at wave 15, and it is a speed change below
+35% HP, which is the subtlest of the four. So the observation was exactly right and the
+mechanism behind it was invented. *Third instance this week of a plausible mechanism
+outranking a measurement in a spec file; the standing lesson in the rim pin applies to
+one's own diagnoses too.*
+
+**The three new moves are chosen to not repeat a dilemma.** With seven nobles the risk is
+seven flavours of "an attack happens": `charge` displaces attention in **distance**,
+`study` in **rhythm**, `devour` in **target priority** — against the existing three axes of
+space (`adds`, `sunder`), time (`bulwark`) and commitment (`surge`). None of the three deals
+direct damage to the Point, which keeps Law·Bosses' "focus-forcer, not damage-dealer" line
+intact across the whole roster. `study` is deliberately the mirror of `surge`, because two
+nobles asking opposite questions is what makes the roster a roster rather than a difficulty
+curve with names on it.
+
+**`study` reads *attention*, not damage.** Only weapons the player drives (`input !== 'none'`
+— aim, hold and swipe alike) feed the clock. Without that rule autos never stop firing, so
+the clock never resets, so the boss sits permanently at its floor and *"two seconds untouched
+and it forgets"* could never fire in any run fielding a single auto: the dilemma in the table
+above would be fiction and the move a flat tax — *"deal less"*, the same failure of
+imagination as *"deal more"* wearing a defensive coat. The rule makes the promised response
+actually available: take your hand off it, let it forget, come back.
+
+**The floor (×0.55) was set by measurement, and the measurement went through two wrong
+answers first — both recorded, because the wrong ones are the useful part.** A guard floor
+is an HP multiplier wearing a verb, and the wave director will not advance while the boss
+lives, which is exactly the freeze-the-run failure ADR-0009 exists for.
+
+- **Wrong answer 1, a mechanism.** At floor 0.4, isolating each new move against the
+  conductor showed `study` alone moving the delegation ratio ×1.41 → ×2.31 while `charge`
+  and `devour` moved it ~0.04 between them. The obvious story — *autos pin the clock, so
+  study taxes delegated builds* — is **false**, and the check cost one run: excluding autos
+  from the clock changed the ratio by ~0.01. The real cause was blunter, and visible only in
+  the distribution rather than the median. Parked death waves, 11 pairs, floor 0.4: `20 20
+  20 20 20 20 20 35 35 35 35`. Seven of eleven hands-off runs died *at Hexley's wave*. He
+  was not taxing the delegated build, he was **stopping** it.
+- **Wrong answer 2, a threshold.** The first killability test asserted "dead within 45
+  seconds" — an absolute bar beside a scaling curve, which is this codebase's most repeated
+  defect (`bossHp` linear vs quartic; boss variants vs a wave-share pool; the hp-bar gate at
+  `maxHp > 40`). Time-to-kill is dominated by how much tech the rig carries, so seconds mean
+  nothing. Re-cut as a **ratio against a moveless control**: every other move measures
+  ×1.00–1.24, `study` at floor 0.4 measures **×2.47**. The test caps every move at **×2.2** —
+  past double, a punishment for playing badly stops reading as a dilemma and starts reading
+  as a boss that does not work. *(And the ratio test was itself theatre at first: started at
+  8% HP it passed at every floor including the broken one, because a fight that ends during
+  the ~4s ramp-in cannot measure the ramp. The 15% start is measured, not guessed.)*
+
+**What shipping floor 0.55 actually costs, stated because it is not free.** Killability and
+delegation pressure turn out to be the *same dial*: at 0.4 study walls the hands-off run
+(7/11 deaths at wave 20, ratio ×2.31); at 0.55 it does not (1/11, ratio ×1.176). Worse, the
+gate reads **lower** with study than without it (×1.176 vs ×1.412) — because the conductor's
+robot never rotates targets, so it plays into `study` exactly as badly as a player can, while
+the parked run's untended gun rarely lands on the boss at all. The move is therefore
+**invisible-to-slightly-negative** on the one instrument this project has, and the thing it
+is actually for — rewarding a human who learns to take their hand off — is precisely what
+that instrument cannot see (README "known coverage gap": the robot is a weak veteran).
+Killability won, because an unadvanceable wave is a bug and a soft dilemma is only a
+disappointment. Net effect of this landing on the gate: ×1.176 → ×1.176, unchanged.
+
 **`e.guard`** is the shared mechanism: a 0–1 multiplier applied in `damageEnemy` after
 crit and before attribution, so a guarded hit is *recorded at the damage it actually
 dealt* and the ledger keeps adding up (core.md Run state). Default 1. It is not a shield
@@ -361,7 +430,9 @@ move needed.
 *(Added 2026-07-25. **Moves fire from wave 10 onward**, so only the very first noble
 — the wave-5 onboarding wall, where ~45% of fresh runs end — is a clean ram. One
 thing at a time: that fight teaches what a boss *is*, and every boss after it teaches
-what a boss can *do*. **The gate is a design choice, not a balance necessity, and the
+what a boss can *do*. **Since the roster completed, that sentence is true in play and
+not only in code** — before it, "moves from wave 10" described a gate that the first
+two nobles past it walked through empty-handed. **The gate is a design choice, not a balance necessity, and the
 distinction is measured:** running moves from the first appearance leaves the
 fresh-run median at 8, comfortably in band, twice — so nothing forced this. Recorded
 because the honest reason is pacing, and a "for balance" justification would have

@@ -555,35 +555,67 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
 - **Context:** Cheap to check — `?specimen&kind=dart` on the dev channel from a phone, then
   a real run past wave 40. If a channel drowns, the annulus allocator is the place to widen
   slots and the armored backing-stroke trick generalises to any channel that needs contrast.
-## [phase 3] Signature moves are unreachable until wave 40 — FOUND BY THUMB, 2026-07-25
+## Boss moves: the roster is complete — what needs thumbs now is the wave-20 step
 
-Daniel, fresh account on /dev, wave 10: *"Lord Rhombus went down easy too, didn't see any
-trace of any signature move."* He is correct twice over, and the second reason is the one
-no gate caught.
+**Landed 2026-07-25 (Daniel's call: "boss moves should start at 10").** All seven nobles
+carry a signature move now: `charge` (Lord Rhombus, wave 10), `study` (Grandmaster Hexley,
+20), `devour` (Polygothra, 25), joining adds/surge/sunder/bulwark. Deliberately no two
+repeat a dilemma — the axes are space, time, commitment, distance, rhythm and target
+priority. Details and the measurement trail: `core.md` "Boss signature moves".
 
-**Verified in code, not from memory:**
-- `BOSS_MOVES` covers 4 of 7 names (Cumference/adds, Obtuse One/surge, Marquis/sunder,
-  Final Vertex/bulwark). Rhombus, Hexley and Polygothra are plain rams — known, deliberate
-  ("content is cheap to add badly").
-- **The real finding:** `game.js:41` gates moves on `G.bossIdx >= BOSS_NAMES.length` —
-  *recirculation*, not wave 10 as the night-log claims. Seven names on a 5-wave cadence
-  means indices 0–6 land on waves 5–35, and the first move in the entire game fires at
-  **wave 40**.
-- Wave 40 is already the variant-stacking regime change with its own "MODIFIERS ARE
-  COMPOUNDING" banner. **Both headline escalations land on the same wave**, and waves 5–35
-  are seven identically-behaving rams wearing different names.
+**Correcting the pin this replaces, because it was wrong in a way worth keeping.** It
+claimed `game.js` gated moves on roster *recirculation*, so the first move in the game
+fired at wave 40. False — the gate has read `S.wave >= 10` since the moves landed, and
+`bossmoves.test` has pinned the wave-5 ram since the same commit. The real cause of Daniel
+seeing nothing at wave 10 was duller: **three of seven names had no move at all, and they
+sat at indices 1, 3 and 4 — waves 10, 20 and 25.** The observation was exactly right; the
+mechanism behind it was invented from a plausible-sounding read of one line. Same species
+as the rim-dead-zone pin. *Prefer a measurement to a mechanism, including about your own
+code.*
 
-Law·Bosses says a boss is a focus-forcer. For the first 35 waves it is a name.
+**What actually needs thumbs (a sim cannot rule on any of these):**
+1. **The wave-20 step.** Hexley stops hands-off runs dead at floor 0.4 (7 of 11) and barely
+   at 0.55 (1 of 11). 0.55 shipped because killability outranks pressure — but whether wave
+   20 now *feels* like a wall to a human is unmeasured. Watch a fresh-account run through it.
+2. **Does anyone discover `study`?** Its whole dilemma is "stop shooting it for two seconds",
+   which is counter-intuitive and has **no telegraph at all** — the guard ring exists
+   (`e.guard` draws gold) but nothing says *why* it hardened. If playtesters never work it
+   out, the move is a stealth tax and needs a tell, not a tune.
+3. **Is `charge` readable on a phone?** The 1.1s wind-up is the entire move. It currently
+   reuses `sfx('shield')` and a stop — no dedicated visual. If the wind-up is missed the
+   charge is a dice roll, which is the exact thing its design forbids.
+- **Where:** `config.js` BOSS_MOVES, `enemies.js` runBossMove, `render.js` (no move-specific
+  art exists yet), `core.md` "Boss signature moves", `test/bossmoves.test.mjs`.
 
-Why no instrument caught it: the conductor gate measures parked-vs-robot survival and is
-blind to boss *identity*; `bossmoves.test` pins that each move works, never that a move is
-reachable. Both green all night. **A test that a feature works is not a test that a player
-can meet it.**
+## The conductor's robot never rotates targets — so it cannot see `study`-shaped design
+- **What:** the gate's robot retargets to *nearest* every 0.2s and otherwise pours damage
+  continuously into whatever it picks. Against Grandmaster Hexley that is the worst possible
+  play, so the gate reads **lower** with study than without it (×1.176 vs ×1.412) even though
+  the move exists to reward a skill the robot does not have.
+- **Why it matters beyond this one boss:** it is a concrete, measured instance of the
+  README's "the robot is a weak veteran" caveat, and it bounds what the conductor can ever
+  certify. Any future mechanic whose answer is *withhold damage* — bait-and-punish, overkill
+  waste, damage-reflect — will read as a regression on the only instrument this project has.
+- **Candidate:** teach the robot to drop a target that has hardened (it can read `e.guard`),
+  which is the smallest possible step toward the "fixed attention budget" policy the
+  hold/swipe-robot pin already argues for. Do it there, not separately.
+- **Where:** `scripts/conductor.mjs` `runOnce` robot branch; folds into the hold/swipe pin
+  above rather than being a second project.
 
-Not fixed — this is a pacing decision (Daniel's). Routes, uncosted: fire on first
-appearance from a wave threshold (restores the wave-10 intent the log thought it had);
-shorten the roster; or give the three plain names moves so recirculation matters less.
-Do NOT quietly land wave-40 stacking + first-move on the same beat either way.
+## calibrate's 32-trial gate cannot distinguish changes it is asked to gate
+- **What:** measured 2026-07-25 while checking whether `charge` moved the onboarding band.
+  Repeated 32-trial runs on **unchanged** code returned medians of 8, 9, 10 — the band is
+  [5,10], so a no-op change can read at the band's upper bound. At 200 trials both arms
+  (with and without the new wave-10 move) sat steady at 7–8 and were indistinguishable.
+- **Why it matters:** CI runs 32 trials and hard-fails the deploy on an out-of-band median.
+  The README already reasons that 32 was chosen over the local 12 because "a flaky gate stops
+  being enforced" — the number just is not big enough. A sweep costs ~1s, so this is nearly
+  free to fix; 200 trials took a few seconds.
+- **Also:** any past finding of the form "median moved 8 → 9, so the change mattered" taken
+  from a single 32-trial run is inside this noise and should be re-measured before being
+  believed. Several such readings exist in the 2026-07-25 session log.
+- **Where:** `scripts/calibrate.mjs` default, `.github/workflows/pages.yml` (the `32`),
+  README "Balance tooling".
 
 ## [perf] Frame rate degrades from ~wave 17 on device — FOUND BY THUMB, 2026-07-25
 
@@ -617,8 +649,14 @@ instrument.
 
 **Playtest outcome, same run (2026-07-25):** died wave 18. Daniel's own account — *"started
 paying less attention and optimising less."* That reads as Law·Delegation landing on a human
-instead of a robot, which would be the best datum this build has. **It is confounded and
-must not be cited as proof:** the framerate degradation above begins at wave 17, one wave
-earlier. Inattention and a chugging game are indistinguishable from here. Re-measure the
-delegation claim on a fresh run *after* the perf fix, and until then quote this as
-suggestive, never as evidence.
+instead of a robot, which would be the best datum this build has.
+
+**The confound is RULED OUT, and only the playtester could rule it out.** This pin originally
+said the datum must not be cited as proof, because the framerate degradation begins at wave
+17 — one wave before the death — and inattention and a chugging game are indistinguishable
+from inside the repo. Asked directly, Daniel: *"The chugging was not the cause of my death."*
+That is the one instrument nothing here can replace: no profiler distinguishes "the game got
+slow" from "I stopped paying attention", but the person holding the phone knows which one
+happened. **Still n=1 and still a self-report** — the honest weight is *one good datum*, not
+proof of the law. Worth re-measuring on a fresh run after the perf fix anyway, now as
+confirmation rather than as disambiguation.

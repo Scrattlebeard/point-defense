@@ -39,6 +39,18 @@ export const BOSS_MOVES = {
   // Attention displaced in TIME: there is a window in which this is the wrong
   // target. The boss also stops — the window is a trade, not extra punishment.
   'THE FINAL VERTEX': { id: 'bulwark', every: 9, dur: 3, guard: 0.25 },
+  // Attention displaced in DISTANCE: the margin you were banking is spent in a
+  // second. The wind-up IS the move — it costs the boss tempo and hands the
+  // player the decision, which is why `tell` is long and legible.
+  'LORD RHOMBUS': { id: 'charge', every: 7, tell: 1.1, dur: 1.6, spdMult: 4 },
+  // Attention displaced in RHYTHM, and the deliberate mirror of `surge`: this one
+  // punishes commitment where the Obtuse One punishes chip. `floor` keeps it a
+  // tax rather than a wall — sustained fire must always still work, just worse.
+  'GRANDMASTER HEXLEY': { id: 'study', step: 0.85, floor: 0.55, forget: 2 },
+  // Attention displaced in TARGET PRIORITY: the chaff you were rightly ignoring
+  // is this one's larder. Heals a flat share of max HP, so it never outpaces a
+  // player who clears the escort (core.md "Boss signature moves").
+  'POLYGOTHRA, DEVOURER OF VERTICES': { id: 'devour', every: 5, range: 150, healPct: 0.04 },
 };
 
 // ---------- Variants: the color/highlight grammar ----------
