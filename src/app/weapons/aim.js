@@ -124,6 +124,7 @@ export function updateAimOrdnance(G, dt) {
           S.boomers.push({
             x: G.cx, y: G.cy, vx: Math.cos(a) * st.speed, vy: Math.sin(a) * st.speed,
             dmg: st.dmg, r: st.r, out: true, hit: new Set(), spin: 0, life: 8,
+            src: 'boomer', // the hit loop reads b.src; without this it pooled into 'other'
           });
         }
         sfx('wave');

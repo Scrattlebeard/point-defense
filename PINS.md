@@ -247,35 +247,40 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
 - **Where:** `src/app/ui.js` statsHTML, `lattice.js` node card; spec in `app.md`.
 - **Context:** `WEAPON_ICONS[id]` is the seam; contract test `test/icons.test.mjs`.
 
-## The Armory: human-hands balance pass (ADR-0004 shipped 2026-07-24 overnight)
-- **What:** All ten new weapons (scatter/burst/heavy/boomer · flame/meteor/blades ·
-  catapult/caltrop/cascade) are sim-verified only — numbers in `config.js` are
-  first-draft tuning. Also provisional: Armory/Arsenal node costs, and the whole
-  gesture-slot *feel* (does locking beam out after picking flame read as a choice
-  or a trap?).
-- **Re-cut by ADR-0006 (2026-07-25):** the ten survive almost intact, but two move —
-  `boomer` becomes an **auto** (its output doesn't scale with aim), and `burst` is demoted
-  from a base to a **form of bolt**, becoming the pilot for the whole form system. The
-  gesture-slot feel question is superseded by the slot *budget* question: does ≤6 total
-  with ≤1 gun/hold/swipe read as identity or as a cage? That is the first thing to watch
-  in the next playtest.
-- **Why:** Daniel + playtester are the balance authority; the calibrate band only
-  guards the fresh-run curve (all ten are tech-locked, so onboarding is untouched —
-  verified in band, median 10, 2026-07-24).
-- **Where:** `src/core/config.js` weapon stats; specs in `core.md`; ADR-0004.
-- **Context / watch-list from the builder:** boomerang turn range is a fixed
-  ~484px (speed²/2·decel) regardless of screen — may feel short on desktop
-  ultrawide, long on phone; catapult targets a random living shape (may read as
-  aimless — candidate: bias toward the densest bearing); cascade cd 5.5s is
-  deliberately long (the weapon is a timing play), may frustrate before it
-  clicks; flame burn numbers are suppressed (fire flicker is the feedback) —
-  check that damage still feels attributable.
+## The Armory balance pass — now with the census it always wanted
+- **What:** every weapon's real damage share, measured 2026-07-25 with the new ledger. Each
+  weapon paired with a maxed bolt in the same control build, 3x 15-minute robot runs, crit
+  off. Share is "of the pair", so the rows are comparable to each other:
 
----
-*The pins below came out of the 2026-07-25 prototype-vs-GDD audit. They are the mechanical
-breadcrumbs for GDD §11's Route; the phase tags say where each one belongs in the order.
-Numbers are measured (headless spikes over the real sim), not estimated.*
+  | | | | |
+  |---|---|---|---|
+  | Seekers 35.5% | Beam 30.2% | Mortar 21.7% | Nova 20.0% |
+  | Orbitals 18.3% | Flame 15.6% | Tesla 10.4% | Turrets 9.8% |
+  | Cascade 8.6% | Catapult 8.3% | Boomerang 7.9% | Meteor 5.7% |
+  | Scattergun 5.3% | Howitzer 4.5% | **Mines 1.1%** | **Caltrops 0.4%** |
+  | *Wall n/a* | *Blades n/a* | *Frost 0% (correct)* | |
 
+- **THREE CAVEATS, and the table is misleading without them:**
+  1. **Wall and Blades are UNMEASURED, not weak.** They need a swipe gesture and the robot
+     never swipes. Do not read their 0% as anything at all.
+  2. Hold weapons are measured with a channel held permanently, which flatters them against a
+     human who must also aim.
+  3. Frost's 0% is correct — it is a slow, not a damage source.
+- **The real findings:**
+  - **Mines (1.1%) and Caltrops (0.4%) are near-dead**, and it is very likely the same
+    *exposure* problem orbit had: both seed stationary in a band, and shapes mostly die
+    before walking onto them. Orbit was fixed by moving its ring out to where shapes
+    actually die (120-240px); the mine/caltrop seed ring is 120px-to-half-the-field and
+    wants the same measured treatment. **Do not assume — the orbit diagnosis proved a
+    plausible mechanism wrong twice.**
+  - **Scattergun (5.3%) and Howitzer (4.5%) are the weakest non-dead weapons** — and they are
+    *guns*, the category bolt already locks out. So the gun-lockout fix has a second half
+    nobody had noticed: even once a rival gun can be drafted, it would be a weak replacement
+    for a bolt doing 55-70%.
+- **Where:** `src/core/config.js` weapon stats; re-run the census after any change (the script
+  shape is in this landing's commit; `S.dmgBy` is the instrument).
+- **Context:** this is the data the pin asked for when ten weapons shipped "sim-verified
+  only". It does not replace human hands — it says *where to point them*.
 ## [phase 4] Forms: the mechanism landed, twelve forms and mastery did not
 - **What (landed 2026-07-25):** forms are real. `FORMS` in config.js, `S.forms` (active) and
   `S.formPool` (unlocked) in run state, form cards in `levelChoices`, and bolt wears its form
