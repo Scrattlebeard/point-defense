@@ -79,6 +79,29 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
 - **Context:** GitHub Pages hosting stays static throughout — no server of ours at
   any step. Discussed 2026-07-24 (chat); Daniel: "put a pin in it."
 
+## The achievement set predates a week of new systems
+- **What:** 14 achievements, and **none** of them reference anything built this week —
+  no form worn, no stacked modifier survived, no epithet boss felled, nothing about the
+  slot budget. Verified by grep over `config.js: ACHIEVEMENTS`. They still describe the
+  game as it was before ADR-0006.
+- **Why it matters:** GDD section 6 calls the post-grind afterlife "challenge achievements
+  and build-chasing", so achievements are meant to be a *pointer at the interesting parts*.
+  Right now they point exclusively at depth and volume (reach wave N, N lifetime kills),
+  which is the least interesting axis the game has, and they are the first thing a player
+  reads on the Records screen.
+- **Candidates, not decided:** wear a form · survive a triple-stacked wave · fell a
+  recirculated noble wearing its epithet · win a run with an empty gun slot (which would
+  also advertise ADR-0007's gunless chassis as a legitimate identity) · max a weapon and
+  its form.
+- **Why not tonight:** each one is a design claim about what deserves celebrating, and
+  picking six at 3am is how a game ends up rewarding whatever the last contributor happened
+  to build. Also: several depend on gaps that are still open (the gun-lockout route decides
+  whether "empty gun slot" is even reachable).
+- **Where:** `src/core/config.js` ACHIEVEMENTS (pure predicates over `(meta, finalRunState)`,
+  so a run-scoped one needs the S argument), `core.md` Records.
+- **Context:** cheap to add — the predicate list is the single home and `evalAchievements`
+  needs no change. The cost is entirely in choosing well.
+
 ## Canvas announcements collide with overlay titles
 - **What:** the lingering on-field announcement (wave banner, "DEFEND THE POINT", debut
   banners — 15s each per app.md) is canvas-drawn at top-left and shows through the

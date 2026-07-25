@@ -180,6 +180,33 @@ if (location.search.includes('bestiary')) {
     ui.showOnly('bestiary');
   });
 }
+// Dev hatches: ?over and ?records photograph the two remaining click-gated
+// screens. Both are IN-MEMORY ONLY — they never call saveMeta, because a dev
+// hatch that clobbers a real save is a worse bug than the ones it finds.
+if (location.search.includes('over')) {
+  startRun();
+  Object.assign(G.S, { wave: 23, kills: 1147, bossKills: 4 });
+  const { earned } = payout(G.S, G.meta);
+  G.meta = { ...G.meta, shards: G.meta.shards + earned, best: Math.max(G.meta.best, 23) };
+  ui.renderGameOver(G, earned, 2);
+  ui.showOnly('over');
+  G.frozen = true;
+}
+if (location.search.includes('records')) {
+  G.meta = {
+    ...G.meta,
+    scores: [
+      { wave: 31, kills: 1810, tower: 'lance', ts: 0 },
+      { wave: 23, kills: 1147, tower: 'bastion', ts: 0 },
+      { wave: 12, kills: 402, tower: 'warden', ts: 0 },
+    ],
+    ach: ['first', 'regicide', 'wave5', 'wave10', 'wave20', 'kills500'],
+  };
+  ui.renderRecords(G);
+  ui.showOnly('records');
+  G.frozen = true;
+}
+
 // Dev hatch: ?pause opens the pause panel on a furnished run — the other loadout
 // surface that needs a click to reach, so it had never been photographed either.
 if (location.search.includes('pause')) {

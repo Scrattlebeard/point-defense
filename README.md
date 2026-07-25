@@ -48,7 +48,9 @@ in-battle (menu has them by default — app.md "Grid sparks") · **`?cards`** op
 weapon · upgrade · form · passive) — form cards otherwise need a maxed base weapon and an
 unlocked-but-unworn form, so the markup is hard to reach by playing ·
 `?pause` opens the pause
-panel on a furnished run (the other click-gated loadout surface) · `?bestiary` opens a fully-revealed bestiary,
+panel on a furnished run · `?over` and `?records` photograph the death payout and the
+high-score/achievement screens (all three are click-gated in play; all are in-memory only and
+never touch the save) · `?bestiary` opens a fully-revealed bestiary,
 in-memory only · `?lattice&shards=N` opens the Lattice with a faked balance
 (in-memory only — node states photographable) · **`?specimen`** lays stacked-variant
 specimens out on a *frozen* field so the highlight grammar can be photographed —
