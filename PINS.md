@@ -555,3 +555,32 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
 - **Context:** Cheap to check — `?specimen&kind=dart` on the dev channel from a phone, then
   a real run past wave 40. If a channel drowns, the annulus allocator is the place to widen
   slots and the armored backing-stroke trick generalises to any channel that needs contrast.
+## [phase 3] Signature moves are unreachable until wave 40 — FOUND BY THUMB, 2026-07-25
+
+Daniel, fresh account on /dev, wave 10: *"Lord Rhombus went down easy too, didn't see any
+trace of any signature move."* He is correct twice over, and the second reason is the one
+no gate caught.
+
+**Verified in code, not from memory:**
+- `BOSS_MOVES` covers 4 of 7 names (Cumference/adds, Obtuse One/surge, Marquis/sunder,
+  Final Vertex/bulwark). Rhombus, Hexley and Polygothra are plain rams — known, deliberate
+  ("content is cheap to add badly").
+- **The real finding:** `game.js:41` gates moves on `G.bossIdx >= BOSS_NAMES.length` —
+  *recirculation*, not wave 10 as the night-log claims. Seven names on a 5-wave cadence
+  means indices 0–6 land on waves 5–35, and the first move in the entire game fires at
+  **wave 40**.
+- Wave 40 is already the variant-stacking regime change with its own "MODIFIERS ARE
+  COMPOUNDING" banner. **Both headline escalations land on the same wave**, and waves 5–35
+  are seven identically-behaving rams wearing different names.
+
+Law·Bosses says a boss is a focus-forcer. For the first 35 waves it is a name.
+
+Why no instrument caught it: the conductor gate measures parked-vs-robot survival and is
+blind to boss *identity*; `bossmoves.test` pins that each move works, never that a move is
+reachable. Both green all night. **A test that a feature works is not a test that a player
+can meet it.**
+
+Not fixed — this is a pacing decision (Daniel's). Routes, uncosted: fire on first
+appearance from a wave threshold (restores the wave-10 intent the log thought it had);
+shorten the roster; or give the three plain names moves so recirculation matters less.
+Do NOT quietly land wave-40 stacking + first-move on the same beat either way.
