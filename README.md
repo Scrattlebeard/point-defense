@@ -149,6 +149,23 @@ deployed from branches — not separate repos):
   and because the whole sweep costs ~1s, flake resistance is nearly free; a
   persistent boundary-flake means the band or the trial count needs an explicit
   decision, not a re-run-until-green.
+- **A gate a channel's head does not carry cannot be run against it.** Every run
+  assembles all channels from their branch heads, so the prod job checks out a
+  commit that may predate a gate script the workflow names. Each gate invocation
+  is therefore wrapped in an existence check and **skipped loudly** (a GitHub
+  `::notice::`) when the script is absent from that channel's tree. This is not a
+  loosening: a gate is a property of the commit it guards, and prod's commit was
+  gated by whatever existed when `scripts/promote` shipped it. The alternative
+  semantics — hard-fail — means **adding any new gate retroactively bricks the
+  whole site** until prod is promoted, which is what happened: wiring the
+  conductor gate in on 2026-07-24 broke `scripts/conductor.mjs` resolution on
+  prod's older head and, because a prod failure blocks the deploy outright, took
+  the dev channel down with it for **20 consecutive runs / 11 hours**. Pinned by
+  `test/deploy.test.mjs`, which fails if a gate is invoked unguarded.
+- **Push ≠ deploy.** `git push origin main:dev` succeeding says nothing about
+  whether the site updated; the run can fail afterwards for reasons that have
+  nothing to do with the push. Verify with `gh run list` — the 11-hour outage
+  above was invisible precisely because every push reported success.
 - **Installable (2026-07-25).** `manifest.webmanifest` + `icon-192/512.png` ship
   alongside `dist/index.html`, so the game can be added to a home screen and run in
   `display: standalone` — which kills the URL bar, and on a phone that is worth more
