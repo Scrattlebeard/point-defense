@@ -53,6 +53,11 @@ jobs:
           # conductor gate (README balance tooling, GDD §3): delegation law enforced
           if [ -f scripts/conductor.mjs ]; then node scripts/conductor.mjs
           else echo "::notice::conductor gate absent on this channel head - skipped"; fi
+          # JS-cost gate (README performance tooling): bounds OUR javascript only —
+          # a stub canvas is blind to rasterisation. Catches an O(n^2) landing, not
+          # a slow phone. Existence-checked: prod's head predates this script.
+          if [ -f scripts/perf.mjs ]; then node scripts/perf.mjs 25
+          else echo "::notice::perf gate absent on this channel head - skipped"; fi
           npm run build
           mkdir -p site
           # dist/ is multi-file since the PWA manifest (README "Deployment")
@@ -77,6 +82,11 @@ jobs:
           else echo "::notice::calibrate gate absent on this channel head - skipped"; fi
           if [ -f scripts/conductor.mjs ]; then node scripts/conductor.mjs
           else echo "::notice::conductor gate absent on this channel head - skipped"; fi
+          # JS-cost gate (README performance tooling): bounds OUR javascript only —
+          # a stub canvas is blind to rasterisation. Catches an O(n^2) landing, not
+          # a slow phone. Existence-checked: prod's head predates this script.
+          if [ -f scripts/perf.mjs ]; then node scripts/perf.mjs 25
+          else echo "::notice::perf gate absent on this channel head - skipped"; fi
           npm run build
           mkdir -p site/beta
           cp dist/index.html site/beta/

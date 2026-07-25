@@ -237,3 +237,24 @@ simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not un
   meta and the menu shows "progress won't persist" — never a silent wipe.
 - **Reset progress:** menu carries a two-tap reset (arm → confirm within 4s) that
   restores `defaultMeta()` and saves. Deliberate wipes only; no accidental ones.
+
+
+## Dev hatch: `?perf` — the frame-time overlay
+
+`perfhud.js` draws what `core/perf.js` reports; `main.js` feeds it the gap between
+rAF callbacks. Three decisions worth keeping at this tier:
+
+- **Canvas, not DOM.** The overlay has to survive a fullscreen installed PWA on a
+  phone, and it has to appear in a headless screenshot — a DOM panel does the first
+  but the screenshot path is the only way this repo reads a number off a real
+  rasteriser. So it draws itself.
+- **It pins to device pixels** (`setTransform` identity, then `G.hudScale = dpr`),
+  offset below the DOM HUD's wave/level line so the two do not overlap. Camera shake
+  must never move the instrument: a jittering readout is unreadable exactly when the
+  frames are worst.
+- **Stats are recomputed every ~15 frames, not every frame.** Percentiles sort, and
+  **the instrument must be cheaper than the thing it measures.** A quarter of a second
+  is far faster than a human reads.
+
+Costs nothing when off: `G.perf` is null unless `?perf` is in the query string, and
+every call site is behind that check.

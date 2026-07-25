@@ -106,6 +106,51 @@ gap:** the robot only *aims*, so the gate proves one of Law·Delegation's three
 input dimensions; hold and swipe are unmeasured. The metric no longer inverts if
 the robot is taught them, which is what makes that work possible.
 
+Performance tooling: `node scripts/perf.mjs [maxWave]` is the **JS-cost gate**. It
+runs a seeded headless game against a stub 2D context and times `updateGame` +
+`renderFrame` per frame, bucketed by wave, then fails if the worst wave's JS
+exceeds **25% of a 16.67ms frame**. It gates a *share of a frame*, never a
+millisecond count — absolute times depend on whichever machine CI got, and an
+absolute threshold beside a moving target is this codebase's most repeated defect.
+Wave 0 is discarded as JIT warm-up (measured 0.082ms at *zero* entities, three
+times wave 22's cost with 38 of them). Wired into the prod gate beside calibrate
+and conductor, existence-checked like the others.
+
+**What it can and cannot see, stated up front because the distinction is the whole
+point.** A stub canvas draws nothing, so this bounds **our JavaScript** and is
+blind to **rasterisation** — which is where a canvas game on a phone actually
+spends its budget. Two measurements from 2026-07-25 bracket it:
+
+| what | where | cost per frame | entities |
+|------|-------|----------------|----------|
+| our JS (sim + draw path) | node, stub canvas | **0.02–0.04 ms** (0.2% of budget) | 14–38 |
+| a real rendered frame | headless Firefox, desktop | **p50 2.0 ms · p95 3–4 ms** | 1–7 |
+
+So rasterisation costs roughly **a hundred times** our own code, and it is already
+12–24% of a frame on a *desktop* with an almost-empty field. **A green perf gate
+therefore says nothing about whether the game is playable** — it says our loops did
+not regress. The playability question is answered by `?perf` on a real device.
+
+**`?perf` — the on-device instrument.** A canvas-drawn overlay (canvas, not DOM, so
+it survives a fullscreen PWA *and* lands in a headless screenshot) showing live
+p50/p95/max and a per-wave table of p50, p95, %-of-frames-over-budget and mean
+entity count. Colour-coded against the 16.67ms budget, because it gets read at a
+glance while something else is happening. **p95 is the headline, not the mean:** a
+run that draws 90% of frames in 6ms and 10% in 40ms averages "fine" and feels
+broken — judder is a tail property. Off by default and free when off; `G.perf`
+stays null and the sampler is never called.
+
+Frame time is measured as the **gap between `requestAnimationFrame` callbacks**,
+not as the duration of our own work: compositing and rasterisation happen after we
+return, so timing only our JS would report a comfortable number while the player
+watches the game stutter.
+
+*Combined with `?turbo`/`?warp=N`, `?perf` also draws and times every pre-simulated
+frame, so the load event fires with a populated table — the only way to read a
+real-rasteriser cost curve out of a headless screenshot, which otherwise catches
+about three frames of startup. That path measures draw cost, not frame rate: there
+is no vsync or compositing in a pre-sim loop.*
+
 ## Deployment (GitHub Pages — canonical)
 
 The phone-playable build is **GitHub Pages**, one site with three **release

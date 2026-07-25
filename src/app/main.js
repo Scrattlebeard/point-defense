@@ -12,6 +12,8 @@ import { nearestEnemy, spawnEnemy } from './enemies.js';
 import { resetWaveDirector, updateGame } from './game.js';
 import { initInput, updateInput, clearInput } from './input.js';
 import { renderFrame } from './render.js';
+import { makePerf, samplePerf } from '../core/perf.js';
+import { drawPerfHud } from './perfhud.js';
 import * as ui from './ui.js';
 
 const canvas = document.getElementById('field');
@@ -25,6 +27,11 @@ const G = {
 };
 setMuted(!G.meta.sound);
 setHaptics(G.meta.haptics !== false);
+
+// Dev hatch: ?perf turns on the frame-time overlay (app.md, core/perf.md).
+// Off by default and costs nothing when off — `G.perf` stays null and the
+// sampler is never called, so the instrument cannot tax normal play.
+if (location.search.includes('perf')) G.perf = makePerf();
 
 const PHONE_ZOOM = 0.75; // app.md "Phone zoom (out)" — more arena on small screens
 const MAX_FIELD = { w: 1400, h: 1000 }; // app.md "Field size cap" — screen size must not be a difficulty setting
@@ -40,6 +47,7 @@ function resize() {
   canvas.width = Math.round(window.innerWidth * dpr);
   canvas.height = Math.round(window.innerHeight * dpr);
   G.ctx.setTransform(dpr * zoom, 0, 0, dpr * zoom, 0, 0);
+  G.hudScale = dpr; // the perf overlay pins to device pixels (perfhud.js)
 }
 window.addEventListener('resize', resize);
 resize();
@@ -166,6 +174,12 @@ function loop(now) {
   // (seen in headless Firefox), and negative dt turns every "decay toward
   // zero" (enemy flash, cooldowns) into a generator. Sim time never rewinds.
   const dt = Math.max(0, Math.min(0.033, (now - last) / 1000));
+  // Frame time is measured as the gap between rAF callbacks, NOT as the time our
+  // own work takes: the browser's compositing and rasterisation happen after we
+  // return, and those are exactly where a canvas game on a phone spends its
+  // budget. Timing only our JS would report a comfortable number while the player
+  // watches judder (core/perf.md "What this cannot tell you").
+  const frameMs = now - last;
   last = now;
   if (G.mode === 'play' && !G.frozen) {
     updateInput(G);
@@ -180,6 +194,14 @@ function loop(now) {
     settleFx(G.fx, dt);
   }
   renderFrame(G);
+  if (G.perf) {
+    samplePerf(G.perf, frameMs, {
+      wave: G.S ? G.S.wave : 0,
+      ents: G.S ? G.S.enemies.length : 0,
+      parts: G.fx ? G.fx.parts.length : 0,
+    });
+    drawPerfHud(G);
+  }
   requestAnimationFrame(loop);
 }
 
@@ -371,6 +393,18 @@ if (location.search.includes('autostart')) {
       }
       const sig = updateGame(G, 1 / 60);
       updateFx(G.fx, 1 / 60);
+      // ?perf during a pre-sim: draw and time every frame, so the load event
+      // fires with a full by-wave table already populated. This is the only way
+      // to get a REAL-RASTERISER cost curve out of a headless screenshot, which
+      // otherwise catches ~3 frames of startup. It measures draw cost, NOT frame
+      // rate — there is no vsync or compositing here (core/perf.md).
+      if (G.perf) {
+        const t0 = performance.now();
+        renderFrame(G);
+        samplePerf(G.perf, performance.now() - t0, {
+          wave: G.S.wave, ents: G.S.enemies.length, parts: G.fx.parts.length,
+        });
+      }
       if (sig === 'levelup') {
         while (G.S.pendingLevels > 0) {
           const cs = levelChoices(G.S, Math.random);

@@ -612,46 +612,59 @@ code.*
 - **Where:** `scripts/calibrate.mjs` default, `.github/workflows/pages.yml` (the `32`),
   README "Balance tooling".
 
-## [perf] Frame rate degrades from ~wave 17 on device — FOUND BY THUMB, 2026-07-25
+## [perf] Frame rate on device — instruments built, and the prime suspect was WRONG
 
-Daniel, fresh account on /dev, phone (installed PWA): *"Game noticeably starts
+Daniel, fresh account on /dev, phone (installed PWA), 2026-07-25: *"Game noticeably starts
 struggling/slowing down at wave 17 - seems like we need an optimisation pass."*
 
-**The gap, stated plainly: this project has zero performance instrumentation.** 219 tests,
-two balance gates, a render crash-net, a conductor, a calibrator — and nothing anywhere
-measures a frame. The sim runs headless in node with no clock; the render smoke test proves
-the draw path doesn't throw, never that it draws in time. We shipped a PWA for phones the
-same night, and the one property a phone game must hold has never been observed.
+**The gap this pin opened is closed: the project can observe a frame now.** `?perf` draws a
+live per-wave table (p50 / p95 / %-over-budget / entity count) on canvas so it works in an
+installed PWA, and `scripts/perf.mjs` is a deterministic JS-cost gate wired into CI beside
+calibrate and conductor. Details in README "Performance tooling" and `src/core/perf.md`.
 
-**Prime suspect, and it is mine — hypothesis, NOT diagnosis:** the Jul-24/25 cost-weighted
-composition change (ADR-0008) deliberately made waves chaff-heavy. Measured that night at
-~49 spawns per wave against ~39 before. ~25% more bodies, each carrying variant checks,
-targeting, and per-shape highlight draws. Wave 17 is also regen's debut (`minWave: 17`) —
-cheap per-entity, but it lands exactly there, so it must be ruled out rather than assumed
-innocent. Do not start optimising before measuring which.
+**The hypothesis this pin carried was mine and it is not supported.** It named the Jul-24/25
+cost-weighted composition change (ADR-0008, ~25% more bodies) as prime suspect and said to
+rule out regen's wave-17 debut. Measured instead:
 
-**First moves, in order — measure before touching anything:**
-1. Instrument: frame-time budget in a dev hatch (`?perf`), reported at wave milestones, on
-   device. Entity count, draw calls, and ms/frame separately — the fix differs per cause.
-2. Bisect against the pre-ADR-0008 commit at matched wave, same seed. Answers "did I cause
-   this" in one measurement instead of an argument.
-3. Only then optimise. Candidates unranked until there are numbers: per-entity highlight
-   draw path, targeting loops (O(n²) suspects), spawn pooling.
+| what | where | cost per frame | entities |
+|------|-------|----------------|----------|
+| our JS (sim + full draw path) | node, stub canvas | **0.02–0.04 ms** = 0.2% of budget | 14–38 |
+| a real rendered frame | headless Firefox, desktop | **p50 2.0 ms · p95 3–4 ms** | 1–7 |
 
-**Standing lesson to carry past this bug:** every gate built this week measures whether the
-game is *correct*. None measures whether it is *playable*. Both are laws; only one had an
-instrument.
+- **Our JavaScript is not the bottleneck and is not close.** At wave 22 with 38 live
+  entities, sim + the entire draw path costs 0.036 ms — two tenths of one percent of a
+  frame. Twenty-five percent more bodies through *that* costs nothing anyone can feel, so
+  ADR-0008 is very unlikely to be the cause.
+- **Rasterisation costs ~100× our code, and is already 12–24% of a frame on a desktop with
+  1–7 entities on screen.** That is the number that should worry us: baseline cost is high
+  before the field is populated at all. A phone GPU is several times slower again, which
+  would put the *empty-field* baseline near budget and make wave 17 the point where a
+  modest entity count tips it over. **Hypothesis, clearly labelled** — it fits, and it is
+  not measured.
+- **dpr is already capped at 2** (`main.js resize`), so the classic mobile own-goal is not
+  in play.
 
-**Playtest outcome, same run (2026-07-25):** died wave 18. Daniel's own account — *"started
-paying less attention and optimising less."* That reads as Law·Delegation landing on a human
-instead of a robot, which would be the best datum this build has.
+**A trap worth keeping, because it cost two measurements.** The first profiling rig used a
+maxed loadout and reported entity counts of **1–11** — a maxed build kills everything on
+contact, so it profiles an empty screen. A natural (level-up-driven) build carries **14–38**.
+*A performance rig that plays well measures nothing.* `scripts/perf.mjs` takes no gear by
+default for exactly this reason.
 
-**The confound is RULED OUT, and only the playtester could rule it out.** This pin originally
-said the datum must not be cited as proof, because the framerate degradation begins at wave
-17 — one wave before the death — and inattention and a chugging game are indistinguishable
-from inside the repo. Asked directly, Daniel: *"The chugging was not the cause of my death."*
-That is the one instrument nothing here can replace: no profiler distinguishes "the game got
-slow" from "I stopped paying attention", but the person holding the phone knows which one
-happened. **Still n=1 and still a self-report** — the honest weight is *one good datum*, not
-proof of the law. Worth re-measuring on a fresh run after the perf fix anyway, now as
-confirmation rather than as disambiguation.
+**Next, in order:**
+1. **Daniel, on the phone: `…/dev/?perf`, play to ~20, screenshot the table.** That single
+   artifact answers the scaling question nothing here can: does p95 rise with `ents`, or is
+   the baseline already bad at wave 1? The two point at completely different fixes.
+2. If baseline-bound: the suspects are full-screen gradients, `shadowBlur`, and overdraw —
+   cost scales with *area*, not with call count, and nothing here counts area. Measured
+   ~1 gradient and ~1 blurred fill per frame, so the count is small; the area may not be.
+3. If entity-bound: per-shape highlight draws and the annulus allocator are the first place
+   to look, and the `?specimen` plate already isolates them.
+4. Only then optimise. **Do not start from the ADR-0008 story** — it is the thing that got
+   ruled out.
+
+**Standing lesson, revised.** The original read: every gate measures whether the game is
+*correct*, none measures whether it is *playable*. Still true, and now half-fixed — but the
+sharper version is that **the cheap instrument and the true instrument were different
+instruments.** A stub canvas is free, deterministic and gateable, and it is blind to the
+entire half of the cost that matters. Shipping it without saying so would have produced a
+green light meaning nothing.
