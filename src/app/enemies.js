@@ -13,8 +13,13 @@ const COMBAT_R = 280; // inertia-age accrual zone (core.md enemyMass)
 export function spawnEnemy(G, kind, variantId = null, x = null, y = null) {
   const S = G.S;
   const def = ENEMIES[kind];
-  const v = variantId ? VARIANTS[variantId] : null;
+  const vRaw = variantId ? VARIANTS[variantId] : null;
   const isBoss = kind === 'boss';
+  // An epithet changes the fight, not the arithmetic: a boss's HP is a share of
+  // the whole wave, so trash multipliers compound against a curve they were
+  // never sized for (core.md "Boss variants"). Everything downstream — regen,
+  // shield, explode, color — reads this merged view via e.vdef.
+  const v = vRaw && isBoss && vRaw.boss ? { ...vRaw, ...vRaw.boss } : vRaw;
   const baseHp = isBoss ? bossHp(S.wave) : def.hp * enemyHpMult(S.wave);
   const hp = baseHp * (v?.hpMult || 1);
   // Wave spawns: on the wall, speed normalized so time-to-Point is constant

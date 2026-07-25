@@ -289,16 +289,3 @@ Numbers are measured (headless spikes over the real sim), not estimated.*
 - **Context:** Verify all stacked pairs on one silhouette before shipping stacking — that
   check is already named in the variant-stacking pin; this is what it will find.
 
-## [phase 3] Boss variants inherit trash multipliers, unspec'd
-- **What:** From wave 40 recirculated bosses roll a guaranteed variant, and `enemies.js:19,31`
-  applies the ordinary variant multipliers unconditionally. An **armored** boss at wave 40 is
-  `bossHp(40) × 2.5 = 43,125 HP`; a **regen** one heals `3% × 17,250 = 517 HP/s`.
-- **Why:** Neither GDD nor `core.md` says whether boss variants should use trash multipliers.
-  A 43k-HP wall and a 517 HP/s regen are both plausibly *intended* (the recirculation is
-  meant to be the lategame's escalation) and plausibly unplayable — it has never been reached
-  in a human run, so nobody knows.
-- **Where:** `src/app/enemies.js` variant application, `core.md` Boss variants, `config.js`
-  if boss-specific multipliers are wanted.
-- **Context:** Cheap to check with a warped sim run before it becomes a playtest ambush.
-  Decide and record either way — "trash multipliers, deliberately" is a fine answer written
-  down and a bad one assumed.

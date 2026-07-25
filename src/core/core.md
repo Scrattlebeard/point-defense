@@ -224,6 +224,27 @@ simplest first; volatile last because its lesson costs the most to learn.)
 variant from the debuted pool, announced as an epithet — *"SIR CUMFERENCE, THE
 ARMORED"*. A name you've beaten coming back changed is the lategame's escalation.
 
+**An epithet changes the fight, not the arithmetic** — bosses use the `boss`
+override on each variant (`config.js: VARIANTS[id].boss`), never the trash
+multipliers. *(Decided 2026-07-25 by measurement, resolving a pin that had asked
+the question since the audit. Trash multipliers on a boss are not "harder", they
+are broken: a boss's HP is a share of the whole wave (`bossHp`), and the trash
+percentages scale with it. Measured against a maxed budget-legal build with the
+field otherwise **empty** — the most generous case the player ever gets — a
+wave-40 **regen** boss healing 3%/s of a 117k pool took **0% damage in 23
+seconds**: mathematically unkillable, and the director will not advance the wave
+until the field is empty, so the reward for reaching wave 40 was a guaranteed
+20%-of-the-time dead end. **Armored** ×2.5 was the same failure in slower motion —
+7% dead at the player's death against 18% for a plain boss.)*
+
+| variant | trash | boss (`.boss`) | why it differs |
+|---------|-------|----------------|----------------|
+| swift | ×1.7 speed | ×1.35 speed | speed is already the scariest thing a boss can gain — the ram arrives sooner and the reaction window is the real resource |
+| armored | ×2.5 hp | ×1.35 hp | multiplies a pool that is already 31% of the wave; the epithet must not become "wait longer" |
+| regen | 3% max hp/s | **0.5%** max hp/s | the only variant that can make a boss *unkillable* rather than merely long — this is a DPS check, not a wall |
+| shielded | 3 hits | 12 hits | a boss eats hits continuously; 3 charges are invisible on it |
+| volatile | burst r70, heals 30% | unchanged | the burst heals *nearby shapes by their own* max hp, so it does not scale with the boss — and a noble dying into a crowd heal is exactly the tactical event the epithet should be |
+
 ## Weapons (`config.js: WEAPONS`)
 
 *Balance round 2 (2026-07-23, playtest-driven): every weapon EXCEPT bolt and frost
