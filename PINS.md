@@ -267,12 +267,29 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
      human who must also aim.
   3. Frost's 0% is correct — it is a slow, not a damage source.
 - **The real findings:**
-  - **Mines (1.1%) and Caltrops (0.4%) are near-dead**, and it is very likely the same
-    *exposure* problem orbit had: both seed stationary in a band, and shapes mostly die
-    before walking onto them. Orbit was fixed by moving its ring out to where shapes
-    actually die (120-240px); the mine/caltrop seed ring is 120px-to-half-the-field and
-    wants the same measured treatment. **Do not assume — the orbit diagnosis proved a
-    plausible mechanism wrong twice.**
+  - **Mines and Caltrops: diagnosed 2026-07-25, and my own hypothesis was wrong.** I guessed
+    the orbit story (seeded outside where shapes die). Measured, the seed ring is
+    120px-to-half-the-field, which *overlaps* the 120-240px band where 83% of deaths happen.
+    Not a placement-vs-deaths mismatch. What the numbers actually say:
+    - **Mines are capable but never triggered.** Against a crowd standing in the band they
+      do **287 dmg/s**; in a real run they sit at **5.8 of cap 6** for the whole run — a
+      count that high means they are not being consumed. Contribution: ~4 dmg/s.
+    - **Caltrops are being judged by the wrong metric, and that is partly my census's
+      fault.** They deal 21 damage and a 45% slow: they are a *control* tool like frost,
+      so ranking them by damage understates them the way it correctly reports frost at 0%.
+      But they also sit at **25.7 of cap 27**, so the *slow* is not landing either — which
+      is the finding that survives the metric problem.
+  - **Tested one fix, and rejected it for not being good enough:** seeding mines toward a
+    bearing a live shape is actually on (instead of uniform random) **doubles** their damage
+    (6385 → 11766 per run) and does increase consumption. It still leaves them at ~1% of a
+    run. Orbit's fix took it 0% → 19%; this does not clear that bar, so it was measured and
+    NOT landed — a change that doubles a negligible number invites the belief that the
+    problem is solved. The measurement is recorded here so the next attempt starts from it.
+  - **The real question is what these two are FOR.** ADR-0006 deliberately deferred weapon
+    purposes ("taxonomy now, purposes after a playtest under the cap"). Mines that are never
+    stepped on and caltrops that never slow anything are not a tuning problem; they are two
+    weapons whose job has not been decided. **Decide the job, then tune to it** — and note
+    that a control weapon needs a control metric, not this damage census.
   - **Scattergun (5.3%) and Howitzer (4.5%) are the weakest non-dead weapons** — and they are
     *guns*, the category bolt already locks out. So the gun-lockout fix has a second half
     nobody had noticed: even once a rival gun can be drafted, it would be a weak replacement
