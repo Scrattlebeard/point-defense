@@ -22,6 +22,7 @@ export function initUI(G, hooks) {
   $('recBack').addEventListener('click', () => { renderMenu(G); showOnly('menu'); });
   $('techBack').addEventListener('click', () => { renderMenu(G); showOnly(G.returnTo || 'menu'); if (G.returnTo === 'over') renderGameOver(G, G.lastEarned); });
   $('muteBtn').addEventListener('click', () => H.onMute());
+  $('hapticBtn').addEventListener('click', () => H.onHaptics());
   // two-tap reset: arm, then confirm within 4s (app.md "Reset progress")
   let resetArmedUntil = 0;
   $('resetBtn').addEventListener('click', () => {
@@ -57,6 +58,10 @@ export function renderMenu(G) {
   $('menuStats').innerHTML =
     `<span class="shards">◆ ${m.shards}</span> shards · best wave <b>${m.best}</b>`;
   $('muteBtn').textContent = m.sound ? '🔊 SOUND ON' : '🔇 SOUND OFF';
+  // desktop has no vibration motor — hide the control rather than offer a lie
+  const canBuzz = typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function';
+  $('hapticBtn').classList.toggle('hidden', !canBuzz);
+  $('hapticBtn').textContent = m.haptics === false ? '📴 HAPTICS OFF' : '📳 HAPTICS ON';
   $('storageWarn').classList.toggle('hidden', storageOk);
   if (!towerUnlocked(m, m.tower)) m.tower = 'bastion';
 

@@ -594,6 +594,34 @@ schema version lands with stage 2's nested fields — recorded in ADR-0003).
 
 Tuning intent: a first run reaching wave 5–8 pays ~20–40◆ — enough for one node.
 
+## Haptics (`config.js: HAPTICS`)
+
+Phone-first game, so touch is an output channel too (GDD section 8). **It is a
+scarce one, deliberately.** A buzz means *"this happened to you"* — never "you did
+a thing". Only three events carry haptics:
+
+| event | pattern | why it earns the channel |
+|-------|---------|--------------------------|
+| `hurt` | 18ms | the tower took damage. GDD section 2 calls a chip a **signal**, and touch is the one channel that reaches the player even when their eyes are on the far rim |
+| `boss` | 45 / 70 / 45ms | a named boss arrived — a threat that cannot be delegated, arriving off-screen more often than not |
+| `gameover` | 220ms | the run ended |
+
+Everything else is deliberately silent to the hand. `shoot` fires from five call
+sites and `death` fires on every kill; a phone that buzzes for those is unusable and
+battery-hostile, and — the real argument — **if everything buzzes, nothing does.**
+That is Law-Legibility applied to touch: a channel only carries meaning while it
+stays scarce.
+
+**Rate-limited to one buzz per `HAPTIC_MIN_GAP`** (120ms). A surrounded tower takes
+a strike every 0.9s *per besieger*, so without the limit a pile-up machine-guns the
+motor; with it, a pile-up reads as a rumble. Total pattern length is capped by test
+(`HAPTIC_MAX_MS`) so no future event can become a punishment.
+
+Execution lives in `app/audio.js` (`haptic(id)`), which no-ops silently when
+`navigator.vibrate` is absent — that is the *desktop* path, not an edge case, and it
+is test-pinned. Toggled by `meta.haptics`, separate from `meta.sound`: silent-with-
+haptics is a real way to play a phone game in company.
+
 ## Gestures (`gestures.js`)
 
 A trace is `{t0, points: [{x, y, t}], holdEngaged}`. Classification:

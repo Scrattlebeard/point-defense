@@ -6,7 +6,7 @@ import { xpForLevel, shardPayout } from './balance.js';
 
 export function defaultMeta() {
   return {
-    shards: 0, best: 0, tech: [], tower: 'bastion', sound: true,
+    shards: 0, best: 0, tech: [], tower: 'bastion', sound: true, haptics: true,
     seen: { enemies: [], variants: [] }, // bestiary discovery record (core.md)
     scores: [], ach: [],                 // records (core.md "Records")
     totalKills: 0, totalBossKills: 0, totalShards: 0,

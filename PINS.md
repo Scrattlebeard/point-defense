@@ -124,12 +124,25 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
   roughly doubled it (was ~25 runs with salvage bought first). Whether that is the right
   arc is Daniel's call; ADR-0003 already records the curve as provisional. Do **not** inflate
   costs to hit a slogan — decide the target first, then tune to it.
-## Haptics + better sound design
-- **What:** `navigator.vibrate` on tower hit / boss spawn; richer synth (noise bursts for explosions, filter sweeps).
-- **Why:** Phone-first game, big cheap juice win.
-- **Where:** `src/app/audio.js`, hooks already exist at every `sfx()` call site.
-- **Context:** Synth is deliberately minimal one-shot sweeps now; audio.js isolates all of it.
-
+## Better sound design (haptics half landed 2026-07-25)
+- **What (landed):** `navigator.vibrate` on three events only — `hurt`, `boss`, `gameover`
+  (`config.js: HAPTICS`, executed by `audio.js: haptic()`). Rate-limited to one buzz per
+  120ms, its own `meta.haptics` setting, and the menu button hides itself entirely on
+  hardware with no motor rather than offering a control that does nothing.
+- **What remains:** the **richer synth** — noise bursts for explosions, filter sweeps. The
+  audio is still the original one-shot square sweeps, and GDD section 8 still lists that half
+  as unbuilt.
+- **Why it was not done tonight:** sound is the one thing in this project I cannot verify at
+  all. Every other claim this week was checked by measurement or screenshot; a synth tweak
+  can only be checked by ear, and shipping audio I have never heard is exactly the kind of
+  unverified confidence the rest of the work has been avoiding. It wants Daniel at a
+  keyboard, or at minimum a listen before landing.
+- **Where:** `src/app/audio.js` (the `P` pattern table and `sweep`), `core.md` if the event
+  vocabulary changes, GDD section 8.
+- **Context / open judgement calls on the haptics that DID land:** the three chosen events
+  and their patterns (18ms chip, 45/70/45 boss, 220ms death) are first-draft feel, unverified
+  by any hand — nobody has held the phone. The scarcity *rule* is the load-bearing part and
+  should survive; the specific millisecond values are tuning.
 ## Boss signature moves: two built, five deliberately unbuilt
 - **What (landed 2026-07-25):** `BOSS_MOVES` in config.js keyed by boss NAME, executed by
   `runBossMove` in enemies.js (decisions in core, execution in shell). **Sir Cumference:

@@ -5,7 +5,7 @@ import { enemyHpMult, enemySpeedMult, bossHp, enemyMass, BOSS_KNOCK_RESIST } fro
 import { addXp } from '../core/state.js';
 import { dist, edgeSpawn } from '../core/geom.js';
 import { burst, dmgText, shake, flash, announce } from './fx.js';
-import { sfx } from './audio.js';
+import { sfx, haptic } from './audio.js';
 
 const TOWER_R = 24;
 const COMBAT_R = 280; // inertia-age accrual zone (core.md enemyMass)
@@ -135,6 +135,7 @@ function hitTower(G, dmg) {
   shake(G.fx, 7);
   flash(G.fx, 0.22);
   sfx('hurt');
+  haptic('hurt'); // core.md Haptics: a chip is a signal, and touch always reaches
 }
 
 /** Knockback entry point: impulses divide by age-mass; bosses resist ×6 on top

@@ -6,7 +6,7 @@ import { buy } from '../core/tech.js';
 import { WEAPONS, FORMS } from '../core/config.js';
 import { loadMeta, saveMeta } from './meta.js';
 import { makeFx, updateFx, settleFx, announce } from './fx.js';
-import { setMuted, sfx } from './audio.js';
+import { setMuted, setHaptics, sfx, haptic } from './audio.js';
 import { resetWeapons } from './weapons/index.js';
 import { nearestEnemy, spawnEnemy } from './enemies.js';
 import { resetWaveDirector, updateGame } from './game.js';
@@ -24,6 +24,7 @@ const G = {
   traces: new Map(),
 };
 setMuted(!G.meta.sound);
+setHaptics(G.meta.haptics !== false);
 
 const PHONE_ZOOM = 0.75; // app.md "Phone zoom (out)" — more arena on small screens
 const MAX_FIELD = { w: 1400, h: 1000 }; // app.md "Field size cap" — screen size must not be a difficulty setting
@@ -76,6 +77,7 @@ function finishRun() {
   G.mode = 'over';
   clearInput(G);
   sfx('gameover');
+  haptic('gameover');
   ui.renderGameOver(G, earned, rank);
   ui.showOnly('over');
 }
@@ -118,6 +120,7 @@ ui.initUI(G, {
   onMute: () => {
     G.meta.sound = !G.meta.sound;
     setMuted(!G.meta.sound);
+setHaptics(G.meta.haptics !== false);
     saveMeta(G.meta);
     ui.renderMenu(G);
   },

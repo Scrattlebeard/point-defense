@@ -1,8 +1,28 @@
-// Tiny WebAudio synth. One-shot sweeps; no assets, no loops.
+import { HAPTICS, HAPTIC_MIN_GAP } from '../core/config.js';
+// Tiny WebAudio synth + the haptic channel. One-shot sweeps; no assets, no loops.
 // AudioContext is created lazily on the first user gesture (autoplay policy).
 let AC = null;
 export let muted = false;
 export function setMuted(m) { muted = m; }
+
+// ---- Haptics (core.md "Haptics"): the table decides, this only executes ----
+let hapticsOn = true;
+let lastBuzz = -Infinity;
+export function setHaptics(on) { hapticsOn = on; }
+
+/** Fire the pattern for `id`, if there is one. Silently does nothing when
+ *  `navigator.vibrate` is missing — that is the DESKTOP path, i.e. most play, not
+ *  an edge case. `now` is injectable so the rate limit is testable. */
+export function haptic(id, now = (globalThis.performance ? performance.now() : Date.now())) {
+  if (!hapticsOn) return;
+  const pattern = HAPTICS[id];
+  if (pattern === undefined) return;
+  if (now - lastBuzz < HAPTIC_MIN_GAP) return;
+  const nav = globalThis.navigator;
+  if (!nav || typeof nav.vibrate !== 'function') return;
+  lastBuzz = now;
+  try { nav.vibrate(pattern); } catch { /* never let a buzz kill a frame */ }
+}
 
 export function initAudio() {
   if (!AC) {

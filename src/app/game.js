@@ -6,7 +6,7 @@ import { BOSS_NAMES, VARIANTS, BOSS_MOVES } from '../core/config.js';
 import { spawnEnemy, updateEnemies } from './enemies.js';
 import { updateWeapons } from './weapons/index.js';
 import { announce } from './fx.js';
-import { sfx } from './audio.js';
+import { sfx, haptic } from './audio.js';
 
 const SOFT_CAP = 240; // app.md: pause the queue, never drop spawns
 
@@ -54,6 +54,7 @@ function directWaves(G, dt) {
           { sides: 9, color: '#ff3df0', variant: bv });
         G.bossIdx++;
         sfx('boss');
+        haptic('boss');
       } else {
         spawnEnemy(G, kind, rollVariants(S.wave, Math.random));
       }

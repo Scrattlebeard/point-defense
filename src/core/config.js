@@ -227,6 +227,26 @@ export const GENERICS = {
   crit:      { name: 'Critical Systems', desc: '+10% critical hit chance', techLock: true },
 };
 
+// ---------- Haptics (core.md "Haptics") ----------
+// A buzz means "this happened to you", never "you did a thing". The channel is
+// deliberately tiny: shoot fires from five call sites and death fires on every
+// kill, and a phone that buzzes for those is unusable — but the real argument is
+// that if everything buzzes, nothing does. Law·Legibility, applied to touch.
+export const HAPTICS = {
+  hurt: 18,              // a chip: GDD §2 calls it a signal, and touch reaches the
+                         // player even when their eyes are on the far rim
+  boss: [0, 45, 70, 45], // a named boss, arriving off-screen more often than not
+  gameover: 220,         // the run ended
+};
+
+/** Minimum ms between buzzes. A surrounded tower takes a strike every 0.9s PER
+ *  besieger; without this a pile-up machine-guns the motor instead of rumbling. */
+export const HAPTIC_MIN_GAP = 120;
+
+/** Ceiling on any single pattern's total duration — test-pinned so no future
+ *  event can turn the channel into a punishment. */
+export const HAPTIC_MAX_MS = 400;
+
 // ---------- Achievements ----------
 // Pure predicates over (meta, finalRunState|null); S-dependent ones unlock only at
 // run end (core.md "Records"). This list is the single home.
