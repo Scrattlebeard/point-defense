@@ -36,6 +36,11 @@ export function waveTrashHp(w) {
 export const BOSS_HP_SHARE = 0.31;
 export const bossHp = w => (BOSS_HP_SHARE / (1 - BOSS_HP_SHARE)) * waveTrashHp(w);
 
+/** A shape shows an HP sliver when it is beefy *for its wave* (app.md "fill
+ *  encodes allegiance"). Wave-relative on purpose: the old absolute `maxHp > 40`
+ *  went dead by wave 4 once enemyHpMult climbed past it. */
+export const hpBarThreshold = w => 2.4 * ENEMIES.grunt.hp * enemyHpMult(w);
+
 /** Chance that a non-boss spawn rolls a variant. Zero early, capped so lategame stays readable. */
 export const variantChance = w => (w <= 5 ? 0 : Math.min(0.35, 0.015 * (w - 5)));
 

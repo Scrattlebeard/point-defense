@@ -3,6 +3,7 @@
 // effects stay cyan/white; single dark neon theme.
 import { TOWERS, WEAPONS, VARIANTS } from '../core/config.js';
 import { TAU, clamp } from '../core/geom.js';
+import { hpBarThreshold } from '../core/balance.js';
 import { BEAM_REARM } from './weapons/index.js';
 
 const TOWER_R = 24;
@@ -596,12 +597,15 @@ function drawEnemies(G) {
       ctx.shadowBlur = 14;
     }
 
-    // wireframe: enemies are outlines, never fills (app.md "fill encodes allegiance")
-    ctx.lineWidth = 2 + e.r * 0.05;
-    ctx.strokeStyle = e.flash > 0 ? '#ffffff' : e.color;
+    // wireframe: enemies are outlines, never fills (app.md "fill encodes allegiance").
+    // The hit pop is a thickened white stroke + glow — never a fill, or the law is
+    // false on nearly every shape in a busy wave (app.md "hit pop is a stroke").
+    const hit = e.flash > 0;
+    if (hit) { ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 12; }
+    ctx.lineWidth = (2 + e.r * 0.05) * (hit ? 2.1 : 1);
+    ctx.strokeStyle = hit ? '#ffffff' : e.color;
     poly(ctx, e.x, e.y, e.r, e.sides, e.rot);
     ctx.stroke();
-    if (e.flash > 0) { ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'; ctx.fill(); } // hit pop
     ctx.shadowBlur = 0;
 
     if (e.variant === 'armored') {
@@ -650,10 +654,12 @@ function drawEnemies(G) {
     if (e.burnStacks > 0) {
       for (let i = 0; i < Math.min(4, e.burnStacks); i++) {
         const fa = S.time * (2.2 + i * 0.7) + i * 2.4;
-        const lx = e.x + Math.cos(fa) * e.r * 0.6;
-        const ly = e.y + Math.sin(fa) * e.r * 0.6;
+        // on the rim, hot-yellow: the volatile core owns orange-in-the-middle, and
+        // sharing that zone+hue made "medic-bomb or on fire?" a live misread (app.md)
+        const lx = e.x + Math.cos(fa) * e.r * 0.95;
+        const ly = e.y + Math.sin(fa) * e.r * 0.95;
         const hgt = 3 + 3 * ((Math.sin(S.time * (6 + i) + i * 1.7) + 1) / 2);
-        flameLick(ctx, lx, ly, hgt * 1.8, `rgba(255, ${160 + i * 20}, 60, 0.7)`);
+        flameLick(ctx, lx, ly, hgt * 1.8, `rgba(255, ${210 + i * 10}, 120, 0.75)`);
       }
     }
 
@@ -669,8 +675,8 @@ function drawEnemies(G) {
       ctx.globalAlpha = 1;
     }
 
-    // hp sliver for beefy shapes
-    if (e.hp < e.maxHp && (e.boss || e.maxHp > 40)) {
+    // hp sliver for shapes that are beefy FOR THIS WAVE (core.md hpBarThreshold)
+    if (e.hp < e.maxHp && (e.boss || e.maxHp > hpBarThreshold(S.wave))) {
       const w = e.r * 2;
       ctx.fillStyle = 'rgba(10, 13, 21, 0.7)';
       ctx.fillRect(e.x - e.r, e.y - e.r - 8, w, 3);

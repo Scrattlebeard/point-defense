@@ -35,6 +35,25 @@ simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not un
   blades), outline-only wireframe = threats.** Enemy shapes are strokes, never fills —
   the only filled element on an enemy is the volatile variant's core, which is exactly
   the part that explodes. (2026-07-23 playtest direction.)
+  - **The hit pop is a stroke, never a fill** *(fixed 2026-07-25)*. It previously
+    filled the whole polygon white at 30% for 0.08s on every hit — so in a wave-30
+    fight nearly everything was fill-flashing nearly continuously and both halves of
+    the law above were false in play (GDD §8 named this leak in its own status line).
+    The pop is now a thickened white stroke plus a brief glow: same juice, same
+    read, no fill.
+  - **Burn licks live on the rim, in the hot-yellow family** *(fixed 2026-07-25)* —
+    drawn at `r·0.95` in `rgba(255, 210–240, 120)`. They previously drew at `r·0.6`
+    in `rgba(255, 160–220, 60)`, near-identical in zone *and* hue to volatile's
+    `#ff8630` core, so with a flamethrower build "medic-bomb or just on fire?" was a
+    live misread. Zone and hue now both separate them: fire clings to the surface,
+    the volatile core sits inside.
+  - **The hp sliver is wave-relative, not absolute** *(fixed 2026-07-25)* — shown
+    when a shape is beefy *for its wave* (`balance.js: hpBarThreshold`), plus always
+    on bosses. The old gate was `maxHp > 40`, an absolute number against a curve that
+    multiplies every enemy's HP: `enemyHpMult` cleared it by wave 4, so the gate was
+    dead code and every damaged shape carried a bar. Same bug class as the pre-0008
+    `bossHp` and the pre-0009 boss variants — **a constant compared against a growing
+    curve** — and worth watching for elsewhere.
 - **Performance guards:** particle and damage-number pools are capped; enemy count is
   soft-capped (~240) by pausing the spawn queue, never by dropping queued spawns.
 - **Aim feedback:** a single faint dashed aim line from the Point toward the aim

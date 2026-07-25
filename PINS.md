@@ -270,22 +270,21 @@ Numbers are measured (headless spikes over the real sim), not estimated.*
 - **Context:** Watch for this in the first post-cap playtest — if a capped run feels like
   hoping rather than choosing, this is why, and it jumps the queue.
 
-## [phase 3] Legibility errata found in the audit
-- **What:** Three small breaks in the shape/highlight/fill grammar. (1) The white hit-flash
-  fills the whole polygon for 0.08s on every hit (`render.js:604`) — in a wave-30 fight
-  nearly everything is fill-flashing nearly continuously, so "fill = allegiance" and
-  "volatile's core is the only fill" are already false in play. (2) Flame's burn licks draw
-  at r·0.6 in `rgba(255,160-220,60)`, near-identical in zone and hue to volatile's `#ff8630`
-  core — with a flamethrower build, "medic-bomb or just on fire?" is a live misread. (3) The
-  HP sliver is gated on `e.maxHp > 40` (`render.js:673`), which `enemyHpMult` clears by wave
-  4 — the gate is dead code and every damaged shape carries a bar.
-- **Why:** Law·Legibility outranks all three, and the stacking work in phase 3 lands *on top*
-  of this zone: armored and shielded already overlap physically at r+4.75–5.75 in two cool
-  greys, and three of five channels are outer-annulus, so a stacked dart wears concentric
-  rings out to 24px around a 10px triangle. The channel that dies under stacking is
-  **shape = species**, which is the load-bearing one.
-- **Where:** `src/app/render.js` (hit flash, burn licks, hp gate, variant highlights),
-  `core.md` Variants, GDD §5 modifier-channel table.
-- **Context:** Verify all stacked pairs on one silhouette before shipping stacking — that
-  check is already named in the variant-stacking pin; this is what it will find.
-
+## [phase 3] Stacked-highlight legibility is still unverified at depth
+- **What:** The three errata from the audit are FIXED (2026-07-25): the hit flash is a
+  stroke pop not a polygon fill, burn licks moved to the rim in hot-yellow away from
+  volatile's orange core, and the hp sliver gate is wave-relative (`hpBarThreshold`).
+  What remains is the check those fixes were clearing the way for: **verify every stacked
+  highlight pair on one silhouette** before variant stacking ships.
+- **Why:** Armored and shielded already overlap physically at `r+4`-`r+6` in two cool
+  greys, and three of five channels are outer-annulus - so a stacked dart could wear
+  concentric rings out to ~24px around a 10px triangle. The channel that dies under
+  stacking is **shape = species**, the load-bearing one (Law-Legibility).
+- **Where:** `src/app/render.js` variant highlight branches (note: every branch is
+  `e.variant === 'x'` - singular - so stacking rewrites this zone anyway), `core.md`
+  Variants, GDD section 5 modifier-channel table.
+- **Context:** Headless single-frame screenshots verified the *fill law* holds in a live
+  frame (enemies are outlines; chaff carries no bars) but they cannot judge a wave-30
+  read - the shots land at wave 1-2 because the robot clears everything. **A dev hatch
+  that spawns one shape wearing N chosen variants is the cheap tool this needs**, and is
+  worth building as step one of stacking rather than eyeballing it.

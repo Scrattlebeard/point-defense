@@ -75,6 +75,11 @@ prereqs enforced), not exact constants, so tuning stays cheap.
   → "Wave composition"): 0 until the elite debut at wave 14, reaching 0.55 at wave
   54. Species budget share ∝ `cost^mixTilt`, pick weight ∝ `cost^(mixTilt−1)`.
 - `xpForLevel(l) = round(10 + 8(l−1) + 1.2(l−1)²)` — XP needed to go from level l to l+1.
+- `hpBarThreshold(w) = 2.4 · grunt.hp · enemyHpMult(w)` — a shape shows an HP sliver
+  when it is beefy *for its wave* (app.md "fill encodes allegiance"; bosses always
+  show one). ≈ the old absolute `40` at wave 1 by construction (38.4 — deliberately just under, so an armored grunt, at exactly ×2.5, clears it), and unlike it
+  does not go dead as the HP curve climbs. Variants count: an armored grunt is beefy
+  and earns a bar, which is the rule working.
 - `waveTrashHp(w) = waveBudget(w) · E[hp per cost] · enemyHpMult(w)` — the expected
   total HP of a wave's non-boss bodies, where `E[hp per cost]` follows the same mix
   weights `composeWave` uses (Enemies → "Wave composition"). Exists so the boss

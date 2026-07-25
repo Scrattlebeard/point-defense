@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as B from '../src/core/balance.js';
+import { ENEMIES, VARIANTS } from '../src/core/config.js';
 
 test('enemyHpMult is 1 at wave 1 and strictly increasing', () => {
   assert.equal(B.enemyHpMult(1), 1);
@@ -32,6 +33,23 @@ test('xpForLevel is a positive-integer increasing curve', () => {
     assert.ok(Number.isInteger(x) && x > 0);
     assert.ok(B.xpForLevel(l + 1) > x);
   }
+});
+
+test('the hp-bar gate stays meaningful as the HP curve climbs', () => {
+  // the regression: an absolute `maxHp > 40` against a curve that multiplies every
+  // enemy's HP — dead by wave 4, so every damaged shape carried a bar (app.md).
+  // Same bug class as the pre-ADR-0008 bossHp and the pre-0009 boss variants.
+  const hpOf = (id, w) => ENEMIES[id].hp * B.enemyHpMult(w);
+  for (const w of [1, 4, 20, 40, 80]) {
+    const t = B.hpBarThreshold(w);
+    assert.ok(hpOf('grunt', w) < t, `chaff earns a bar at wave ${w} — the gate is dead again`);
+    assert.ok(hpOf('dart', w) < t, `darts earn a bar at wave ${w}`);
+    assert.ok(hpOf('tank', w) > t, `a tank should read as beefy at wave ${w}`);
+    assert.ok(hpOf('elite', w) > t, `an elite should read as beefy at wave ${w}`);
+  }
+  // a variant that genuinely makes chaff tanky flips it — the rule working
+  assert.ok(hpOf('grunt', 20) * VARIANTS.armored.hpMult > B.hpBarThreshold(20),
+    'an armored grunt is beefy and should earn a bar');
 });
 
 test('a boss holds its share of the wave: never decays into the crowd', () => {
