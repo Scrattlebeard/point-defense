@@ -130,12 +130,28 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
 - **Where:** `src/app/audio.js`, hooks already exist at every `sfx()` call site.
 - **Context:** Synth is deliberately minimal one-shot sweeps now; audio.js isolates all of it.
 
-## Boss behaviors beyond the ram
-- **What:** Give later bosses (name list in `config.js: BOSS_NAMES`) one signature move each — e.g. spawn minions, radial dart burst, speed surge at low hp.
-- **Why:** Every 5th wave currently differs only in hp scale; names deserve behaviors.
-- **Where:** `src/app/enemies.js` (boss branch), spec first in `src/core/core.md` Enemies.
-- **Context:** Keep decisions in core (a `BOSS_MOVES` table), execution in shell, per pillar 5.
-
+## Boss signature moves: two built, five deliberately unbuilt
+- **What (landed 2026-07-25):** `BOSS_MOVES` in config.js keyed by boss NAME, executed by
+  `runBossMove` in enemies.js (decisions in core, execution in shell). **Sir Cumference:
+  adds** — shakes 2 darts from his sides every ~6s, which is GDD section 3's canonical
+  ninety seconds verbatim. **The Obtuse One: surge** — +60% speed below 35% hp, so chip
+  damage without commitment becomes the worst option. Moves fire from **wave 10**, leaving
+  the wave-5 noble a clean ram.
+- **What remains:** five names still differ only by HP — Lord Rhombus, Grandmaster Hexley,
+  Polygothra, Marquis de Sides, The Final Vertex. Each wants ONE move posing a distinct
+  focus dilemma; the mechanism is built, so each is now a table entry plus a small branch.
+  Candidate directions (not decided): a radial projectile burst (forces walls/positioning
+  rather than aim), a shielded phase (forces sustained focus over chip), a slow field that
+  punishes standing still, a death-split into two half-bosses.
+- **Why not tonight:** five behaviours is content, and content is cheap to add badly. Each
+  wants its own balance pass against the conductor, and inventing five dilemmas in one go
+  at the end of a night is how you get five variations on "more damage".
+- **Where:** `src/core/config.js` BOSS_MOVES, `src/app/enemies.js` runBossMove, `core.md`
+  Enemies "Boss signature moves", `test/bossmoves.test.mjs`.
+- **Context / watch-list:** adds spawn OUTSIDE the wave budget, like splitter children — so a
+  boss with adds inflates real body counts at depth. Sim-verified only (calibrate median 10
+  in band, conductor holds); whether "the boss shakes and two darts fly out" reads as a
+  dilemma or as noise is a thumbs question.
 ## Weapon icons: remaining consumers (level-up cards + weapons bar shipped 2026-07-24)
 - **What:** Icons now flow via generated `src/app/icons.js` (regen:
   `scripts/icons.mjs`; source `assets/icons/`, provenance in its icons.md).

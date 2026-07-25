@@ -27,6 +27,15 @@ export const BOSS_NAMES = [
   'THE FINAL VERTEX',
 ];
 
+// Boss signature moves (core.md Enemies). The move belongs to the NAME, so a
+// recirculated noble brings its signature back. Decisions here, execution in
+// enemies.js (pillar 5). Moves fire only from a boss's SECOND appearance — the
+// wave-5 noble stays the clean onboarding wall the calibrate band is tuned to.
+export const BOSS_MOVES = {
+  'SIR CUMFERENCE': { id: 'adds', every: 6, count: 2, child: 'dart' },
+  'THE OBTUSE ONE': { id: 'surge', belowHp: 0.35, spdMult: 1.6 },
+};
+
 // ---------- Variants: the color/highlight grammar ----------
 // Shape says what it is; highlight says what's special (README pillar 3).
 // Debut order (minWave): mechanically simplest first; volatile last — its lesson

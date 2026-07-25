@@ -1,6 +1,6 @@
 // Enemy entities: spawning (base × variant), movement, contact, damage/death
 // side-effects. Rules and numbers come from core; this file executes them.
-import { ENEMIES, VARIANTS, SPLIT } from '../core/config.js';
+import { ENEMIES, VARIANTS, SPLIT, BOSS_MOVES } from '../core/config.js';
 import { enemyHpMult, enemySpeedMult, bossHp, enemyMass, BOSS_KNOCK_RESIST } from '../core/balance.js';
 import { addXp } from '../core/state.js';
 import { dist, edgeSpawn } from '../core/geom.js';
@@ -41,6 +41,9 @@ export function spawnEnemy(G, kind, variants = null, x = null, y = null) {
     x, y, r: def.r,
     hp, maxHp: hp,
     spd: def.spd * enemySpeedMult(S.wave) * prod('spdMult') * laneMult,
+    // spawn-time speed, kept so a move can scale it without recomputing the
+    // lane normalisation baked in above (core.md "Spawn geometry")
+    baseSpd: def.spd * enemySpeedMult(S.wave) * prod('spdMult') * laneMult,
     dmg: def.dmg,
     xp: Math.round(def.xp * prod('xpMult')),
     rot: Math.random() * Math.PI * 2,
@@ -52,6 +55,7 @@ export function spawnEnemy(G, kind, variants = null, x = null, y = null) {
     kbx: 0, kby: 0, contactCd: 0, flash: 0, orbHit: 0, age: 0, wallAtk: 0,
     // damage attribution (core.md Enemies): the shell owns these, render reads them
     sieging: false, strike: 0,
+    moveId: null, moveT: 0, // boss signature move (core.md), assigned by game.js
     beamHeat: 0, beamTick: 0,
     burnStacks: 0, burnLeft: 0, burnTick: 0, // flamethrower DoT (core.md flame row)
     calSlowT: 0, calSlow: 0, // caltrop prick (core.md caltrop row)
@@ -229,6 +233,30 @@ export function damageEnemy(G, e, raw, { noMult = false, silent = false } = {}) 
   return dmg;
 }
 
+/** Execute a boss's signature move. The BOSS_MOVES table owns every number. */
+function runBossMove(G, e, dt) {
+  const mv = Object.values(BOSS_MOVES).find(m => m.id === e.moveId);
+  if (!mv) return;
+  if (mv.id === 'adds') {
+    e.moveT -= dt;
+    if (e.moveT <= 0) {
+      e.moveT = mv.every;
+      for (let i = 0; i < mv.count; i++) {
+        const a = e.rot + (i / mv.count) * Math.PI * 2;
+        spawnEnemy(G, mv.child, null, e.x + Math.cos(a) * (e.r + 8), e.y + Math.sin(a) * (e.r + 8));
+      }
+      burst(G.fx, e.x, e.y, e.color, 16, 200, 0.4, 2);
+      shake(G.fx, 4);
+      sfx('boss');
+    }
+  } else if (mv.id === 'surge') {
+    // a wounded boss is a FASTER boss: chip damage without commitment is the
+    // worst option, which is the focus dilemma the move exists to pose
+    const surging = e.hp < e.maxHp * mv.belowHp;
+    e.spd = e.baseSpd * (surging ? mv.spdMult : 1);
+  }
+}
+
 export function updateEnemies(G, dt) {
   const S = G.S;
   for (const e of S.enemies) {
@@ -245,6 +273,9 @@ export function updateEnemies(G, dt) {
     if (e.regenPct && e.hp < e.maxHp) {
       e.hp = Math.min(e.maxHp, e.hp + e.maxHp * e.regenPct * dt);
     }
+    // boss signature move (core.md "Boss signature moves"): the table decides,
+    // this only executes. Movement multipliers apply before the aura slow.
+    if (e.moveId) runBossMove(G, e, dt);
     // frost aura slow, resisted by age-mass (core.md enemyMass)
     let slow = 1;
     if (G.aura && d < G.aura.r + e.r) {

@@ -289,6 +289,29 @@ boss waves (multiples of 5) so introduction banners and boss-name banners don't
 land together — hence shielded at 21, not 20. (Ordering intent: mechanically
 simplest first; volatile last because its lesson costs the most to learn.)
 
+**Boss signature moves (`config.js: BOSS_MOVES`).** A boss is a *focus-forcer*
+(GDD §5 Law·Bosses), and a threat that only rams differs from the last one by an HP
+number. Each **name** carries a move — the move belongs to the character, so a
+recirculated noble brings its signature back with it. Decisions live in the table;
+`enemies.js` only executes (pillar 5).
+
+| boss | move | the dilemma it poses |
+|------|------|----------------------|
+| Sir Cumference | **adds** — shakes 2 darts out of its sides every ~6s | split your aim or let leakers through. This is GDD §3's canonical ninety seconds verbatim: *"Sir Cumference shakes himself and more enemies fly out from his sides"* — the one boss behaviour the target experience explicitly names |
+| The Obtuse One | **surge** — +60% speed below 35% hp | finish it or buy time; a wounded boss is a *faster* boss, so chip damage without commitment is the worst option |
+| *(the other five)* | ram only, for now | deliberately unbuilt — see PINS. Five more moves is content, and content is cheap to add badly |
+
+*(Added 2026-07-25. **Moves fire from wave 10 onward**, so only the very first noble
+— the wave-5 onboarding wall, where ~45% of fresh runs end — is a clean ram. One
+thing at a time: that fight teaches what a boss *is*, and every boss after it teaches
+what a boss can *do*. **The gate is a design choice, not a balance necessity, and the
+distinction is measured:** running moves from the first appearance leaves the
+fresh-run median at 8, comfortably in band, twice — so nothing forced this. Recorded
+because the honest reason is pacing, and a "for balance" justification would have
+been a made-up one. Note the fit with GDD §3's canonical ninety seconds: it names
+Sir Cumference shaking out adds in a run that already has regen and armored elites,
+which puts it at his recirculation around wave 40 — the scene the table reproduces.)*
+
 **Boss variants:** bosses roll no variants until the name roster recirculates
 (boss #8, wave 40). From then on, every returning noble carries a **guaranteed**
 variant from the debuted pool, announced as an epithet — *"SIR CUMFERENCE, THE

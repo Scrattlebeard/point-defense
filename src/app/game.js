@@ -2,7 +2,7 @@
 // healing, payout) come from core; this file only sequences them in time.
 import { composeWave, rollVariants, pickVariant } from '../core/waves.js';
 import { waveCleared } from '../core/state.js';
-import { BOSS_NAMES, VARIANTS } from '../core/config.js';
+import { BOSS_NAMES, VARIANTS, BOSS_MOVES } from '../core/config.js';
 import { spawnEnemy, updateEnemies } from './enemies.js';
 import { updateWeapons } from './weapons/index.js';
 import { announce } from './fx.js';
@@ -42,6 +42,11 @@ function directWaves(G, dt) {
         const bv = recirc ? pickVariant(S.wave, Math.random) : null;
         spawnEnemy(G, 'boss', bv);
         const name = BOSS_NAMES[G.bossIdx % BOSS_NAMES.length];
+        // signature move, from this noble's SECOND appearance onward (core.md)
+        const bossEnt = S.enemies[S.enemies.length - 1];
+        if (bossEnt && S.wave >= 10) {
+          bossEnt.moveId = BOSS_MOVES[name]?.id || null;
+        }
         announce(G.fx,
           bv ? `${name}, THE ${VARIANTS[bv].name.toUpperCase()}` : name,
           '#ff3df0',
