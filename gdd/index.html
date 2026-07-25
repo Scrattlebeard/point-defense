@@ -340,6 +340,17 @@ rather than collection. <span class="badge tentative">TENTATIVE</span> on the ex
 the budget-with-ceilings <em>shape</em> is ratified
 (<a href="../adr/0006-weapon-taxonomy.md">ADR-0006</a>).</p>
 
+<p class="status"><span class="badge open">OPEN — MEASURED</span> The ceiling currently makes
+<strong>every gun but bolt unreachable</strong>. Measured over 60 mature-account runs:
+Scattergun, Howitzer and the Repeater are offered <strong>0%</strong> of the time, because all
+four towers start with bolt, so the one gun slot is occupied at t=0 in every run that has ever
+been played. The same runs fill all six slots by <strong>level ~8.6 of ~37</strong> — the build
+is decided in about the first ninety seconds. ADR-0006 anticipated pool <em>dilution</em>; this
+is <em>lockout</em>, and it is what "randomness survives in tempo, dies in identity" looks like
+when it goes wrong. The fix is already sanctioned — a chassis may open with a different gun
+(<a href="../adr/0007-laws-bind-the-default.md">ADR-0007</a>) — but which route to take is a
+design call; see <code>PINS.md</code>.</p>
+
 <p><strong>The slot count is tower-bent, never bought.</strong> A "+1 slot" purchase would
 be the best node in the game and would un-scarce the thing scarcity is holding up. Towers
 bend the grammar instead — the gunslinger's 2 guns + 2 autos is a chassis, not a shop item

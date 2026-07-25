@@ -296,18 +296,41 @@ Numbers are measured (headless spikes over the real sim), not estimated.*
   with Law·QoL-milestone — this is arguably the flagship milestone grant rather than a
   purchase, which would mean retiring `head`/`head2` as buyable nodes.
 
-## [phase 4] Pool dilution: weapon priority moves from TENTATIVE to urgent
-- **What:** GDD §7's weapon-priority mechanic — deterministic slot resolution, so when a
-  hold-weapon offer appears it is *your* flamethrower. Zero code surface today.
-- **Why:** ADR-0006's six-slot budget against ~20 unlocked weapons means the specific weapon
-  a build wants may simply never be offered. The cap does not create the problem, it reveals
-  it — build identity dies to draw luck exactly when scarcity is supposed to be creating it.
-  GDD: "randomness survives in tempo, dies in identity."
-- **Where:** new pre-run loadout surface (`src/app/ui.js` + meta), `state.js` levelChoices,
-  `core.md`, GDD §7 (badge moves off TENTATIVE when the shape firms up).
-- **Context:** Watch for this in the first post-cap playtest — if a capped run feels like
-  hoping rather than choosing, this is why, and it jumps the queue.
-
+## [phase 4] MEASURED: the slot budget makes every gun but bolt dead content
+- **What:** measured 2026-07-25 over 60 mature-account runs (every lattice node owned,
+  robot picks). The pin below used to say "watch for this in playtest" — it does not need
+  watching, it needs a decision. Numbers:
+  - **Guns are offered 0% of the time.** `scatter` 0%, `heavy` 0%, `burst` 0%. Not rare —
+    *never*.
+  - **All six slots fill by level ~8.6, in 60 runs out of 60**, while runs reach level ~37.
+    So the build is decided in roughly the first 90 seconds and the remaining ~28 level-ups
+    can only upgrade what luck already handed you.
+  - Distinct weapons ever offered as new: **10.8 of 21**.
+- **Why the guns are at zero, and it is structural, not luck:** ADR-0006's ceiling says a
+  category held by a *different* owned weapon locks its rivals out of the draft
+  (test-pinned, correct). **Every one of the four towers starts with bolt.** So the gun slot
+  is occupied at t=0 in every run that has ever been played, and Scattergun, Howitzer and
+  the Repeater form-pilot can never be drawn by anyone. Two individually-correct decisions
+  compose into dead content: ADR-0006 anticipated *dilution*, not *lockout*.
+- **The fix is already sanctioned in writing, which is why this is a decision and not a
+  bug report.** ADR-0006 Decision 4: *"A chassis that opens with a Howitzer is a legible
+  identity, and the gun slot is only interesting if something can occupy it besides bolt."*
+  ADR-0007 Decision 1: a tower may open with a different gun, or none. Three candidate
+  routes, not mutually exclusive:
+  1. **Tower loadout diversity** — give one unlockable tower a different starting gun. The
+     tower IS the unlock (core.md Towers), so it needs no lattice change. Cheapest, and it
+     converts dead content into tower identity, which is what towers are for.
+  2. **Weapon priority** (GDD section 7, the original subject of this pin) — a pre-run
+     loadout surface that fixes slot identity so the draft offers *your* gun.
+  3. **Let a rival gun be offered as a REPLACEMENT** rather than an addition — a swap card.
+     New mechanic, most expensive, but the only one that lets a build change its mind
+     mid-run, and it would also loosen the level-8.6 lock-in above.
+- **Where:** `config.js` TOWERS (route 1), `state.js` levelChoices (route 3), new pre-run
+  surface + `core.md`/GDD section 7 (route 2). The lockout itself is pinned by
+  `test/taxonomy.test.mjs` "gun ceiling" — that test is correct and should stay.
+- **Context:** I did not pick a route. Re-identifying a tower is design, and the measurement
+  is the thing worth handing over; the reproduction is `scratchpad/dilution.mjs`-shaped —
+  run mature-account sims, record which weapons are ever OFFERED (not taken).
 ## [phase 3] Stacked legibility on a real phone (the plate says yes; thumbs haven't)
 - **What:** Variant stacking shipped 2026-07-25 with an annulus allocator (outer channels
   claim successive slots) and an armored contrast fix (a dark backing stroke — it was the
