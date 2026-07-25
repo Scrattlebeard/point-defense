@@ -224,6 +224,22 @@ DART — fast and fragile" / "NEW SPECIMEN: REGEN — heals 3% max HP per second
 The banner repeats each run by design — it's a tutorial beat, not a trophy; the
 run-scoped record lives in `S.introduced`.
 
+**A debut is guaranteed, not hoped for.** On the wave a variant's `minWave` names,
+`composeWave` marks one non-boss spawn as its **debut** (`plan.debutVariant` +
+`plan.debutAt`; core decides both what and where, the director only executes). That
+specimen wears **exactly** that modifier — never a stack, never a second roll on top
+— because a debut is a teaching beat and the whole point is to show one new thing
+cleanly.
+
+*(Added 2026-07-25. Before this, a debut was just the first wave on which the variant
+became **eligible**, at the ordinary `variantChance` roll — so it fired when the dice
+allowed. Measured over 4000 waves: swift's nominal wave-6 debut actually happened
+that wave in **53%** of runs. **A tutorial beat that fires "usually" is not a
+tutorial beat** — half of all players met their first modified shape at some
+unannounced later moment, or as a nasty surprise mid-fight. The variant may of course
+also roll normally on other spawns in the same wave; the guarantee is a floor, not a
+cap.)*
+
 **The regime change announces itself.** The first *stacked* shape of a run (two or
 more modifiers on one body, so from wave 40 — Variants → "Stacking") fires its own
 introduction: **"MODIFIERS ARE COMPOUNDING"**, carrying the actual stacked specimen

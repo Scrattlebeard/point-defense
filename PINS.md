@@ -290,15 +290,11 @@ Numbers are measured (headless spikes over the real sim), not estimated.*
   4-5-6 (tank, boss, swift) — squarely where ~45% of fresh runs die — so peak
   content-firehose still coincides with peak difficulty wall. Spreading those is a real
   onboarding improvement and is independent of everything above.
-- **Also unresolved:** debut waves are **stochastic, not deterministic**. Swift's nominal
-  wave-6 debut fires that wave in **53%** of runs — re-measured 2026-07-25 over 4000 waves
-  (~49 spawns x a 1.5% roll). It was ~45% when first audited; cost-weighted composition put
-  more bodies on the field and moved it, which is itself the lesson: an inherited number
-  drifts when the system under it changes. So the first modifier beat is a coin flip rather
-  than a beat. The spec states debut waves as if fixed. Either pin
-  the first sighting (force the debut variant onto one spawn in its debut wave) or state
-  the slip honestly in `core.md`. Pinning it is probably right — a tutorial beat that
-  fires "usually" is not a tutorial beat.
+- **RESOLVED 2026-07-25:** debut waves were **stochastic** — swift's nominal wave-6 debut
+  fired that wave in 53% of runs (re-measured over 4000 waves; it was ~45% when first audited
+  and drifted when cost-weighted composition added bodies — an inherited number expires when
+  the system under it changes). Now `composeWave` marks one non-boss spawn per debut wave to
+  carry the variant, wearing it alone. All five debuts measured at **100%**.
 - **Where:** `config.js` ENEMIES.minWave + VARIANTS.minWave, `waves.js` rollVariants (for
   a forced first sighting), `core.md` Introductions.
 - **Context:** Do NOT invent new species past 23 to fill 24-39 — that is content ahead of

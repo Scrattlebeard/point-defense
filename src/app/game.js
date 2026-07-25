@@ -56,7 +56,10 @@ function directWaves(G, dt) {
         sfx('boss');
         haptic('boss');
       } else {
-        spawnEnemy(G, kind, rollVariants(S.wave, Math.random));
+        // the debut specimen wears exactly its modifier — a teaching beat shows
+        // one new thing cleanly (core.md Introductions)
+        const isDebut = wd.plan.debutVariant !== null && wd.idx - 1 === wd.plan.debutAt;
+        spawnEnemy(G, kind, isDebut ? [wd.plan.debutVariant] : rollVariants(S.wave, Math.random));
       }
       wd.spawnT += wd.plan.interval;
     }

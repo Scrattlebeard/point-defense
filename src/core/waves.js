@@ -23,7 +23,16 @@ export function composeWave(w, rng) {
   }
   const boss = w % 5 === 0;
   if (boss) spawns.push('boss');
-  return { spawns, interval: spawnInterval(w), boss };
+  // A debut is guaranteed, not hoped for (core.md Introductions): on the wave a
+  // variant's minWave names, one non-boss spawn is marked to carry it. Core picks
+  // both the modifier and the body; the director only executes. Before this a
+  // debut was merely the first ELIGIBLE wave, so swift's wave-6 debut actually
+  // happened that wave in 53% of runs — a tutorial beat that fires "usually".
+  const debutVariant = Object.keys(VARIANTS).find(id => VARIANTS[id].minWave === w) || null;
+  const debutAt = debutVariant && spawns.length
+    ? Math.floor(rng() * spawns.filter(id => id !== 'boss').length)
+    : null;
+  return { spawns, interval: spawnInterval(w), boss, debutVariant, debutAt };
 }
 
 /** Uniform pick from the debuted variant pool (null if none has debuted). */
