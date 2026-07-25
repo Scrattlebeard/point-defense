@@ -56,7 +56,12 @@ jobs:
           npm run build
           mkdir -p site
           # dist/ is multi-file since the PWA manifest (README "Deployment")
-          cp dist/index.html dist/manifest.webmanifest dist/icon-*.png site/
+          cp dist/index.html site/
+          # Optional artifacts: a channel head may predate them (README
+          # "Deployment"). index.html is the only guaranteed one.
+          if [ -e dist/manifest.webmanifest ]; then
+            cp dist/manifest.webmanifest dist/icon-*.png site/
+          else echo "::notice::PWA assets absent on this channel head - index.html only"; fi
       - name: beta channel (beta, gated)
         continue-on-error: true
         run: |
@@ -74,7 +79,12 @@ jobs:
           else echo "::notice::conductor gate absent on this channel head - skipped"; fi
           npm run build
           mkdir -p site/beta
-          cp dist/index.html dist/manifest.webmanifest dist/icon-*.png site/beta/
+          cp dist/index.html site/beta/
+          # Optional artifacts: a channel head may predate them (README
+          # "Deployment"). index.html is the only guaranteed one.
+          if [ -e dist/manifest.webmanifest ]; then
+            cp dist/manifest.webmanifest dist/icon-*.png site/beta/
+          else echo "::notice::PWA assets absent on this channel head - index.html only"; fi
       - name: dev channel (dev, build only)
         continue-on-error: true
         run: |
@@ -86,7 +96,12 @@ jobs:
           npm ci
           npm run build
           mkdir -p site/dev
-          cp dist/index.html dist/manifest.webmanifest dist/icon-*.png site/dev/
+          cp dist/index.html site/dev/
+          # Optional artifacts: a channel head may predate them (README
+          # "Deployment"). index.html is the only guaranteed one.
+          if [ -e dist/manifest.webmanifest ]; then
+            cp dist/manifest.webmanifest dist/icon-*.png site/dev/
+          else echo "::notice::PWA assets absent on this channel head - index.html only"; fi
       - name: gdd (dev head - the living design doc)
         continue-on-error: true
         run: |

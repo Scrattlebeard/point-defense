@@ -30,6 +30,21 @@ test('every gate is guarded against being absent from a channel head', () => {
   }
 });
 
+test('optional build artifacts are never copied unconditionally', () => {
+  // dist/index.html is the only artifact every channel head is guaranteed to
+  // produce. The PWA manifest and icons postdate prod's build.mjs — copying them
+  // blind failed the run immediately after the gate fix: same bug, different noun.
+  const marker = 'dist/manifest.webmanifest'; // the PWA set ships together
+  const copies = yml.split('\n').filter(l => /^\s*cp\s/.test(l) && l.includes(marker)).length;
+  const guards = [...yml.matchAll(/\[\s*-[ef]\s+dist\/manifest\.webmanifest\s*\]/g)].length;
+  assert.ok(copies > 0, 'expected the PWA assets to be copied somewhere');
+  assert.ok(
+    guards >= copies,
+    `${copies} copies of the PWA assets but only ${guards} existence guards — a head ` +
+    `that does not build them fails the step, and on prod that blocks the whole deploy`,
+  );
+});
+
 test('a missing gate is skipped loudly, never silently', () => {
   // A skip nobody can see in the log is indistinguishable from a gate that passed.
   const notices = [...yml.matchAll(/::notice::/g)].length;

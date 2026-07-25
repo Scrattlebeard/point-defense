@@ -149,19 +149,28 @@ deployed from branches — not separate repos):
   and because the whole sweep costs ~1s, flake resistance is nearly free; a
   persistent boundary-flake means the band or the trial count needs an explicit
   decision, not a re-run-until-green.
-- **A gate a channel's head does not carry cannot be run against it.** Every run
-  assembles all channels from their branch heads, so the prod job checks out a
-  commit that may predate a gate script the workflow names. Each gate invocation
-  is therefore wrapped in an existence check and **skipped loudly** (a GitHub
-  `::notice::`) when the script is absent from that channel's tree. This is not a
-  loosening: a gate is a property of the commit it guards, and prod's commit was
-  gated by whatever existed when `scripts/promote` shipped it. The alternative
-  semantics — hard-fail — means **adding any new gate retroactively bricks the
-  whole site** until prod is promoted, which is what happened: wiring the
-  conductor gate in on 2026-07-24 broke `scripts/conductor.mjs` resolution on
-  prod's older head and, because a prod failure blocks the deploy outright, took
-  the dev channel down with it for **20 consecutive runs / 11 hours**. Pinned by
-  `test/deploy.test.mjs`, which fails if a gate is invoked unguarded.
+- **The workflow lives on one branch and runs against four heads — so it may
+  name nothing an older head lacks.** Every run assembles all channels from their
+  branch heads, and the workflow file comes from the *pushed* branch, so the prod
+  job routinely checks out a commit older than the workflow driving it. Anything
+  the workflow names — a gate script, a build artifact — may therefore be absent.
+  Every such reference is wrapped in an existence check and **skipped loudly** (a
+  GitHub `::notice::`), never silently. Two classes exist today, both learned the
+  hard way on 2026-07-24/25:
+  - **Gate scripts.** Wiring the conductor gate in broke `scripts/conductor.mjs`
+    resolution on prod's older head; because a prod failure blocks the deploy
+    outright, the dev channel rode down with it for **20 consecutive runs / 11
+    hours**. Skipping is not a loosening: a gate is a property of the commit it
+    guards, and prod's commit was gated by whatever existed when
+    `scripts/promote` shipped it. Hard-fail semantics mean **adding any new gate
+    retroactively bricks the whole site** until prod is promoted.
+  - **Build artifacts.** The PWA manifest and icons postdate prod's
+    `scripts/build.mjs`, so copying them unconditionally failed the *next* run
+    after the gate fix — same bug, different noun. `dist/index.html` is the only
+    artifact every head is guaranteed to produce; everything else is optional.
+  Pinned by `test/deploy.test.mjs`. **When adding anything to this workflow, ask
+  whether prod's head has it** — the answer is usually no, because prod is
+  promoted rarely and by hand.
 - **Push ≠ deploy.** `git push origin main:dev` succeeding says nothing about
   whether the site updated; the run can fail afterwards for reasons that have
   nothing to do with the push. Verify with `gh run list` — the 11-hour outage
