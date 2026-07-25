@@ -47,6 +47,15 @@ simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not un
     `#ff8630` core, so with a flamethrower build "medic-bomb or just on fire?" was a
     live misread. Zone and hue now both separate them: fire clings to the surface,
     the volatile core sits inside.
+  - **A besieger telegraphs its strike** *(2026-07-25)*. A shape holding the rim
+    (`e.sieging`, core.md Enemies) draws a **wind-up**: in the last ~0.25s of its
+    strike cadence a short bright spur grows from its inner edge toward the Point,
+    and at the strike itself (`e.strike`) it pops white and throws its burst along
+    that line. Before this, a besieger was visually identical to a shape merely
+    standing near the tower, so with several on the rim "who is hurting me" was
+    unreadable and the generic tower shake was the only feedback. The wind-up is
+    the load-bearing half — a tell that arrives *before* the damage is what makes
+    the threat answerable at all.
   - **Stacked highlights allocate annulus slots** *(2026-07-25, with variant
     stacking)*. Three of the five modifier channels live outside the silhouette, and
     two of them — armored's thick outline and shielded's rotating arcs — sat at fixed

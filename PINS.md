@@ -70,21 +70,27 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
 - **Context:** GitHub Pages hosting stays static throughout — no server of ours at
   any step. Discussed 2026-07-24 (chat); Daniel: "put a pin in it."
 
-## Siege strike readability (follow-up to the 2026-07-24 besiege rework)
-- **What:** Besiegers (core.md Enemies) currently strike with only a small particle
-  burst + the generic tower shake/flash — consider a telegraph (wind-up lunge, or a
-  strike flash on the attacker) so "who is hurting me" reads at a glance when several
-  shapes hold the rim. Also playtest the pile-up feel: a surrounded tower now takes
-  N×dmg/0.9s sustained instead of N one-shot hits — does death read as a siege lost
-  or as an abrupt melt?
-- **Why:** Kamikaze deaths were self-announcing (attacker vanished); a static besieger
-  is easy to misread as harmless. Damage attribution is a legibility pillar elsewhere
-  (flame's watch-list entry, same file).
-- **Where:** `src/app/enemies.js` contact branch, `render.js` if a lunge/telegraph is
-  drawn; spec in `core.md` Enemies.
-- **Context:** Landed sim-verified only (calibrate in band, median 8). Daniel +
-  playtester are the feel authority — first dev-channel playtest decides.
-
+## Siege pile-up feel — the telegraph landed, the death shape still needs thumbs
+- **What (landed 2026-07-25):** besiegers now telegraph. `e.sieging` and `e.strike` are
+  explicit sim state (the shell owns the fact, the view reads it), and a **collapsing red
+  dashed ring** tightens onto an attacker through the last ~0.28s of its cadence before it
+  pops. Verified on the new `?specimen=siege` plate: with six identical shapes on the rim
+  you can now tell which one is about to hit you, which was impossible before.
+- **Design note worth keeping:** the first attempt drew a spur pointing *at the Point* —
+  semantically right ("this thing is stabbing you"), visually wrong, because it lands in the
+  busiest pixels on screen (tower glow, hp arc, the other besiegers). Brightening the
+  attacker's outline was also rejected: white-and-thick already means "this took damage".
+  The channel had to be one nothing else uses — red, dashed, transient, around the shape.
+- **What remains, and it needs thumbs not a sim:** the *pile-up feel*. A surrounded tower
+  takes N x dmg / 0.9s sustained instead of N one-shot hits — does death read as a siege
+  lost, or as an abrupt melt? Related and still open: the measured death shape is a median
+  40s bleed of which only ~6s is the drowning; the level-up heal cut invoicing 34s -> 19s
+  but did not fix it, and this telegraph is the *attribution* half of the same problem.
+  Whether attribution alone makes a chip death feel earned is exactly the thing a sim
+  cannot answer.
+- **Where:** `src/app/enemies.js` (sieging/strike state), `render.js` (the ring),
+  `core.md` Enemies, app.md "A besieger telegraphs its strike", `test/siege.test.mjs`,
+  `?specimen=siege`.
 ## Lattice layout: probably back to radial web (GDD session, 2026-07-24)
 - **What:** Daniel, during GDD vision talk: "tech tree should probably go back to radial web." The radial defense-grid metaphor is part of the visual language (radiation from the Point); ADR-0005 moved the lattice to horizontal rectilinear, trading metaphor for scroll ergonomics.
 - **Why:** The GDD-level visual language (radials, Tron/cyber geometry) outranks screen ergonomics if a workable radial rendering exists.

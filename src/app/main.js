@@ -202,6 +202,10 @@ if (specimenMatch) {
     combos = arg.split(',').map(c => c.split('+').filter(Boolean));
   }
   const kind = (location.search.match(/kind=(\w+)/) || [])[1] || 'dart';
+  // ?specimen=siege — the strike telegraph staged around the rim, one shape per
+  // phase of the 0.9s cadence plus one mid-strike. The tell is a ~0.25s window,
+  // so a live screenshot almost always lands in the quiet part of the cycle;
+  // this is the only way to actually look at it (app.md "A besieger telegraphs").
   startRun();
   G.S.wave = 45; // past the regime wave, so the stacks are honest ones
   // suppress the tutorial layer BEFORE spawning: intro banners and their dashed
@@ -209,6 +213,25 @@ if (specimenMatch) {
   G.S.introduced.variants = new Set(V);
   G.S.introduced.enemies = new Set(['grunt', 'dart', 'tank', 'splitter', 'elite', 'boss']);
   G.S.introduced.stacked = true; // the regime beat too — this is a plate, not a run
+  if (arg === 'siege') {
+    // the strike telegraph staged around the rim: one shape per phase of the
+    // 0.9s cadence, plus one caught mid-blow. The tell is a ~0.25s window, so a
+    // live screenshot almost always lands in the quiet part of the cycle — this
+    // is the only way to actually look at it (app.md "A besieger telegraphs").
+    const phases = [0.9, 0.6, 0.35, 0.2, 0.1, 0];
+    phases.forEach((cd, i) => {
+      const a = -Math.PI / 2 + (i / phases.length) * Math.PI * 2;
+      const e = spawnEnemy(G, kind, null, G.cx, G.cy - 200);
+      e.spd = 0;
+      const rim = e.r + 24;
+      e.x = G.cx + Math.cos(a) * rim;
+      e.y = G.cy + Math.sin(a) * rim;
+      e.sieging = true;
+      e.contactCd = cd;
+      if (cd === 0) e.strike = 1;
+    });
+    G.frozen = true;
+  } else {
   const cols = Math.ceil(Math.sqrt(combos.length * (G.W / G.H) * 1.6)) || 1;
   const rows = Math.ceil(combos.length / cols);
   combos.forEach((combo, i) => {
@@ -219,6 +242,7 @@ if (specimenMatch) {
     e.spd = 0;
   });
   G.frozen = true;
+  }
 }
 
 // Dev/smoke-test hatches: ?autostart skips the menu; ?turbo pre-simulates ~40s

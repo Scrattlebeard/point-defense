@@ -130,6 +130,18 @@ prereqs enforced), not exact constants, so tuning stays cheap.
 
 ## Enemies (`config.js: ENEMIES`)
 
+**A besieging shape is explicit state, not a distance test.** While a shape holds
+the rim it carries `e.sieging = true`, and each strike sets a decaying `e.strike`
+marker. Both exist so the renderer can answer *"who is hurting me?"* without
+re-deriving geometry — the shell owns the fact, the view reads it (pillar 5).
+*(2026-07-25: damage attribution was the missing half of the death-shape problem.
+Measured the same night, a run bleeds a median 40s of which only ~6s is the actual
+drowning; a besieger announced itself with a small particle burst and a generic
+tower shake, so several shapes on the rim were indistinguishable and "your line has
+a hole" — the signal GDD §2 says a chip is — never arrived. The **wind-up telegraph**
+matters more than the hit flash: a tell that fires ~0.25s **before** the strike is
+what makes the threat answerable, and an unanswerable chip is bookkeeping.)*
+
 Base shapes; on reaching the Point they **besiege** it: stop at the rim and strike
 for `dmg` every 0.9s (first strike on arrival) — same siege grammar as the force
 wall ("shapes in contact attack it"). Knockback still applies, so CC can shove a

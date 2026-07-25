@@ -656,6 +656,35 @@ function drawEnemies(G) {
       slot += 5;
     }
 
+    // Siege telegraph (app.md "A besieger telegraphs its strike"): a shape holding
+    // the rim grows a bright spur toward the Point through the last of its cadence,
+    // and pops white on the strike itself. The wind-up is the load-bearing half —
+    // a tell that arrives with the damage cannot be answered.
+    if (e.sieging || e.strike > 0) {
+      // A ring that COLLAPSES onto the attacker as its strike nears, then pops.
+      // Drawn around the shape, never toward the Point: an inward spur lands in
+      // the busiest pixels on screen (tower glow, hp arc, the other besiegers)
+      // and reads as noise. Red-orange and transient, so it cannot be confused
+      // with armored's static grey plate or shielded's rotating blue arcs, nor
+      // with the white hit-flash, which already means "this took damage".
+      const wind = e.sieging ? clamp(1 - e.contactCd / 0.28, 0, 1) : 0;
+      if (wind > 0.01 && e.strike <= 0) {
+        ctx.strokeStyle = `rgba(255, 92, 108, ${0.25 + 0.6 * wind})`;
+        ctx.lineWidth = 1 + 2 * wind;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, e.r + 14 - 11 * wind, 0, TAU);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      if (e.strike > 0) { // the attacker pops, not just the tower
+        ctx.strokeStyle = `rgba(255, 210, 160, ${0.85 * e.strike})`;
+        ctx.lineWidth = 2.5;
+        poly(ctx, e.x, e.y, e.r + 2 + 7 * (1 - e.strike), e.sides, e.rot);
+        ctx.stroke();
+      }
+    }
+
     // primed shapes carry a pulsing white diamond — marker, not ring (app.md)
     if (e.primed) {
       const p = 0.6 + 0.4 * Math.sin(S.time * 14);

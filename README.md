@@ -49,8 +49,11 @@ specimens out on a *frozen* field so the highlight grammar can be photographed �
 bare `?specimen` gives every single and every pair, `=triples` every three-way stack,
 `=armored+regen,swift+volatile` explicit combos, `&kind=dart|elite|…` picks the
 silhouette (default `dart`, the smallest and so the worst case for ring crowding).
-This is the tool the stacked-legibility check uses; eyeballing a live wave-40 fight
-is how the channel collisions got shipped in the first place. Magnify it with the
+`=siege` stages the **strike telegraph** instead: one besieger per phase of the 0.9s
+cadence plus one caught mid-blow, frozen at the rim — the tell is a ~0.25s window, so
+a live screenshot almost always lands in the quiet part of the cycle. These are the
+tools the legibility checks use; eyeballing a live wave-40 fight is how the channel
+collisions got shipped in the first place. Magnify it with the
 dpr profile trick above (`devPixelsPerPx = 3`).
 
 Balance tooling: `node scripts/calibrate.mjs [trials]` runs fresh no-tech robot

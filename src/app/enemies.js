@@ -50,6 +50,8 @@ export function spawnEnemy(G, kind, variants = null, x = null, y = null) {
     explode: vdefs.find(d => d.explode)?.explode || null,
     shield: strongest('shield'),
     kbx: 0, kby: 0, contactCd: 0, flash: 0, orbHit: 0, age: 0, wallAtk: 0,
+    // damage attribution (core.md Enemies): the shell owns these, render reads them
+    sieging: false, strike: 0,
     beamHeat: 0, beamTick: 0,
     burnStacks: 0, burnLeft: 0, burnTick: 0, // flamethrower DoT (core.md flame row)
     calSlowT: 0, calSlow: 0, // caltrop prick (core.md caltrop row)
@@ -238,6 +240,7 @@ export function updateEnemies(G, dt) {
     if (e.introduce) e.introduce = Math.max(0, e.introduce - dt);
     e.flash = Math.max(0, e.flash - dt);
     e.contactCd = Math.max(0, e.contactCd - dt);
+    e.strike = Math.max(0, e.strike - dt * 4);
     e.rot += e.rotSpd * dt;
     if (e.regenPct && e.hp < e.maxHp) {
       e.hp = Math.min(e.maxHp, e.hp + e.maxHp * e.regenPct * dt);
@@ -261,11 +264,17 @@ export function updateEnemies(G, dt) {
     e.y += uy * adv + e.kby * dt;
     e.kbx *= Math.pow(0.02, dt); // knockback decays hard
     e.kby *= Math.pow(0.02, dt);
-    // contact with the Point (core.md Enemies: siege, not kamikaze)
-    if (d < e.r + TOWER_R + 1) {
+    // contact with the Point (core.md Enemies: siege, not kamikaze).
+    // `sieging` is set every frame from the live distance so CC that shoves a
+    // shape off the rim clears it immediately — the view must never show a tell
+    // for a shape that is no longer in contact.
+    const inContact = dist(e.x, e.y, G.cx, G.cy) < e.r + TOWER_R + 1;
+    e.sieging = inContact;
+    if (inContact) {
       if (e.boss) {
         if (e.contactCd <= 0) {
           hitTower(G, e.dmg);
+          e.strike = 1;
           e.contactCd = 1.1;
           // ram, recoil, return — an aged boss recoils less and rams more often
           const m = enemyMass(e.age);
@@ -275,6 +284,7 @@ export function updateEnemies(G, dt) {
         // besiege: strike and stay — dmg every 0.9s, same cadence as the
         // wall siege (core.md force wall row)
         hitTower(G, e.dmg);
+        e.strike = 1;
         e.contactCd = 0.9;
         burst(G.fx, e.x, e.y, e.color, 5, 90, 0.25, 2);
       }
