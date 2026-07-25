@@ -286,10 +286,14 @@ Numbers are measured (headless spikes over the real sim), not estimated.*
   wave. Waves 24-39 are now deliberately empty of *new pieces*: the content there is
   combination, not vocabulary, which is GDD section 5's doctrine rather than a gap in it.
   That position is written into `core.md` Introductions so it reads as a decision.
-- **What remains:** the *front* of the drip is still bunched. Three beats land on waves
-  4-5-6 (tank, boss, swift) — squarely where ~45% of fresh runs die — so peak
-  content-firehose still coincides with peak difficulty wall. Spreading those is a real
-  onboarding improvement and is independent of everything above.
+- **RESOLVED 2026-07-25:** the front bunching is fixed — swift moved 6→7, so no three
+  consecutive waves carry a beat (pinned by `test/drip.test.mjs`, which will catch a future
+  content addition re-bunching them). Measured: the minimal change keeps the onboarding
+  median at 8–9 with the baseline's tight spread. **The prettier option lost on
+  measurement** — also moving tank to 3 and splitter to 9 would have given a beat every
+  other wave and filled the empty wave 3, but it widened the median spread to 9/9/5/9 and
+  dropped the death floor to wave 3, because early tanks make runs bimodal. A wider spread
+  is a band gate that flakes at both edges.
 - **RESOLVED 2026-07-25:** debut waves were **stochastic** — swift's nominal wave-6 debut
   fired that wave in 53% of runs (re-measured over 4000 waves; it was ~45% when first audited
   and drifted when cost-weighted composition added bodies — an inherited number expires when

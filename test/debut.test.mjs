@@ -30,8 +30,8 @@ test('waves that debut nothing say so', () => {
 });
 
 test('the debut is deterministic under a seeded rng, like the rest of the plan', () => {
-  const a = composeWave(6, mulberry32(3));
-  const b = composeWave(6, mulberry32(3));
+  const a = composeWave(VARIANTS.swift.minWave, mulberry32(3));
+  const b = composeWave(VARIANTS.swift.minWave, mulberry32(3));
   assert.equal(a.debutVariant, b.debutVariant);
   assert.equal(a.debutAt, b.debutAt);
 });
@@ -44,21 +44,22 @@ test('a debut specimen wears exactly one modifier — teach one thing at a time'
     G.S.weapons.bolt = 0; // nothing dies, so every spawn stays inspectable
     resetWeapons(G);
     resetWaveDirector(G);
-    G.S.wave = 5; // the director will start wave 6 next
+    G.S.wave = VARIANTS.swift.minWave - 1; // the director starts swift's debut wave next
     // wave 6 emits ~50 spawns at ~0.8s apart, so the whole wave takes ~40s to
     // ARRIVE; a shorter window can finish before a late debut index is reached
-    for (let i = 0; i < 60 * 120 && G.S.wave < 7; i++) updateGame(G, 1 / 60);
+    for (let i = 0; i < 60 * 120 && G.S.wave <= VARIANTS.swift.minWave; i++) updateGame(G, 1 / 60);
     const swifts = G.S.enemies.filter(e => e.variants.includes('swift'));
-    assert.ok(swifts.length >= 1, `seed ${seed}: wave 6 produced no swift at all`);
+    assert.ok(swifts.length >= 1, `seed ${seed}: swift's debut wave produced no swift at all`);
     const debut = swifts[0];
     assert.equal(debut.variants.length, 1, `seed ${seed}: the debut specimen was stacked`);
   }
 });
 
 test('the guarantee is a floor, not a cap — the variant may still roll elsewhere', () => {
-  // pinning "exactly one swift per debut wave" would be wrong: the ordinary roll
-  // still applies to every other spawn
-  const plan = composeWave(6, mulberry32(11));
+  // pinning "exactly one swift on the debut wave" would be wrong: the ordinary
+  // roll still applies to every other spawn. Read the wave from config, never
+  // hardcode it — swift moved 6 -> 7 and hardcoded 6 is what broke here.
+  const plan = composeWave(VARIANTS.swift.minWave, mulberry32(11));
   assert.ok(plan.spawns.length > 1, 'setup');
   assert.equal(typeof plan.debutAt, 'number');
 });

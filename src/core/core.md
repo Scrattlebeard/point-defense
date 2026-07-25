@@ -224,6 +224,24 @@ DART — fast and fragile" / "NEW SPECIMEN: REGEN — heals 3% max HP per second
 The banner repeats each run by design — it's a tutorial beat, not a trophy; the
 run-scoped record lives in `S.introduced`.
 
+**No more than two consecutive waves carry a new beat.** Introductions land at
+waves 1, 2, 4, 5, 7, 8, 11, 14, 17, 21, 23 (and 40, when modifiers begin to stack),
+so the player never meets three unfamiliar things in three waves. *(Swift moved from
+wave 6 to 7 on 2026-07-25. Tank at 4, the boss at 5 and swift at 6 were three beats
+in three waves, landing squarely where ~45% of fresh runs end — peak content firehose
+at peak difficulty wall. The guaranteed-debut change the same day made that cluster
+**certain** where it had previously been a 53% coin flip, which is what forced the
+fix: solving one problem sharpened another.)*
+
+*Rejected by measurement, recorded because the rejected option was the prettier one:*
+moving tank to 3 and splitter to 9 as well would have given a beat every other wave —
+1, 2, 3, 5, 7, 9 — and filled the empty wave 3. Measured over four 48-trial runs it
+also **widened the onboarding spread** (medians 9/9/5/9 against a baseline that sits
+tight at 8–9, and a death floor dropping to wave 3), because tanks at wave 3 make
+early runs bimodal. A wider spread means a band gate that flakes at both edges, which
+is the failure this project fixed the same night. The smallest change that solves the
+stated problem won.
+
 **A debut is guaranteed, not hoped for.** On the wave a variant's `minWave` names,
 `composeWave` marks one non-boss spawn as its **debut** (`plan.debutVariant` +
 `plan.debutAt`; core decides both what and where, the director only executes). That
@@ -271,7 +289,7 @@ Shape encodes species; highlight encodes the variation (pillar 3).
 
 | id | visual highlight | effect | xp mult | from wave |
 |----|------------------|--------|---------|-----------|
-| swift | white-hot glow outline | speed ×1.7 | 1.3 | 6 |
+| swift | white-hot glow outline | speed ×1.7 | 1.3 | 7 |
 | armored | thick steel outline | hp ×2.5 | 1.6 | 11 |
 | regen | pulsating green plus inside the shape | heals 3% max hp / s | 1.5 | 17 |
 | shielded | rotating ring segments | absorbs first 3 damage instances (ring depletes visibly) | 1.6 | 21 |
