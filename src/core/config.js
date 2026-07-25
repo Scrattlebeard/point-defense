@@ -252,7 +252,21 @@ export const TOWERS = {
 // Band order (top to bottom in the Lattice view) — SEMANTIC since ADR-0005:
 // cross-sector requisites may only reference an adjacent sector in this order
 // (core.md "The Lattice"; enforced by tech.test 'adjacent lanes').
-export const SECTORS = ['Hull', 'Arms', 'Mind', 'Salvage', 'Arsenal', 'Armory', 'Towers'];
+// Band order is SEMANTIC (ADR-0005): a cross-sector requisite may only reference
+// an adjacent sector. 'Salvage' was retired 2026-07-25 with its income line — the
+// law took its content and an empty band reads as a bug, not a design. Re-adding a
+// sector is cheap when one earns a theme (PINS: the deck sector).
+export const SECTORS = ['Hull', 'Arms', 'Mind', 'Arsenal', 'Armory', 'Towers'];
+
+/** Nodes removed from the lattice, with what they cost, so a save holding one can
+ *  be refunded exactly once at load (core.md "Retired nodes refund on load").
+ *  Silently ignoring unknown ids would strand shards with no way to notice. */
+export const RETIRED_NODES = {
+  // The Salvage income line: 1255◆ for ×2.35 shard income. Retired 2026-07-25 for
+  // breaking Law·No-meta-accel (nothing purchasable may speed meta-progression) —
+  // and Law·Focus, since an income node is an optimiser's no-brainer first buy.
+  salv1: 15, salv2: 40, salv3: 100, salv4: 250, goldrush: 600, quartermaster: 250,
+};
 
 export const LATTICE = [
   // ---- Hull (survival) ----
@@ -290,12 +304,6 @@ export const LATTICE = [
   { id: 'head',       sector: 'Mind', ring: 2, name: 'Head Start',      desc: 'Start at level 2 with a free pick', cost: 45,  req: ['study1'], effect: { startLevelAdd: 1 } },
   { id: 'head2',      sector: 'Mind', ring: 4, name: 'Running Start',   desc: 'Start one level higher again',      cost: 250, req: ['head'],   effect: { startLevelAdd: 1 } },
   { id: 'enlighten',  sector: 'Mind', ring: 5, name: 'Enlightenment',   desc: '+20% XP',        cost: 600, req: ['study4'],   effect: { xpAdd: 0.2 } },
-  // ---- Salvage (economy; split out of Mind — ADR-0003) ----
-  { id: 'salv1',      sector: 'Salvage', ring: 1, name: 'Salvage I',    desc: '+20% shards',    cost: 15,  req: [],           effect: { salvageAdd: 0.2 } },
-  { id: 'salv2',      sector: 'Salvage', ring: 2, name: 'Salvage II',   desc: '+20% shards',    cost: 40,  req: ['salv1'],    effect: { salvageAdd: 0.2 } },
-  { id: 'salv3',      sector: 'Salvage', ring: 3, name: 'Salvage III',  desc: '+20% shards',    cost: 100, req: ['salv2'],    effect: { salvageAdd: 0.2 } },
-  { id: 'salv4',      sector: 'Salvage', ring: 4, name: 'Salvage IV',   desc: '+25% shards',    cost: 250, req: ['salv3'],    effect: { salvageAdd: 0.25 } },
-  { id: 'goldrush',   sector: 'Salvage', ring: 5, name: 'Gold Rush',    desc: '+35% shards',    cost: 600, req: ['salv4'],    effect: { salvageAdd: 0.35 } },
   // ---- Arsenal (weapon unlocks + munitions) ----
   { id: 'tesla',      sector: 'Arsenal', ring: 1, name: 'Tesla Coil',  desc: 'Adds Tesla Coil to the level-up pool', cost: 25, req: [],        effect: { unlockWeapon: 'tesla' } },
   { id: 'seek',       sector: 'Arsenal', ring: 2, name: 'Seekers',     desc: 'Adds Seekers to the level-up pool',    cost: 45, req: ['tesla'], effect: { unlockWeapon: 'seek' } },
@@ -328,9 +336,8 @@ export const LATTICE = [
   { id: 'towermaster', sector: 'Towers', ring: 5, name: 'Master of Points', desc: '+40 max HP & +5% damage', cost: 600, req: ['tower_lance', 'keel2'], effect: { hpBonus: 40, dmgAdd: 0.05 } },
   // ---- Cross-links (reqMode any — the web strands between sectors) ----
   { id: 'fieldkit',   sector: 'Hull',    ring: 2, name: 'Field Kit',      desc: '+0.3 HP/s regen', cost: 40,  req: ['nano1', 'prec'],           reqMode: 'any', effect: { regen: 0.3 } },
-  { id: 'warchest',   sector: 'Salvage', ring: 3, name: 'War Chest',      desc: '+8% damage',      cost: 100, req: ['mortar', 'salv2'],         reqMode: 'any', effect: { dmgAdd: 0.08 } },
+  { id: 'warchest',   sector: 'Mind',    ring: 3, name: 'War Chest',      desc: '+8% damage',      cost: 100, req: ['mortar', 'study2'],        reqMode: 'any', effect: { dmgAdd: 0.08 } },
   { id: 'scholarsoldier', sector: 'Mind', ring: 3, name: 'Scholar-Soldier', desc: '+8% XP',        cost: 100, req: ['study2', 'over2'],         reqMode: 'any', effect: { xpAdd: 0.08 } },
   { id: 'overseer',   sector: 'Towers',  ring: 3, name: 'Overseer',       desc: '−4% cooldowns',   cost: 100, req: ['ballistics', 'tower_tempest'], reqMode: 'any', effect: { cdAdd: -0.04 } },
-  { id: 'quartermaster', sector: 'Salvage', ring: 4, name: 'Quartermaster', desc: '+15% shards',   cost: 250, req: ['salv3', 'mun1'],           reqMode: 'any', effect: { salvageAdd: 0.15 } },
   { id: 'reinforcedgrid', sector: 'Hull', ring: 4, name: 'Reinforced Grid', desc: '+25 max HP',    cost: 250, req: ['vit3', 'over3'],           reqMode: 'any', effect: { hpBonus: 25 } },
 ];

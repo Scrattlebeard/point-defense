@@ -507,10 +507,17 @@ milestone-granted QoL (no mechanism exists) · <span class="badge proto">PROTOTY
 organizing principle: the <em>mechanism</em> now exists for both halves — weapons via
 <code>unlockWeapon</code> and, since 2026-07-25, generic cards via <code>unlockGeneric</code>
 (Precision buys the crit <em>card</em> rather than a flat stat, which is what makes §7's
-canonical wave-30 draft implementable at all). But only 16 of 70 nodes use it; the other 54
+canonical wave-30 draft implementable at all). But only 16 of 64 nodes use it; the other 48
 are still flat stats, so the principle is wired, not yet honoured.
-Two live law violations: six Salvage nodes (×2.35 shard income) break no-meta-accel, and the
-whole 70-node lattice costs ~22 runs — about four hours, not "weeks of play."</p>
+<strong>Both law violations are closed</strong> (2026-07-25): the six Salvage income nodes
+(1255◆ for ×2.35 shard income) are <em>retired</em> — <a href="#law-no-meta-accel">no-meta-accel</a>
+is now enforced structurally, by a test asserting that owning the entire lattice cannot change
+payout — and the "weeks of play" claim is retired with them. The arc is now <em>measured</em>
+rather than promised: 64 nodes, 11,620◆, ≈47 runs for a player habitually dying near wave 20
+(~71 at wave 15, ~25 at wave 30). Whether it <em>should</em> be longer is an open question for
+playtest, deliberately not answered by quietly inflating costs — the economy curve is Daniel's
+call. The Salvage band itself is gone; an empty lane reads as a bug, not a design, and the slot
+is cheap to re-add when a sector earns a theme.</p>
 
 <p>Death → shards → lattice → next stand. Weapon use → mastery exp → weapon trees.
 Tower use → tower trees. Three currencies, one destination:</p>

@@ -1,6 +1,6 @@
 // Lattice logic (core.md "The Lattice"). Nodes live in config.js; meta is never
 // mutated, always replaced.
-import { LATTICE } from './config.js';
+import { LATTICE, RETIRED_NODES } from './config.js';
 
 const byId = new Map(LATTICE.map(n => [n.id, n]));
 
@@ -24,6 +24,21 @@ export function buy(id, meta) {
   if (!canBuy(id, meta.tech, meta.shards)) return meta;
   const n = byId.get(id);
   return { ...meta, shards: meta.shards - n.cost, tech: [...meta.tech, id] };
+}
+
+/** Refund a save holding retired nodes, once, at load (core.md "Retired nodes
+ *  refund on load"). Respecs are free, so retiring a node must never cost the
+ *  player their investment. Returns the input unchanged when there is nothing
+ *  to do, so a clean save is never rewritten. */
+export function refundRetired(meta) {
+  const owned = meta.tech.filter(id => RETIRED_NODES[id] !== undefined);
+  if (!owned.length) return meta;
+  const refund = owned.reduce((s, id) => s + RETIRED_NODES[id], 0);
+  return {
+    ...meta,
+    shards: meta.shards + refund,
+    tech: meta.tech.filter(id => RETIRED_NODES[id] === undefined),
+  };
 }
 
 /** Aggregate owned nodes into one effects object. Additive within each stat. */

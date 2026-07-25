@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { defaultMeta, newRun, addXp, levelChoices, applyChoice, payout, addScore, evalAchievements } from '../src/core/state.js';
 import { xpForLevel } from '../src/core/balance.js';
-import { WEAPONS } from '../src/core/config.js';
+import { WEAPONS, LATTICE } from '../src/core/config.js';
 import { mulberry32 } from '../src/core/rng.js';
 
 test('bastion baseline: 100 hp, bolt L2, level 1', () => {
@@ -197,9 +197,13 @@ test('payout adds shards, tracks best wave, applies salvage, never pays zero', (
   assert.ok(earned >= 1);
   assert.equal(meta.shards, earned);
   assert.equal(meta.best, 10);
-  const salvMeta = { ...defaultMeta(), tech: ['study1', 'salv1'] };
-  const { earned: salvEarned } = payout(S, salvMeta);
-  assert.ok(salvEarned > earned);
+  // Law·No-meta-accel (core.md): no purchasable node may raise shard income.
+  // STRENGTHENED 2026-07-25 — this replaces an assertion that salvage tech
+  // INCREASED payout; the Salvage income line was retired for breaking the law,
+  // so the pin is now that owning EVERYTHING changes nothing.
+  const richMeta = { ...defaultMeta(), tech: LATTICE.map(n => n.id) };
+  const { earned: richEarned } = payout(S, richMeta);
+  assert.equal(richEarned, earned, 'owning the whole lattice must not inflate payout');
   const S0 = newRun(defaultMeta(), 'bastion');
   const { earned: zeroRun } = payout(S0, defaultMeta());
   assert.ok(zeroRun >= 1, 'losing must always buy something');

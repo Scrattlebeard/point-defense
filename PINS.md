@@ -91,13 +91,33 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
 - **Where:** `src/app/lattice.js`, ADR-0005 (supersede via new ADR if done); GDD visual-language section once it exists.
 - **Context:** "Probably" — a candidate, not a commitment. Revisit against whatever made 0005 abandon radial (check the ADR's alternatives before re-deciding).
 
-## Salvage sector violates the new no-meta-acceleration rule (GDD session, 2026-07-24)
-- **What:** GDD rule ratified: **no upgrades that speed up meta-progression** (no +shards, no meta-exp boosters) — managing the in-run-power-vs-rewards tradeoff is not fun (Daniel). The entire Salvage income line (salv1–4, goldrush, quartermaster's salvage half) violates it and must be redesigned; the sector needs a new theme (its non-income nodes — warchest etc. — can stay).
-- **Why:** Two laws convict it: the ratified rule, plus the focus law (income nodes are an optimizer's no-brainer first-buy — never a real choice). Corollary rule: QoL unlocks are milestone-granted by total investment (e.g. third hold weapon → hold-priority auto-unlocks), never explicit purchases.
-- **Where:** `src/core/config.js` LATTICE Salvage sector, `tech.js` effectsOf salvageAdd, `state.js` payout, `core.md` + ADR-0003 (supersede note), state tests pinning salvage.
-- **Context:** Save-compat: owned salvage nodes need a migration story (free respec makes this easy — refund on load). Redesign is open; do it when the GDD Builds/Meta chapters land.
-- **Audited 2026-07-25 — the numbers, and a second conviction.** Six nodes, all `salvageAdd`: `salv1` 15◆ · `salv2` 40 · `salv3` 100 · `salv4` 250 · `goldrush` 600 · `quartermaster` 250. Full line = **1255◆ for ×2.35 shard income**, paying for itself in ~2 wave-20 runs. It is also what breaks the cost-curve claim: the whole 70-node lattice costs **~22 wave-20 runs ≈ 4 hours** with salvage bought first, ~49 runs without — against `core.md` and ADR-0003 both promising "weeks of play." Deleting the line is half the cost-curve fix on its own. Pin correction: `quartermaster` has no "salvage half" — it is 100% income. (xp nodes are clean: `xpAdd` reaches `S.xpMult` only, never `payout` — legal per the law's own parenthetical.)
-
+## The retired sector's slot is open — leading candidate: the deck sector
+- **What (landed 2026-07-25):** the Salvage income line (`salv1`-`salv4`, `goldrush`,
+  `quartermaster` — 1255◆ for x2.35 shard income) is **retired** for breaking
+  Law·No-meta-accel, and with only War Chest left the band was a visibly empty lane, so
+  the **Salvage sector was removed** from `SECTORS` too and War Chest moved to Mind (it
+  already cross-linked there). Retired ids **refund their shards once at load**
+  (`RETIRED_NODES` + `tech.js refundRetired`) — respecs are free, so a retirement must
+  never cost the player their investment.
+- **What remains:** the game is down to six sectors and the lattice is 64 nodes. A seventh
+  band is cheap to re-add when one earns a theme. **Leading candidate: the deck sector** —
+  nodes whose whole job is `unlockGeneric`, i.e. authoring what card types exist. That
+  directly serves GDD section 6's organizing principle (still only 16 of 64 nodes author
+  anything) and needs no new mechanism, because the `techLock`/`unlockGeneric` seam already
+  exists. It would also give the meta layer a lane that is about *decks* rather than stats,
+  which is the distinction the GDD keeps drawing and the lattice keeps blurring.
+- **Why not tonight:** picking card types is content design, and the honest version wants
+  the GDD's Builds/Meta chapters (or Daniel) to say what a "deck" node should feel like.
+  Inventing five card types at 9am on my own authority is exactly the "content ahead of the
+  Route's order" the Route warns about.
+- **Where:** `src/core/config.js` SECTORS + LATTICE + GENERICS, `tech.js`, `core.md` "The
+  Lattice", `test/tech.test.mjs` (the band-order literal is duplicated there ON PURPOSE so
+  a sector change lands as a reviewed diff), `test/economy.test.mjs`.
+- **Open economy question, with the measured table:** the full lattice is now ~47 runs at
+  wave 20 / ~71 at wave 15 / ~25 at wave 30 — several hours, not weeks. Retiring salvage
+  roughly doubled it (was ~25 runs with salvage bought first). Whether that is the right
+  arc is Daniel's call; ADR-0003 already records the curve as provisional. Do **not** inflate
+  costs to hit a slogan — decide the target first, then tune to it.
 ## Haptics + better sound design
 - **What:** `navigator.vibrate` on tower hit / boss spawn; richer synth (noise bursts for explosions, filter sweeps).
 - **Why:** Phone-first game, big cheap juice win.

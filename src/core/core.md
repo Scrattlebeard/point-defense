@@ -437,7 +437,33 @@ The meta tech system is a **web**: 60+ nodes in seven sectors (**Hull, Arms,
 Mind, Salvage, Arsenal, Armory, Towers** — Armory added by ADR-0004 for the
 manual/aim weapon unlocks, so Arsenal keeps its auto-ordnance identity and its
 lane stays readable) across five rings, ring = cost band (~15 / 40 / 100 / 250
-/ 600 — deep lattice is weeks of play). Rendered as an actual graph (app.md
+/ 600).
+
+**How long the arc actually is — measured, not promised.** 64 nodes, **11,620◆**.
+Against the real payout curve that is roughly **47 runs** for a player habitually
+dying around wave 20, ~71 at wave 15, ~25 at wave 30 — *several hours, not weeks.*
+*(This spec previously claimed "deep lattice is weeks of play", which GDD §6 flagged
+as a live contradiction. The claim is now the measurement. Whether the arc **should**
+be longer is a live design question for playtest and is pinned with the full table —
+it is deliberately not answered by quietly inflating costs, because the economy curve
+is Daniel's call and "provisional until he plays it" is written into ADR-0003.)*
+
+**Law·No-meta-accel is enforced structurally, not by good intentions.** No node may
+carry a `salvageAdd` effect — nothing purchasable may speed up meta-progression.
+*(2026-07-25: the entire Salvage income line — `salv1`–`salv4`, `goldrush`,
+`quartermaster`, 1255◆ for **×2.35 shard income** — was retired for breaking it.
+Two laws convicted it: the ratified rule, and the focus law, since an income node is
+an optimiser's no-brainer first buy and therefore never a real choice. Retiring it
+also removed the distortion behind the cost-curve claim: with salvage bought first
+the whole lattice cost ~25 runs; without the line it is ~47. `xpAdd` nodes stay
+legal — in-run levelling speed is game power, not meta speed, which the law's own
+parenthetical allows.)*
+
+**Retired nodes refund on load** (`config.js: RETIRED_NODES`, `tech.js:
+refundRetired`): a save holding a retired id gets its shards back and the id
+dropped, once, at load. Respecs are free, so a retirement must never cost the
+player the investment — and the alternative (silently ignoring unknown ids) would
+strand shards with no way to notice. Rendered as an actual graph (app.md
 "Lattice view", layout per ADR-0005), not columns. **The sector order is core
 data** (`config.js: SECTORS`, the order above): since ADR-0005 stacks sectors
 as bands, adjacency in that order is *semantic* — **a cross-sector requisite

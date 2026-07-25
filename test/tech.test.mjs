@@ -7,7 +7,13 @@ import { canBuy, buy, effectsOf } from '../src/core/tech.js';
 
 // 'Armory' added by ADR-0004 (deliberate extension — sector list is pinned so
 // new sectors are a decision, not a typo)
-const SECTORS = ['Hull', 'Arms', 'Mind', 'Salvage', 'Arsenal', 'Armory', 'Towers'];
+// REVIEWED BAND-ORDER CHANGE 2026-07-25: 'Salvage' removed. Its income line was
+// retired for breaking Law·No-meta-accel, which left the band with one node and a
+// visibly empty lane in the Lattice view — an empty band reads as a bug, not a
+// design. War Chest moved to Mind (it already cross-linked there). Mind and Arsenal
+// are now adjacent; every existing cross-link was re-checked and still hops one
+// border. This literal is duplicated on purpose so exactly this diff is reviewable.
+const SECTORS = ['Hull', 'Arms', 'Mind', 'Arsenal', 'Armory', 'Towers'];
 const RING_MIN_COST = { 1: 10, 2: 30, 3: 70, 4: 200, 5: 500 };
 
 test('lattice integrity: unique ids, sectors, rings 1-5, resolvable prereqs', () => {
@@ -53,10 +59,14 @@ test('every node is reachable (any-mode edges honored, no dead branches)', () =>
     `unreachable: ${LATTICE.filter(n => !owned.has(n.id)).map(n => n.id).join(', ')}`);
 });
 
+// NOTE (2026-07-25): 'salv1' was removed from this list. It is not a regression —
+// the Salvage income line was RETIRED for breaking Law·No-meta-accel, and its
+// migration story changed from "preserve the purchase" to "refund the shards"
+// (config.js RETIRED_NODES, tech.js refundRetired, pinned by test/economy.test.mjs).
 test('legacy node ids survive so old saves keep their purchases', () => {
   const ids = new Set(LATTICE.map(n => n.id));
   for (const legacy of ['vit1', 'vit2', 'plate1', 'nano1', 'over1', 'prec', 'haste1',
-    'study1', 'head', 'salv1', 'tesla', 'seek', 'turret',
+    'study1', 'head', 'tesla', 'seek', 'turret',
     'tower_tempest', 'tower_warden', 'tower_lance']) {
     assert.ok(ids.has(legacy), `legacy id ${legacy} dropped — save migration broken`);
   }
