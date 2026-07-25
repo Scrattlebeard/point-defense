@@ -221,9 +221,11 @@ Numbers are measured (headless spikes over the real sim), not estimated.*
   ricocheting bolt. The icons come from the Design project (provenance in
   `assets/icons/icons.md`), so redrawing is Daniel's call, not a thing to improvise at 1am. A
   `fan.svg` was authored for the new form and is deliberately close in spirit.
-- **Context:** the form card's *rendering* is unverified by eye — there is no dev hatch that
-  opens a level-up screen, so the card markup has only been exercised by the render smoke and
-  by mirroring the weapon card. Worth a look on the first playtest that maxes bolt.
+- **Context / verification state:** the in-fight **weapons bar** with a worn form is verified
+  by screenshot (`?autostart&form=bolt:fan`, added for exactly this). The **level-up card** and
+  the **pause stats panel** are still unverified by eye — both need a click no headless shot can
+  make — though all three now render from the same tested `loadout(S)` query, so the risk is
+  markup rather than logic. Worth a look on the first playtest that maxes bolt.
 ## [phase 3] The rim dead zone — re-measured 2026-07-25, and the pin was partly wrong
 - **What:** Orbit, mines and caltrops deal **literally zero** damage to a shape holding the
   rim, at every level. Re-measured 2026-07-25 against a grunt parked at the rim for 12s:

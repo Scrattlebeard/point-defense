@@ -116,3 +116,39 @@ test('an unlocked-but-unowned form stays out of a fresh account draft', () => {
     }
   }
 });
+
+// ---- Loadout visibility (core.md Forms: "rhythm is loot") ----
+import { loadout } from '../src/core/state.js';
+
+test('loadout() reports owned weapons, their level, and the form each wears', () => {
+  const meta = { ...defaultMeta(), tech: LATTICE.map(n => n.id) };
+  const S = newRun(meta, 'bastion');
+  S.weapons.bolt = WEAPONS.bolt.max;
+  S.weapons.orbit = 2;
+  const before = loadout(S);
+  const bolt = before.find(r => r.id === 'bolt');
+  assert.ok(bolt, 'owned weapon missing from the loadout');
+  assert.equal(bolt.isMax, true);
+  assert.equal(bolt.form, null, 'no form worn yet');
+  assert.ok(!before.some(r => r.lvl < 1), 'unowned weapons must not appear');
+
+  applyChoice(S, { type: 'form', id: 'burst', of: 'bolt' });
+  const after = loadout(S);
+  const worn = after.find(r => r.id === 'bolt');
+  assert.equal(worn.form, 'burst', 'the worn form is not reported');
+  assert.equal(worn.formName, FORMS.burst.name, 'the form needs a display name');
+  // and a weapon with no form is unaffected
+  assert.equal(after.find(r => r.id === 'orbit').form, null);
+});
+
+test('the loadout signature changes when a form is taken', () => {
+  // the in-fight weapons bar rebuilds only when this changes — before forms were
+  // included, taking one mid-fight left the bar showing the old loadout forever
+  const meta = { ...defaultMeta(), tech: LATTICE.map(n => n.id) };
+  const S = newRun(meta, 'bastion');
+  S.weapons.bolt = WEAPONS.bolt.max;
+  const sig = l => l.map(r => `${r.id}${r.lvl}${r.form || ''}`).join('.');
+  const before = sig(loadout(S));
+  applyChoice(S, { type: 'form', id: 'burst', of: 'bolt' });
+  assert.notEqual(sig(loadout(S)), before, 'the bar would never refresh');
+});

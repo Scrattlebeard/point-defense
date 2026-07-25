@@ -147,6 +147,24 @@ export function applyChoice(S, c) {
   else if (c.id === 'crit') S.critChance += 0.10;
 }
 
+/** The owned loadout, with the form each weapon wears (core.md Forms: "the active
+ *  form is visible wherever the loadout is"). Single query behind the level-up
+ *  header, the pause stats panel and the in-fight weapons bar — which all used to
+ *  iterate S.weapons themselves, and all used to be blind to forms. */
+export function loadout(S) {
+  const rows = [];
+  for (const [id, lvl] of Object.entries(S.weapons)) {
+    if (lvl < 1) continue;
+    const w = WEAPONS[id];
+    const form = S.forms?.[id] || null;
+    rows.push({
+      id, lvl, name: w.name, max: w.max, isMax: lvl >= w.max,
+      form, formName: form ? FORMS[form]?.name || form : null,
+    });
+  }
+  return rows;
+}
+
 /** Wave-clear breather: heal 4% max hp. */
 export function waveCleared(S) {
   S.hp = Math.min(S.maxHp, S.hp + 0.04 * S.maxHp);

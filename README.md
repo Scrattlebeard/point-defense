@@ -41,7 +41,8 @@ Dev hatches (query params on any build): `?autostart` skips the menu ·
 `&warp=N` pre-simulates exactly N seconds with *no* aimer (enemies survive to be
 photographed — keep N ≲ 15: besiegers grind the undefended tower down, so long
 warps photograph the death screen) · `&gear=frost:4,orbit:2` grants weapon levels after autostart (visual
-dev — capped at each weapon's max) · `&sparks` enables the ambient grid sparks
+dev — capped at each weapon's max) · `&form=bolt:fan` wears a form (maxes its base
+weapon first; forms are otherwise only reachable by a full run) · `&sparks` enables the ambient grid sparks
 in-battle (menu has them by default — app.md "Grid sparks") · `?bestiary` opens a fully-revealed bestiary,
 in-memory only · `?lattice&shards=N` opens the Lattice with a faked balance
 (in-memory only — node states photographable) · **`?specimen`** lays stacked-variant

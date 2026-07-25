@@ -1,7 +1,7 @@
 // DOM overlays + HUD. Reads core tables directly; all game actions go through
 // hooks injected by main.js (no circular imports, no rules in here).
 import { TOWERS, WEAPONS, GENERICS, FORMS, ENEMIES, VARIANTS, ACHIEVEMENTS, chipOf } from '../core/config.js';
-import { towerUnlocked } from '../core/state.js';
+import { towerUnlocked, loadout } from '../core/state.js';
 import { storageOk } from './meta.js';
 import { poly } from './render.js';
 import { renderLattice } from './lattice.js';
@@ -203,10 +203,13 @@ export function toast(html) {
 
 function loadoutHTML(S) {
   const items = [];
-  for (const [id, l] of Object.entries(S.weapons)) {
-    if (l < 1) continue;
-    const max = l >= WEAPONS[id].max;
-    items.push(`<span class="litem"><b>${WEAPONS[id].name}</b> ${max ? '<span class="lmax">MAX</span>' : 'Lv ' + l}</span>`);
+  for (const r of loadout(S)) {
+    // the worn form replaces the level badge at max: "Bolt · FAN" reads as an
+    // identity, where "Bolt MAX (fan)" reads as a footnote (core.md Forms)
+    const badge = r.form
+      ? `<span class="lform">${r.formName.toUpperCase()}</span>`
+      : (r.isMax ? '<span class="lmax">MAX</span>' : 'Lv ' + r.lvl);
+    items.push(`<span class="litem"><b>${r.name}</b> ${badge}</span>`);
   }
   const mods = [];
   if (Math.abs(S.dmgMult - 1) > 1e-9) mods.push(`DMG ×${S.dmgMult.toFixed(2)}`);
@@ -250,12 +253,11 @@ const pips = (l, max) =>
 
 function statsHTML(S) {
   const rows = [];
-  for (const [id, l] of Object.entries(S.weapons)) {
-    if (l < 1) continue;
-    const w = WEAPONS[id];
+  for (const r of loadout(S)) {
     rows.push(
-      `<div class="srow"><span class="sname">${w.name}</span>${pips(l, w.max)}` +
-      `<span class="sstat">${l >= w.max ? '<span class="lmax">MAX</span> · ' : ''}${statLine(id, l)}</span></div>`);
+      `<div class="srow"><span class="sname">${r.name}` +
+      `${r.form ? ` <span class="lform">${r.formName.toUpperCase()}</span>` : ''}</span>${pips(r.lvl, r.max)}` +
+      `<span class="sstat">${r.isMax ? '<span class="lmax">MAX</span> · ' : ''}${statLine(r.id, r.lvl)}</span></div>`);
   }
   const mods = [];
   if (Math.abs(S.dmgMult - 1) > 1e-9) mods.push(`DMG ×${S.dmgMult.toFixed(2)}`);
@@ -350,14 +352,16 @@ export function updateHUD(G) {
   if (c.wave !== S.wave) { $('waveTxt').textContent = 'Wave ' + S.wave; c.wave = S.wave; }
   if (c.lvl !== S.lvl) { $('lvlTxt').textContent = 'Lv ' + S.lvl; c.lvl = S.lvl; }
   // weapons bar: rebuild only on loadout change (app.md "Loadout visibility")
-  const owned = Object.entries(S.weapons).filter(([, l]) => l > 0);
-  const wsig = owned.map(([id, l]) => id + l).join('.');
+  const owned = loadout(S);
+  // the form is part of the signature: without it, taking a form mid-fight left
+  // the bar showing the old loadout for the rest of the run (core.md Forms)
+  const wsig = owned.map(r => `${r.id}${r.lvl}${r.form || ''}`).join('.');
   if (c.wsig !== wsig) {
     c.wsig = wsig;
-    $('wbar').innerHTML = owned.map(([id, l]) => {
-      const max = WEAPONS[id].max;
-      return `<span class="wrow">${WEAPON_ICONS[id]}` +
-        `<span class="wpips${l >= max ? ' lmax' : ''}">${'●'.repeat(l)}${'○'.repeat(max - l)}</span></span>`;
+    $('wbar').innerHTML = owned.map(r => {
+      const icon = r.form ? WEAPON_ICONS[r.form] || WEAPON_ICONS[r.id] : WEAPON_ICONS[r.id];
+      return `<span class="wrow${r.form ? ' formed' : ''}">${icon}` +
+        `<span class="wpips${r.isMax ? ' lmax' : ''}">${'●'.repeat(r.lvl)}${'○'.repeat(r.max - r.lvl)}</span></span>`;
     }).join('');
   }
 }

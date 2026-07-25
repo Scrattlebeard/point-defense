@@ -435,6 +435,16 @@ arithmetic cannot drift even when the base weapon is rebalanced later.
 | **Burst** | bolt | the same volleys arrive as a fast salvo of `salvo` shots then a beat, instead of an even stream - *ratatatata-pause-ratatatata* against the default's *bang-pause-bang* (GDD section 4). Gap = `gapFrac` x the base cadence, and the pause makes the cycle exactly `salvo` x base cadence, so shots-per-second is unchanged | the `burst` lattice node (interim) |
 | **Fan** | bolt | each shot becomes a **center-true spread** of `spread` bolts at ±0.11 rad, each carrying `1/spread` of the damage. Coverage instead of concentration; the centre bolt still sits exactly on the aim line, so aim fidelity - bolt's identity - survives the trade | the `fan` lattice node (interim) |
 
+**The active form is visible wherever the loadout is** — `state.js: loadout(S)` is
+the single query behind the level-up header, the pause stats panel and the in-fight
+weapons bar, and it reports each owned weapon with its level and its worn form. GDD
+section 4 calls forms *"rhythm is loot"*; loot the player cannot see is not loot, and
+Law-Legibility applies to the HUD as much as to the field. The weapons-bar cache key
+includes the worn form, so taking a form mid-fight refreshes the bar — it did not,
+before this existed. *(Added 2026-07-25, immediately after forms shipped: the first
+two forms went in with no surface anywhere telling the player their bolt had
+changed.)*
+
 **Forms cost no slot.** They are not weapons: `S.forms[weaponId]` names the active
 form, `S.formPool` is what the account has unlocked, and a form card is offered only
 when its base weapon is **at max level**, its form is unlocked, and it is not already

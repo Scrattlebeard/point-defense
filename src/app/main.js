@@ -3,7 +3,7 @@
 // happen here — no other module changes G.mode.
 import { newRun, levelChoices, applyChoice, payout, defaultMeta, addScore, evalAchievements } from '../core/state.js';
 import { buy } from '../core/tech.js';
-import { WEAPONS } from '../core/config.js';
+import { WEAPONS, FORMS } from '../core/config.js';
 import { loadMeta, saveMeta } from './meta.js';
 import { makeFx, updateFx, settleFx, announce } from './fx.js';
 import { setMuted, sfx } from './audio.js';
@@ -256,6 +256,17 @@ if (location.search.includes('autostart')) {
   if (gearMatch) for (const kv of gearMatch[1].split(',')) {
     const [id, l] = kv.split(':');
     if (WEAPONS[id]) G.S.weapons[id] = Math.min(WEAPONS[id].max, Number(l) || 1);
+  }
+  // &form=bolt:fan — wear a form without grinding to it. Forms need a maxed base
+  // weapon, so without this the only way to photograph one is a full run.
+  const formMatch = location.search.match(/form=([\w:,]+)/);
+  if (formMatch) for (const kv of formMatch[1].split(',')) {
+    const [of, id] = kv.split(':');
+    if (FORMS[id] && FORMS[id].of === of) {
+      G.S.weapons[of] = WEAPONS[of].max;
+      G.S.formPool.add(id);
+      G.S.forms[of] = id;
+    }
   }
   if (location.search.includes('turbo') || warpMatch) {
     let tapT = 0;

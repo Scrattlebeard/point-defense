@@ -170,6 +170,9 @@ button:active { transform: translateY(1px); }
 /* forms are neither weapon nor passive — magenta, the boss/regime hue, because a
    form card is a rare beat (core.md "Forms") */
 .chip.FORM { color: #ff5c9d; }
+/* worn form, shown wherever the loadout is (core.md Forms: rhythm is loot) */
+.lform { color: #ff5c9d; font-weight: 700; font-size: .82em; letter-spacing: .04em; }
+.wrow.formed { box-shadow: inset 0 0 0 1px rgba(255,92,157,.35); border-radius: 6px; }
 .card .newmark { color: var(--accent-warm); letter-spacing: 0.1em; }
 @media (max-width: 620px) {
   #cardRow { flex-direction: column; align-items: stretch; }
