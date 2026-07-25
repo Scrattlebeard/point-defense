@@ -2,7 +2,7 @@
 // Deliberately canvas-drawn rather than DOM: it must survive a fullscreen PWA on a
 // phone, and it must appear in a headless screenshot — which is the only way this
 // repo can read a number off a real rasteriser.
-import { perfRows, perfStats } from '../core/perf.js';
+import { perfRows, perfStats, refreshMs } from '../core/perf.js';
 
 const PAD = 8;
 // clears the DOM HUD's wave/level line, which also lives at the top-left
@@ -32,12 +32,16 @@ export function drawPerfHud(G) {
   const { ctx } = G;
   if (!G.perf) return;
   if (tick++ % REFRESH === 0 || !cache) {
-    cache = { rows: perfRows(G.perf), live: perfStats(G.perf.cur ? G.perf.cur.ms : []) };
+    cache = {
+      rows: perfRows(G.perf),
+      live: perfStats(G.perf.cur ? G.perf.cur.ms : [], refreshMs(G.perf)),
+      synthetic: !!G.perf.synthetic,
+    };
   }
-  const { rows, live } = cache;
+  const { rows, live, synthetic } = cache;
 
-  const w = 232;
-  const h = PAD * 2 + LINE * (rows.length + 2);
+  const w = 250;
+  const h = PAD * 2 + LINE * (rows.length + 3);
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0);      // pin to the physical top-left, unshaken
   ctx.scale(G.hudScale || 1, G.hudScale || 1);
@@ -54,10 +58,17 @@ export function drawPerfHud(G) {
   ctx.textAlign = 'left';
 
   let y = PAD + LINE - 3;
-  ctx.fillStyle = tint(live.dropped);
+  ctx.fillStyle = synthetic ? OK : tint(live.dropped);
   ctx.fillText(
     `p50 ${live.p50.toFixed(1)}  p95 ${live.p95.toFixed(1)}  max ${live.worst.toFixed(0)}`,
     PAD, y);
+  y += LINE;
+  ctx.fillStyle = '#5f7396';
+  // Rows are the WORST ~2s window of each wave, not the wave average: a wave
+  // ramps and thins, and the average reports neither (core/perf.md).
+  ctx.fillText(synthetic
+    ? 'pre-sim: draw cost, no vsync — drop n/a'
+    : 'rows = worst 2s window of each wave', PAD, y);
   y += LINE;
   ctx.fillStyle = '#8fa6c8';
   // `work` is ours; p50/p95 are the vsync-quantized gap. Both, because either
@@ -66,12 +77,12 @@ export function drawPerfHud(G) {
 
   for (const r of rows) {
     y += LINE;
-    ctx.fillStyle = tint(r.dropped);
+    ctx.fillStyle = synthetic ? OK : tint(r.dropped);
     ctx.fillText(
       String(r.wave).padStart(4) + '  ' +
       r.p50.toFixed(1).padStart(4) + '  ' +
       r.p95.toFixed(1).padStart(5) + '  ' +
-      (r.dropped * 100).toFixed(0).padStart(3) + '%  ' +
+      (synthetic ? '  -' : (r.dropped * 100).toFixed(0).padStart(3) + '%') + '  ' +
       r.work.toFixed(1).padStart(4) + '  ' +
       Math.round(r.ents).toString().padStart(4),
       PAD, y);

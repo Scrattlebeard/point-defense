@@ -160,13 +160,35 @@ Two columns, because either alone is half an instrument:
   the gap is **vsync-quantized**: once locked, "we spent 3ms and waited" and "we
   spent 16ms and just made it" are the same number.
 
-**`drop` is relative to the median, never to an absolute budget.** The first phone
+**Each row is the worst ~2s window of its wave, not the wave average.** A wave
+ramps — spawns arrive, the field fills, the player clears it — and Daniel's second
+capture named the consequence: *"p50 would often go to 33, then drop back down to
+16.7 at the end of the level when the active enemies had been thinned out."* An
+average over that reports neither half. Worse, it smears **both axes at once**: the
+first capture appeared to show the wave-20 step happening at the fewest entities on
+the table, which read as evidence that cost was not entity-driven — but those counts
+were wave-long means too, so the comparison was invalid. The entity count is now the
+mean **inside the same window** as the timing, co-timed, so the row is internally
+consistent and the cost-versus-count question can actually be asked.
+
+**The startup frame is not sampled.** `last` is stamped at module load, so the first
+rAF gap spans page setup (and any pre-sim) and reports a multi-second "hitch" no
+player experienced — the 2199ms `max` in the first phone capture was exactly this.
+
+**`drop` is relative to the refresh interval, never to an absolute budget.** The first phone
 capture returned p50 = 16.7 at every wave from 17 to 45 and p95 of exactly 16.8 /
 33.4 / 50.0 — one, two and three refresh intervals on a 60Hz panel. The original
 "longer than 16.67ms" definition therefore counted float noise and reported
 **72–94% of frames over budget for a game holding a clean 60fps**, painting the
-whole table red. `drop` now means *longer than 1.5× the median*, which is
-refresh-rate agnostic and reads correctly on a 90 or 120Hz screen too.
+whole table red. `drop` now means *longer than 1.5× one refresh interval*, which is
+refresh-rate agnostic and reads correctly on a 90 or 120Hz screen too. The interval
+is estimated **session-wide** (p05 of all frames), not from the sample being scored:
+a window in which every frame is 33.3ms has a median of 33.3 and would grade itself
+flawless, and those are precisely the windows the peak-window table selects for.
+
+*In a `?turbo`/`?warp` pre-sim there is no vsync, so the samples are raw draw costs
+and `drop` is meaningless — the HUD prints `-` and says so, rather than colouring a
+table with a number that does not apply.*
 
 *Combined with `?turbo`/`?warp=N`, `?perf` also draws and times every pre-simulated
 frame, so the load event fires with a populated table — the only way to read a

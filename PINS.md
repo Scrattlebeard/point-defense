@@ -633,12 +633,22 @@ wave 45      16.7      33.5       13
 wave 36      33.3      49.9       24  <- a whole wave at 30fps
 ```
 
-- **The step is at wave 20 and it is NOT entity count.** Wave 20 carries ten entities, fewer
-  than 19 (18 ents, p95 17.0) or 21 (19 ents, p95 33.4). Cost per shape is rising while the
-  number of shapes is not. This kills the last of the ADR-0008 "more bodies" story.
+- **The step is at wave 20. Whether it is entity count is now UNKNOWN — the earlier "it is
+  not" was withdrawn.** That claim compared wave 19's "18 entities" against wave 20's "10",
+  but both are *wave-long means*, and Daniel's follow-up capture showed why that is fatal:
+  *"p50 would often go to 33, then drop back down to 16.7 at the end of the level when the
+  active enemies had been thinned out."* The aggregate smeared the timing and the count
+  together, so neither described the moment frames dropped. **Two aggregates whose peaks are
+  invisible cannot support a conclusion about their peaks.** The instrument now reports the
+  worst 2s window per wave with a co-timed entity count; re-measure before believing
+  anything about cost-versus-count. (Within a wave, Daniel's own observation is direct
+  evidence that cost DOES track density — which points back toward, not away from, the
+  per-shape blur suspect.)
 - **Median performance is fine; the tail is not.** ~5% of frames drop one refresh from wave
   20 on, one whole wave (36) ran at a 30fps median, and a 2199ms hitch appeared in the
   wave-37 session. "Struggling from wave 17" is a true report of the tail, not the median.
+  *(The 2199ms figure has since been explained and is NOT a stall: `last` was stamped at
+  module load, so the first sampled gap contained all of page setup. No longer sampled.)*
 
 **The suspect, and it is a hypothesis, not a diagnosis.** `render.js` sets `shadowBlur`
 **per enemy**: 12 for every shape currently flashing from a hit, 14 for every swift one, 22
@@ -672,3 +682,72 @@ code spent inside the frame: **the gap says whether we dropped a frame, work say
 headroom is left, and once vsync-locked the gap alone cannot tell those apart.** The original
 design timed only the gap and I wrote a paragraph justifying it — right about detection,
 wrong about diagnosis.
+
+## Bosses are HP sponges, and the force wall can shove them — FOUND BY THUMB, 2026-07-25
+
+Daniel, after the wave-45 run: *"I'd died to hp sponge bosses much earlier if I couldn't
+cheese them by spawning force walls inside them to push them back."*
+
+**Two findings in one sentence, and they are not the same problem.**
+
+**1. Bosses take too long, and there is an independent measurement agreeing.** Building the
+signature-move killability test the same day, a **full-HP armored wave-40 boss under
+continuously focused fire from a maxed six-weapon build took 195 seconds to kill** — over
+three minutes, with no tech tree. That number was collected to calibrate a guard floor and
+was not read as a finding at the time; Daniel arrived at the same conclusion from the other
+side, playing. Two independent lines is enough to treat it as real.
+
+This is a Law·Bosses problem, not a tuning one: *a boss is a focus-forcer*, and a
+focus-forcer that outlasts the player's attention span is an HP number wearing a dilemma's
+clothes. The signature moves shipped today make each fight *different*; they do not make it
+*shorter*. Note the tension before touching anything — ADR-0008 derived `BOSS_HP_SHARE = 0.31`
+from the conductor gate and recorded a hard ceiling in the other direction (**the wave
+director will not advance while the boss lives, so an over-tanky boss freezes the run**).
+Lowering the share is therefore a gate-affecting change and wants its own ADR, not a nudge.
+The `?perf`-adjacent instrument for this already exists: the time-to-kill ratio rig in
+`test/bossmoves.test.mjs`.
+
+**2. The force wall can be spawned *inside* a boss to push it back, indefinitely.** The wall
+anchors at the gesture's start and shoves contacting shapes along its tower-away normal, so
+placing one *on* a boss converts the wall from a barrier into a repulsor. Repeatedly.
+
+**Do not reflexively call this a bug.** GDD §4 says the wall's job is *"seconds purchased and
+setups created — not DPS"*, and pushing a boss back is the purest possible form of that. The
+Armory census already measured walls buying time at the largest scale in the game (halving
+the rate waves arrive at, at zero survival cost). The real question is whether it is a
+*skill expression* or a *dominant strategy that trivialises the one threat designed to be
+undelegatable* — and Daniel's own framing ("cheese", "I'd have died much earlier") says it is
+currently the latter. **A tool that makes the focus-forcer optional defeats Law·Bosses**, and
+the delegation gate cannot see it: the conductor's robot has never swiped (already pinned).
+
+**DIAGNOSED, 2026-07-25 — the mechanism is confirmed and it is one line.** Every other
+knockback in the game goes through `applyKnock` (`enemies.js:147`), which divides the impulse
+by `enemyMass(e.age) * (e.boss ? BOSS_KNOCK_RESIST : 1)` — **bosses resist knockback ×6**.
+The force wall does not use `applyKnock`: `swipe.js:60` writes `e.x`/`e.y` directly, dividing
+by `enemyMass(e.age)` alone. **So a boss takes the wall's shove at six times the strength it
+takes every other push in the game.**
+
+**But this is a DESIGN call, not a tier violation, and that distinction is why it is not
+already fixed.** `core.md`'s force-wall row documents the push as `(100+25L)÷mass` — no boss
+term — so the spec and the code agree; only the *analogy with every other knockback source*
+is broken. There is also precedent for deliberate bypass: the boss ram's own recoil skips
+`BOSS_KNOCK_RESIST` on purpose, and that is written down. So the wall's exemption could be
+intentional-but-unrecorded or simply never considered, and the difference is Daniel's to
+declare. **It also directly affects how he is currently playing** — it is what kept the
+wave-45 run alive — so it must not be nerfed unilaterally.
+
+Candidate directions, none decided:
+- **Route the wall push through `applyKnock`** — one line, restores the ×6 analogy, and makes
+  every knockback in the game obey one rule. Almost certainly the largest single balance
+  change available right now: it removes the answer to the sponge problem while the sponge
+  problem is still open, so it should probably not land *before* (1).
+- Keep the shove but make a wall placed *on top of* a shape spawn disabled until it clears —
+  targets the "spawn it inside them" move specifically rather than the wall-vs-boss matchup.
+- Leave it and make it legible as intended play. If a wall is the sanctioned answer to a
+  boss, Law·Bosses is satisfied by a *swipe* rather than by aim — which is still hands, and
+  the conductor gate has never measured swipe (already pinned).
+
+**Where:** `src/app/weapons/swipe.js` (wall placement + push), `enemies.js applyKnock` /
+`BOSS_KNOCK_RESIST`, `core.md` force wall row + "Boss signature moves", GDD §4, ADR-0008 for
+the HP share. **First move is diagnostic, not design:** find out whether boss knockback
+resistance is being applied to the wall's push at all.

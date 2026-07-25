@@ -45,6 +45,26 @@ Two consequences, both learned by shipping the wrong thing:
   sufficient alone, which is why the first design (gap only, justified at length) was half an
   instrument.
 
+## The peak window, not the wave average
+
+**A wave is not one workload.** Daniel, second capture: *"p50 would often go to 33, then drop
+back down to 16.7 at the end of the level when the active enemies had been thinned out."*
+A wave ramps — spawns arrive, the field fills, the player clears it — so a whole-wave
+aggregate averages the crunch together with the mop-up and reports neither.
+
+Worse, it smears **both axes at once**: the timing *and* the entity count beside it. The
+first phone capture appeared to show the wave-20 step happening at the *fewest* entities on
+the table, which read as strong evidence that cost was not entity-driven. That comparison is
+invalid — wave 19's "18 entities" and wave 20's "10" are wave-long means, and neither
+describes the moment the frames actually dropped. **A conclusion drawn from two aggregates
+whose peaks are invisible is not a conclusion.**
+
+So each wave reports its **worst `WINDOW` window** (~2s), re-evaluated every `WINDOW_STRIDE`
+frames, and the entity count reported beside it is the mean **inside that same window** —
+co-timed, so the row is internally consistent and the cost/count question can actually be
+asked. Whole-wave figures are still computed and available; the table shows the peak, because
+the peak is what the player feels and the average is what hides it.
+
 ## What it records
 
 Samples are bucketed **per wave**, because the complaint is shaped like a wave number and a

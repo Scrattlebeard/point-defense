@@ -169,6 +169,7 @@ document.addEventListener('fullscreenchange', () => {
 
 // ---------- frame loop ----------
 let last = performance.now();
+let sampledOnce = false;
 function loop(now) {
   // clamp BOTH ends: rAF timestamps can run backward vs performance.now()
   // (seen in headless Firefox), and negative dt turns every "decay toward
@@ -181,6 +182,12 @@ function loop(now) {
   // watches judder (core/perf.md "What this cannot tell you").
   const frameMs = now - last;
   last = now;
+  // The first gap is not a frame: `last` is stamped at module load, so it spans
+  // page setup (and any ?turbo pre-sim). Sampling it reports a multi-second
+  // "hitch" that no player ever experienced — the 2199ms max in the first phone
+  // capture was exactly this, not a stall.
+  const startupFrame = !sampledOnce;
+  sampledOnce = true;
   const workT0 = G.perf ? performance.now() : 0;
   if (G.mode === 'play' && !G.frozen) {
     updateInput(G);
@@ -196,7 +203,9 @@ function loop(now) {
   }
   renderFrame(G);
   if (G.perf) {
-    samplePerf(G.perf, frameMs, {
+    // skip only the SAMPLE on the startup frame, never the draw — gating both
+    // hid the overlay entirely until frame two
+    if (!startupFrame) samplePerf(G.perf, frameMs, {
       wave: G.S ? G.S.wave : 0,
       ents: G.S ? G.S.enemies.length : 0,
       parts: G.fx ? G.fx.parts.length : 0,
@@ -408,6 +417,9 @@ if (location.search.includes('autostart')) {
         const drawMs = performance.now() - t0;
         // In a pre-sim there is no vsync, so the gap IS the work — reporting it in
         // both columns keeps the table honest rather than showing a hollow 0.0.
+        // No vsync in a pre-sim, so these are raw draw costs, not frame gaps —
+        // `dropped` is a vsync concept and would be nonsense here (core/perf.md).
+        G.perf.synthetic = true;
         samplePerf(G.perf, drawMs, {
           wave: G.S.wave, ents: G.S.enemies.length, parts: G.fx.parts.length, work: drawMs,
         });

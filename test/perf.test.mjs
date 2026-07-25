@@ -5,8 +5,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  makePerf, samplePerf, perfStats, perfRows,
-  FRAME_BUDGET_MS, KEEP_SAMPLES, KEEP_WAVES, MIN_SAMPLES,
+  makePerf, samplePerf, perfStats, perfRows, refreshMs,
+  FRAME_BUDGET_MS, KEEP_SAMPLES, KEEP_WAVES, MIN_SAMPLES, WINDOW,
 } from '../src/core/perf.js';
 
 const feed = (p, wave, times, ents = 10, parts = 20) => {
@@ -45,7 +45,7 @@ test('a vsync-locked 60fps run reports essentially NO dropped frames', () => {
     `a clean 60fps run reported ${(s.dropped * 100).toFixed(0)}% dropped — the budget-comparison bug`);
 });
 
-test('dropped frames are relative to the median, so any refresh rate works', () => {
+test('dropped frames are relative to the refresh interval, so any panel works', () => {
   // 120Hz panel: 8.3ms is perfect and 16.7ms is a DROPPED frame — the exact value
   // that is flawless on a 60Hz one. An absolute budget cannot express that.
   const oneTwenty = [...Array(90).fill(8.3), ...Array(10).fill(16.7)];
@@ -53,6 +53,25 @@ test('dropped frames are relative to the median, so any refresh rate works', () 
   assert.ok(Math.abs(s.dropped - 0.10) < 0.001, `120Hz drops read ${s.dropped}`);
   assert.ok(Math.abs(perfStats(Array(100).fill(16.7)).dropped) < 0.001,
     'a steady 16.7ms stream is 60fps and must read as zero drops, not 100%');
+});
+
+// The bug that made a session-wide baseline necessary. Scored against its OWN
+// median, a window where every frame is 33.3 has a cut of 50 and reports zero
+// drops — a solidly 30fps stretch graded flawless, and those are precisely the
+// windows the peak-window table selects for.
+test('a uniformly 30fps window is not "no dropped frames"', () => {
+  const solid30 = Array(120).fill(33.3);
+  assert.equal(perfStats(solid30).dropped, 0, 'setup: self-referential scoring reports zero');
+  const s = perfStats(solid30, 16.7); // told what a refresh interval actually is
+  assert.equal(s.dropped, 1, 'every frame in a 30fps window is a dropped frame');
+});
+
+test('the refresh interval is estimated from the whole session, not the bad part', () => {
+  const p = makePerf();
+  feed(p, 1, Array(400).fill(16.7));          // healthy stretch
+  feed(p, 2, Array(200).fill(33.3));          // a bad wave
+  assert.ok(Math.abs(refreshMs(p) - 16.7) < 1,
+    `refresh estimated at ${refreshMs(p).toFixed(1)} — the bad wave moved the baseline`);
 });
 
 test('a single hitch and a sustained overrun are distinguishable', () => {
@@ -150,4 +169,37 @@ test('the gate trips when JS actually gets expensive', () => {
   // a net that has never failed is theatre: this is the failing direction, pinned
   assert.equal(scorePerf([row(9, FRAME_BUDGET_MS * 0.9)]).ok, false);
   assert.equal(scorePerf([row(9, FRAME_BUDGET_MS * 0.01)]).ok, true);
+});
+
+
+// ---- the peak window (core/perf.md "The peak window, not the wave average") ----
+
+test('a wave reports its WORST window, not its average — the crunch, not the mop-up', () => {
+  // Daniel's second capture: "p50 would often go to 33, then drop back down to
+  // 16.7 at the end of the level when the active enemies had been thinned out."
+  const p = makePerf();
+  feed(p, 12, Array(WINDOW * 2).fill(33.3), 40);  // the crunch: dense field
+  feed(p, 12, Array(WINDOW * 6).fill(16.7), 4);   // the mop-up: field thinned
+  const r = perfRows(p).at(-1);
+  assert.ok(r.p50 > 30,
+    `reported p50 ${r.p50} — the wave average buried a sustained 30fps stretch`);
+});
+
+test('the entity count is CO-TIMED with the peak, or the row cannot be reasoned about', () => {
+  // The whole point: "was it slow because there were more shapes?" is unanswerable
+  // if the timing comes from the crunch and the count comes from the whole wave.
+  const p = makePerf();
+  feed(p, 9, Array(WINDOW * 2).fill(33.3), 40);
+  feed(p, 9, Array(WINDOW * 6).fill(16.7), 4);
+  const r = perfRows(p).at(-1);
+  assert.ok(r.ents > 30,
+    `reported ${r.ents.toFixed(1)} entities beside a 33ms peak — that is the wave mean, ` +
+    'not the field that was actually on screen when the frames dropped');
+});
+
+test('a wave that is uniformly fine reports fine — the peak is not a worst-frame hunt', () => {
+  const p = makePerf();
+  feed(p, 4, Array(WINDOW * 4).fill(16.7), 10);
+  const r = perfRows(p).at(-1);
+  assert.ok(r.p50 < 20, `a clean wave reported a peak p50 of ${r.p50}`);
 });
