@@ -405,8 +405,11 @@ if (location.search.includes('autostart')) {
       if (G.perf) {
         const t0 = performance.now();
         renderFrame(G);
-        samplePerf(G.perf, performance.now() - t0, {
-          wave: G.S.wave, ents: G.S.enemies.length, parts: G.fx.parts.length,
+        const drawMs = performance.now() - t0;
+        // In a pre-sim there is no vsync, so the gap IS the work — reporting it in
+        // both columns keeps the table honest rather than showing a hollow 0.0.
+        samplePerf(G.perf, drawMs, {
+          wave: G.S.wave, ents: G.S.enemies.length, parts: G.fx.parts.length, work: drawMs,
         });
       }
       if (sig === 'levelup') {
