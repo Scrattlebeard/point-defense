@@ -133,3 +133,41 @@ test('a guarded boss draws its own tell, in a channel nothing else uses', () => 
   assert.ok(!taken.some(c => '#ffd166'.toLowerCase() === String(c).toLowerCase()),
     'gold must not collide with armored grey, shielded blue, siege red or hit-flash white');
 });
+
+// ?noblur (render.js) — the A/B switch for the shadowBlur hypothesis (PINS [perf]).
+// A hatch that quietly does nothing is worse than no hatch: it would send back a
+// null result from the device and retire a live suspect for the wrong reason. So
+// both directions are pinned.
+import { setGlow } from '../src/app/render.js';
+
+function blurredDraws(G) {
+  let blurred = 0, blur = 0;
+  const inner = G.ctx;
+  const spy = new Proxy(inner, {
+    get(t, k) {
+      if (k === 'shadowBlur') return blur;
+      const v = t[k];
+      if (typeof v === 'function' && (k === 'stroke' || k === 'fill' || k === 'fillText')) {
+        return (...a) => { if (blur > 0) blurred++; return v.apply(t, a); };
+      }
+      return v;
+    },
+    set(t, k, v) { if (k === 'shadowBlur') blur = v; else t[k] = v; return true; },
+  });
+  renderFrame({ ...G, ctx: spy });
+  return blurred;
+}
+
+test('?noblur actually removes every blurred draw, and the default keeps them', () => {
+  const G = deepField(30, 8);
+  assert.ok(G.S.enemies.length > 0, 'setup: shapes on the field');
+
+  setGlow(true);
+  const on = blurredDraws(G);
+  setGlow(false);
+  const off = blurredDraws(G);
+  setGlow(true); // leave the module as we found it
+
+  assert.ok(on > 0, 'the default must still glow — this is the control arm');
+  assert.equal(off, 0, `?noblur left ${off} blurred draws — the A/B would measure nothing`);
+});

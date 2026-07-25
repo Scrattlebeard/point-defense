@@ -56,6 +56,23 @@ export function renderFrame(G) {
 
 const SPARKS_ON = typeof location !== 'undefined' && location.search.includes('sparks');
 
+// ?noblur — the A/B switch for the shadowBlur hypothesis (PINS [perf]). Canvas
+// shadow blur is the most expensive 2D operation on a mobile GPU (each one forces
+// an offscreen blur pass), and this renderer applies it per-enemy: every shape
+// currently flashing from a hit, plus every swift one. Measured 2.5 blurred draws
+// per frame at wave 14 rising to 7.3 by wave 29 — which is the right SHAPE to
+// explain the observed p95 step, and unmeasurable from here because nothing in
+// this repo can time a GPU. So it ships as a hatch the device can settle, not as
+// a change to a law-governed channel (app.md "the hit pop is a stroke + glow").
+let glowOn = typeof location === 'undefined' || !location.search.includes('noblur');
+/** Test seam — the hatch must be provably load-bearing, not decorative. */
+export function setGlow(on) { glowOn = on; }
+function glow(ctx, color, amount) {
+  if (!glowOn) return;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = amount;
+}
+
 function drawGrid(G) {
   const { ctx, W, H } = G;
   ctx.strokeStyle = 'rgba(110, 150, 230, 0.055)';
@@ -593,16 +610,13 @@ function drawEnemies(G) {
 
     // variant under-glow
     const has = id => e.variants.includes(id);
-    if (has('swift')) {
-      ctx.shadowColor = '#ffffff';
-      ctx.shadowBlur = 14;
-    }
+    if (has('swift')) glow(ctx, '#ffffff', 14);
 
     // wireframe: enemies are outlines, never fills (app.md "fill encodes allegiance").
     // The hit pop is a thickened white stroke + glow — never a fill, or the law is
     // false on nearly every shape in a busy wave (app.md "hit pop is a stroke").
     const hit = e.flash > 0;
-    if (hit) { ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 12; }
+    if (hit) glow(ctx, '#ffffff', 12);
     ctx.lineWidth = (2 + e.r * 0.05) * (hit ? 2.1 : 1);
     ctx.strokeStyle = hit ? '#ffffff' : e.color;
     poly(ctx, e.x, e.y, e.r, e.sides, e.rot);
@@ -758,8 +772,8 @@ function drawTower(G) {
   ctx.beginPath(); ctx.arc(G.cx, G.cy, TOWER_R + 8, -Math.PI / 2, -Math.PI / 2 + TAU * frac); ctx.stroke();
   // body
   const pulse = 1 + 0.04 * Math.sin(S.time * 3);
-  ctx.shadowColor = color;
-  ctx.shadowBlur = 22;
+  glow(ctx, color, 22); // the tower's own glow — routed through the hatch so
+                        // ?noblur removes ALL blur and the A/B isolates cleanly
   ctx.fillStyle = color;
   ctx.beginPath(); ctx.arc(G.cx, G.cy, (TOWER_R - 4) * pulse, 0, TAU); ctx.fill();
   ctx.shadowBlur = 0;
@@ -833,7 +847,7 @@ function drawMiniSpecimen(ctx, x, y, icon) {
   const r = 9;
   const ids = icon.variants || (icon.variant ? [icon.variant] : []);
   const has = id => ids.includes(id);
-  if (has('swift')) { ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 8; }
+  if (has('swift')) glow(ctx, '#ffffff', 8);
   ctx.lineWidth = 1.8;
   ctx.strokeStyle = icon.color;
   poly(ctx, x, y, r, icon.sides, -Math.PI / 2);

@@ -612,59 +612,63 @@ code.*
 - **Where:** `scripts/calibrate.mjs` default, `.github/workflows/pages.yml` (the `32`),
   README "Balance tooling".
 
-## [perf] Frame rate on device — instruments built, and the prime suspect was WRONG
+## [perf] The device answered: 60fps median, a step at wave 20, and blur is the suspect
 
-Daniel, fresh account on /dev, phone (installed PWA), 2026-07-25: *"Game noticeably starts
-struggling/slowing down at wave 17 - seems like we need an optimisation pass."*
+**First real capture, 2026-07-25 (Daniel's phone, installed PWA, /dev/?perf, run to wave
+45).** The instrument worked and immediately corrected two things — one about the game, one
+about the instrument.
 
-**The gap this pin opened is closed: the project can observe a frame now.** `?perf` draws a
-live per-wave table (p50 / p95 / %-over-budget / entity count) on canvas so it works in an
-installed PWA, and `scripts/perf.mjs` is a deterministic JS-cost gate wired into CI beside
-calibrate and conductor. Details in README "Performance tooling" and `src/core/perf.md`.
+**What the game does.** Every reading is an exact multiple of 16.7ms: the panel is 60Hz and
+vsync hands out whole frames. `p50 = 16.7` at **every wave from 17 to 45** — the median frame
+is a clean 60fps even at wave 45. The signal is in p95:
 
-**The hypothesis this pin carried was mine and it is not supported.** It named the Jul-24/25
-cost-weighted composition change (ADR-0008, ~25% more bodies) as prime suspect and said to
-rule out regen's wave-17 debut. Measured instead:
+```
+wave 17  p50 16.7  p95 16.8  ents 13     one refresh
+wave 18      16.7      16.7       20
+wave 19      16.7      17.0       18
+wave 20      16.7      33.3       10  <- STEPS, at the FEWEST entities on the table
+wave 21      16.7      33.4       19
+...
+wave 45      16.7      33.5       13
+wave 36      33.3      49.9       24  <- a whole wave at 30fps
+```
 
-| what | where | cost per frame | entities |
-|------|-------|----------------|----------|
-| our JS (sim + full draw path) | node, stub canvas | **0.02–0.04 ms** = 0.2% of budget | 14–38 |
-| a real rendered frame | headless Firefox, desktop | **p50 2.0 ms · p95 3–4 ms** | 1–7 |
+- **The step is at wave 20 and it is NOT entity count.** Wave 20 carries ten entities, fewer
+  than 19 (18 ents, p95 17.0) or 21 (19 ents, p95 33.4). Cost per shape is rising while the
+  number of shapes is not. This kills the last of the ADR-0008 "more bodies" story.
+- **Median performance is fine; the tail is not.** ~5% of frames drop one refresh from wave
+  20 on, one whole wave (36) ran at a 30fps median, and a 2199ms hitch appeared in the
+  wave-37 session. "Struggling from wave 17" is a true report of the tail, not the median.
 
-- **Our JavaScript is not the bottleneck and is not close.** At wave 22 with 38 live
-  entities, sim + the entire draw path costs 0.036 ms — two tenths of one percent of a
-  frame. Twenty-five percent more bodies through *that* costs nothing anyone can feel, so
-  ADR-0008 is very unlikely to be the cause.
-- **Rasterisation costs ~100× our code, and is already 12–24% of a frame on a desktop with
-  1–7 entities on screen.** That is the number that should worry us: baseline cost is high
-  before the field is populated at all. A phone GPU is several times slower again, which
-  would put the *empty-field* baseline near budget and make wave 17 the point where a
-  modest entity count tips it over. **Hypothesis, clearly labelled** — it fits, and it is
-  not measured.
-- **dpr is already capped at 2** (`main.js resize`), so the classic mobile own-goal is not
-  in play.
+**The suspect, and it is a hypothesis, not a diagnosis.** `render.js` sets `shadowBlur`
+**per enemy**: 12 for every shape currently flashing from a hit, 14 for every swift one, 22
+for the tower. Canvas shadow blur is the most expensive 2D operation on a mobile GPU — each
+forces an offscreen blur pass. Measured in the headless harness: **2.5 blurred draws per
+frame at wave 14, rising to 7.3 by wave 29.** At a plausible 1–3ms per blurred draw on phone
+silicon that alone spans the budget, and it scales with *how many shapes are being hit*
+rather than how many exist — which is exactly the shape of the wave-20 step. **Nothing in
+this repo can time a GPU, so this cannot be confirmed here.**
 
-**A trap worth keeping, because it cost two measurements.** The first profiling rig used a
-maxed loadout and reported entity counts of **1–11** — a maxed build kills everything on
-contact, so it profiles an empty screen. A natural (level-up-driven) build carries **14–38**.
-*A performance rig that plays well measures nothing.* `scripts/perf.mjs` takes no gear by
-default for exactly this reason.
+**The experiment is built and takes one run:** `?noblur` suppresses every blur in the
+renderer. Play the same waves with and without and compare the `drop` column. A test pins
+that the hatch removes *all* blurred draws and the default keeps them — a hatch that quietly
+does nothing would send back a null result and retire a live suspect for the wrong reason.
 
-**Next, in order:**
-1. **Daniel, on the phone: `…/dev/?perf`, play to ~20, screenshot the table.** That single
-   artifact answers the scaling question nothing here can: does p95 rise with `ents`, or is
-   the baseline already bad at wave 1? The two point at completely different fixes.
-2. If baseline-bound: the suspects are full-screen gradients, `shadowBlur`, and overdraw —
-   cost scales with *area*, not with call count, and nothing here counts area. Measured
-   ~1 gradient and ~1 blurred fill per frame, so the count is small; the area may not be.
-3. If entity-bound: per-shape highlight draws and the annulus allocator are the first place
-   to look, and the `?specimen` plate already isolates them.
-4. Only then optimise. **Do not start from the ADR-0008 story** — it is the thing that got
-   ruled out.
+**If it is confirmed**, the fix is a design question, not a tuning one, because the glow is
+load-bearing in two named channels: app.md's *"the hit pop is a stroke + glow"* and the swift
+variant's white-hot highlight (README pillar 3). Candidate routes, none costed: pre-render
+the glow once into an offscreen sprite and blit it; drop blur for a brighter/thicker stroke
+and check the pop still reads on the `?specimen` plate; or cap blurred draws per frame,
+which is the ugliest because it makes legibility load-dependent.
 
-**Standing lesson, revised.** The original read: every gate measures whether the game is
-*correct*, none measures whether it is *playable*. Still true, and now half-fixed — but the
-sharper version is that **the cheap instrument and the true instrument were different
-instruments.** A stub canvas is free, deterministic and gateable, and it is blind to the
-entire half of the cost that matters. Shipping it without saying so would have produced a
-green light meaning nothing.
+**And what it corrected about my own instrument, which is the more embarrassing half.** The
+first version defined "over budget" as *longer than 16.67ms*. Against vsync that counts float
+noise: it reported **72–94% of frames over budget while the phone held a clean 60fps**, and
+painted the entire table red. That is precisely the failure I had written a test against —
+"an instrument that argues with the person holding the phone" — guarded in the wrong
+direction. `drop` is now *longer than 1.5× the median*, refresh-rate agnostic, with the
+60fps case pinned as a regression test. A second column, `work`, now reports what our own
+code spent inside the frame: **the gap says whether we dropped a frame, work says how much
+headroom is left, and once vsync-locked the gap alone cannot tell those apart.** The original
+design timed only the gap and I wrote a paragraph justifying it — right about detection,
+wrong about diagnosis.

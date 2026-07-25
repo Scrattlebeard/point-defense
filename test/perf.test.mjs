@@ -29,9 +29,30 @@ test('p95 catches judder that the mean hides — the reason p95 is the headline'
   assert.equal(s.worst, 40);
 });
 
-test('`over` is the fraction of frames the player did not get', () => {
+test('`dropped` is the fraction of frames the player did not get', () => {
   const s = perfStats([...Array(75).fill(5), ...Array(25).fill(30)]);
-  assert.ok(Math.abs(s.over - 0.25) < 0.001, `expected 0.25, got ${s.over}`);
+  assert.ok(Math.abs(s.dropped - 0.25) < 0.001, `expected 0.25, got ${s.dropped}`);
+});
+
+// REGRESSION, from the first phone capture (core/perf.md "Vsync quantizes everything").
+// The original definition was "longer than FRAME_BUDGET_MS", which reported 72-94% of
+// frames over budget for a game holding a clean 60fps, because a vsynced frame measures
+// ~16.7 against a 16.666 budget. The instrument was arguing with the player.
+test('a vsync-locked 60fps run reports essentially NO dropped frames', () => {
+  const sixty = Array.from({ length: 600 }, (_, i) => 16.7 + (i % 3) * 0.05);
+  const s = perfStats(sixty);
+  assert.ok(s.dropped < 0.02,
+    `a clean 60fps run reported ${(s.dropped * 100).toFixed(0)}% dropped — the budget-comparison bug`);
+});
+
+test('dropped frames are relative to the median, so any refresh rate works', () => {
+  // 120Hz panel: 8.3ms is perfect and 16.7ms is a DROPPED frame — the exact value
+  // that is flawless on a 60Hz one. An absolute budget cannot express that.
+  const oneTwenty = [...Array(90).fill(8.3), ...Array(10).fill(16.7)];
+  const s = perfStats(oneTwenty);
+  assert.ok(Math.abs(s.dropped - 0.10) < 0.001, `120Hz drops read ${s.dropped}`);
+  assert.ok(Math.abs(perfStats(Array(100).fill(16.7)).dropped) < 0.001,
+    'a steady 16.7ms stream is 60fps and must read as zero drops, not 100%');
 });
 
 test('a single hitch and a sustained overrun are distinguishable', () => {
@@ -93,7 +114,7 @@ test('entity and particle counts are means over the bucket, so a row explains it
 test('perfStats on nothing returns zeroes rather than NaN', () => {
   // The HUD draws on frame one, before any wave has enough samples.
   const s = perfStats([]);
-  for (const k of ['p50', 'p95', 'worst', 'over']) {
+  for (const k of ['p50', 'p95', 'worst', 'dropped']) {
     assert.equal(s[k], 0, `${k} was ${s[k]} — a NaN here paints "NaN" across the screen`);
   }
 });

@@ -181,6 +181,7 @@ function loop(now) {
   // watches judder (core/perf.md "What this cannot tell you").
   const frameMs = now - last;
   last = now;
+  const workT0 = G.perf ? performance.now() : 0;
   if (G.mode === 'play' && !G.frozen) {
     updateInput(G);
     const sig = updateGame(G, dt);
@@ -199,6 +200,9 @@ function loop(now) {
       wave: G.S ? G.S.wave : 0,
       ents: G.S ? G.S.enemies.length : 0,
       parts: G.fx ? G.fx.parts.length : 0,
+      // measured BEFORE the HUD draws itself: an instrument must not bill the
+      // player for its own overlay (core/perf.md)
+      work: performance.now() - workT0,
     });
     drawPerfHud(G);
   }

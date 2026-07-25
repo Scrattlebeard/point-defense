@@ -131,19 +131,42 @@ So rasterisation costs roughly **a hundred times** our own code, and it is alrea
 therefore says nothing about whether the game is playable** — it says our loops did
 not regress. The playability question is answered by `?perf` on a real device.
 
+**`?noblur` — the A/B switch for the current suspect.** Suppresses every
+`shadowBlur` in the renderer. Canvas shadow blur is the most expensive 2D
+operation on a mobile GPU (each forces an offscreen blur pass), and this renderer
+applies it *per enemy*: every shape flashing from a hit, plus every swift one.
+Measured **2.5 blurred draws per frame at wave 14 rising to 7.3 by wave 29** — the
+right shape to explain the observed p95 step, and unmeasurable here because
+nothing in this repo can time a GPU. Run the same waves with and without it and
+compare the `drop` column. Pinned by a test asserting the hatch removes *all*
+blurred draws and the default keeps them: a hatch that quietly does nothing would
+send back a null result and retire a live suspect for the wrong reason.
+
 **`?perf` — the on-device instrument.** A canvas-drawn overlay (canvas, not DOM, so
 it survives a fullscreen PWA *and* lands in a headless screenshot) showing live
-p50/p95/max and a per-wave table of p50, p95, %-of-frames-over-budget and mean
-entity count. Colour-coded against the 16.67ms budget, because it gets read at a
-glance while something else is happening. **p95 is the headline, not the mean:** a
-run that draws 90% of frames in 6ms and 10% in 40ms averages "fine" and feels
-broken — judder is a tail property. Off by default and free when off; `G.perf`
-stays null and the sampler is never called.
+p50/p95/max and a per-wave table: **p50, p95, drop%, work, ents**. **p95 is the
+headline, not the mean:** a run that draws 90% of frames in 6ms and 10% in 40ms
+averages "fine" and feels broken — judder is a tail property. Off by default and
+free when off; `G.perf` stays null and the sampler is never called.
 
-Frame time is measured as the **gap between `requestAnimationFrame` callbacks**,
-not as the duration of our own work: compositing and rasterisation happen after we
-return, so timing only our JS would report a comfortable number while the player
-watches the game stutter.
+Two columns, because either alone is half an instrument:
+
+- **p50 / p95 / drop** are the **gap between `requestAnimationFrame` callbacks** —
+  what the player actually got. Compositing happens after we return, so timing
+  only our own work would report a comfortable number while the phone stutters.
+- **work** is the wall time our `updateGame + renderFrame` consumed *inside* the
+  frame (sampled before the HUD draws itself — an instrument must not bill the
+  player for its own overlay). This is the headroom reading, and it exists because
+  the gap is **vsync-quantized**: once locked, "we spent 3ms and waited" and "we
+  spent 16ms and just made it" are the same number.
+
+**`drop` is relative to the median, never to an absolute budget.** The first phone
+capture returned p50 = 16.7 at every wave from 17 to 45 and p95 of exactly 16.8 /
+33.4 / 50.0 — one, two and three refresh intervals on a 60Hz panel. The original
+"longer than 16.67ms" definition therefore counted float noise and reported
+**72–94% of frames over budget for a game holding a clean 60fps**, painting the
+whole table red. `drop` now means *longer than 1.5× the median*, which is
+refresh-rate agnostic and reads correctly on a 90 or 120Hz screen too.
 
 *Combined with `?turbo`/`?warp=N`, `?perf` also draws and times every pre-simulated
 frame, so the load event fires with a populated table — the only way to read a

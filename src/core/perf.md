@@ -22,6 +22,29 @@ complained about: a run that renders 90% of frames in 6ms and 10% in 40ms *feels
 *averages* fine. Judder is a tail property, so the tail is what gets reported. `worst` is
 kept beside it because a single 300ms hitch is a different bug from a sustained 20ms.
 
+## Vsync quantizes everything, and the first version of this got it wrong
+
+**On a real device, frame times are not a continuous quantity.** The first phone capture
+(2026-07-25, waves 17→45) returned p50 = **16.7** at every single wave and p95 of exactly
+**16.8 / 33.4 / 50.0** — one, two and three refresh intervals on a 60Hz panel. The compositor
+hands out whole frames; you never observe "we used 21ms", only which multiple you landed on.
+
+Two consequences, both learned by shipping the wrong thing:
+
+- **`over` cannot be "longer than the budget".** A perfectly vsynced 60fps frame measures
+  ~16.7ms against a 16.666ms budget, so the original definition counted float noise and
+  reported **72–94% of frames over budget for a game holding a solid 60fps** — the whole
+  table red while the phone was hitting its target. An instrument that argues with the person
+  holding the device is worse than no instrument. `dropped` now means **longer than 1.5× the
+  median frame**, which is refresh-rate agnostic: it catches 33.4 against a 16.7 median and
+  16.7 against an 8.3 one, with no assumption about the panel.
+- **The gap alone cannot diagnose.** Once vsync-locked, "we spent 3ms and waited" and "we
+  spent 16ms and just made it" are *the same reading*. So the HUD reports **`work`** beside
+  it — the wall time our `updateGame + renderFrame` actually consumed inside the frame. The
+  gap says *whether* we dropped; work says *how much headroom is left*. Neither is
+  sufficient alone, which is why the first design (gap only, justified at length) was half an
+  instrument.
+
 ## What it records
 
 Samples are bucketed **per wave**, because the complaint is shaped like a wave number and a
@@ -30,12 +53,14 @@ per-wave table is the artifact a playtester can screenshot and send back. Each b
 | field | meaning |
 |-------|---------|
 | `wave` | the wave these frames were drawn during |
-| `ms` | bounded ring of recent frame times (`KEEP_SAMPLES`, ~10s at 60fps) |
+| `ms` | bounded ring of recent frame times — the rAF *gap* (`KEEP_SAMPLES`, ~10s at 60fps) |
+| `work` | bounded ring of the wall time our own update+render consumed inside those frames |
 | `ents` / `parts` | mean live enemies and fx particles over the bucket — the two counts most likely to explain a cost curve |
 | `n` | frames sampled (a bucket with too few is not reported: `MIN_SAMPLES`) |
 
-`perfStats(ms)` returns `{ p50, p95, worst, over }`, where `over` is the **fraction of frames
-past budget** — the closest single number to "does this feel bad".
+`perfStats(ms)` returns `{ p50, p95, worst, dropped }`, where `dropped` is the **fraction of
+frames longer than 1.5× the median** — the closest single number to "does this feel bad", and
+the only one that survives vsync quantization.
 
 ## Bounded by construction
 
@@ -54,7 +79,7 @@ itself is an array write and four adds.
 ```js
 makePerf()                       -> state
 samplePerf(state, ms, {wave, ents, parts})
-perfStats(msArray)               -> { p50, p95, worst, over }
+perfStats(msArray)               -> { p50, p95, worst, dropped }
 perfRows(state)                  -> [{ wave, p50, p95, worst, over, ents, parts, n }, …]
 FRAME_BUDGET_MS, KEEP_SAMPLES, KEEP_WAVES, MIN_SAMPLES
 ```

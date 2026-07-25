@@ -2,7 +2,7 @@
 // Deliberately canvas-drawn rather than DOM: it must survive a fullscreen PWA on a
 // phone, and it must appear in a headless screenshot — which is the only way this
 // repo can read a number off a real rasteriser.
-import { perfRows, perfStats, FRAME_BUDGET_MS } from '../core/perf.js';
+import { perfRows, perfStats } from '../core/perf.js';
 
 const PAD = 8;
 // clears the DOM HUD's wave/level line, which also lives at the top-left
@@ -13,10 +13,13 @@ const WARN = '#ffd24d';
 const BAD = '#ff5c6c';
 
 /** Colour is the whole point: a table of numbers on a phone screen is unreadable
- *  at a glance, and this gets read at a glance while something else is happening. */
-function tint(p95) {
-  if (p95 > FRAME_BUDGET_MS * 1.5) return BAD;
-  if (p95 > FRAME_BUDGET_MS) return WARN;
+ *  at a glance, and this gets read at a glance while something else is happening.
+ *  Keyed on DROPPED FRAMES, not on p95 against an absolute budget — the first
+ *  version painted the whole table red for a phone running a clean 60fps
+ *  (core/perf.md "Vsync quantizes everything"). */
+function tint(dropped) {
+  if (dropped > 0.10) return BAD;
+  if (dropped > 0.02) return WARN;
   return OK;
 }
 
@@ -33,7 +36,7 @@ export function drawPerfHud(G) {
   }
   const { rows, live } = cache;
 
-  const w = 190;
+  const w = 232;
   const h = PAD * 2 + LINE * (rows.length + 2);
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0);      // pin to the physical top-left, unshaken
@@ -51,22 +54,25 @@ export function drawPerfHud(G) {
   ctx.textAlign = 'left';
 
   let y = PAD + LINE - 3;
-  ctx.fillStyle = tint(live.p95);
+  ctx.fillStyle = tint(live.dropped);
   ctx.fillText(
     `p50 ${live.p50.toFixed(1)}  p95 ${live.p95.toFixed(1)}  max ${live.worst.toFixed(0)}`,
     PAD, y);
   y += LINE;
   ctx.fillStyle = '#8fa6c8';
-  ctx.fillText('wave  p50   p95   over  ents', PAD, y);
+  // `work` is ours; p50/p95 are the vsync-quantized gap. Both, because either
+  // alone is half an instrument (core/perf.md).
+  ctx.fillText('wave  p50   p95  drop  work  ents', PAD, y);
 
   for (const r of rows) {
     y += LINE;
-    ctx.fillStyle = tint(r.p95);
+    ctx.fillStyle = tint(r.dropped);
     ctx.fillText(
       String(r.wave).padStart(4) + '  ' +
       r.p50.toFixed(1).padStart(4) + '  ' +
       r.p95.toFixed(1).padStart(5) + '  ' +
-      (r.over * 100).toFixed(0).padStart(3) + '%  ' +
+      (r.dropped * 100).toFixed(0).padStart(3) + '%  ' +
+      r.work.toFixed(1).padStart(4) + '  ' +
       Math.round(r.ents).toString().padStart(4),
       PAD, y);
   }
