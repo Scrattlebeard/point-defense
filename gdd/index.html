@@ -174,9 +174,12 @@ status axis + §11 Route added after the prototype audit of 2026-07-25</p>
 </nav>
 
 <h2 id="vision"><span class="secnum">1</span>Vision</h2>
-<p class="status"><span class="badge proto">PROTOTYPE</span> The power fantasy lands; the
-horde does not credibly threaten it past the midgame, and the stand cannot yet hold
-(no win state exists). Focus — the core resource — is not scarce in code.</p>
+<p class="status"><span class="badge proto">PROTOTYPE</span> The power fantasy lands, and
+<strong>focus is scarce in code now</strong> — the slot budget caps a build at six weapons
+(ADR-0006), and the conductor gate holds the delegation law to a measured number in CI. The
+horde threatens credibly <em>at depth</em>: the strongest do-nothing build dies in most
+40-minute runs where it once survived untouched. It still does not threaten through the first
+~30 waves, and the stand cannot yet hold — no win state exists.</p>
 
 <p><strong>Point Defense is a Last Stand power fantasy.</strong> Your weapons tear
 through the horde — and the horde keeps coming. The odds are grim, new bullshit keeps
@@ -308,9 +311,7 @@ sentence contains a tradeoff. Tower choice may bend this archetype
 <p class="status"><span class="badge shipped">SHIPPED</span> the gesture vocabulary · no
 dead inputs · the two-axis taxonomy, slot budget and category ceilings (≤6 / ≤1 gun ·
 hold · swipe, 2026-07-25) · the gun slot (scatter and howitzer are guns; boomer demoted
-to auto) · <span class="badge proto">PROTOTYPE</span> burst as the form pilot — a
-max-bolt-gated card that still costs a slot until forms proper ·
-the <strong>form mechanism</strong>, with Burst as its pilot: a form regroups a weapon's
+to auto) · the <strong>form mechanism</strong>, with Burst as its pilot: a form regroups a weapon's
 output in time and never changes it, so it costs no slot and cannot become a stat wearing a
 name (2026-07-25) · <span class="badge unbuilt">UNBUILT</span> the other twelve forms, mastery
 XP as their unlock (they come off the lattice for now), the Rail.
@@ -570,8 +571,10 @@ choices, not sunk costs.</p>
 
 <h2 id="builds"><span class="secnum">7</span>Builds</h2>
 <p class="status"><span class="badge shipped">SHIPPED</span> lattice passives · pool unlocks ·
-three cards on level-up · <span class="badge unbuilt">UNBUILT</span> forms and form cards ·
-weapon priority · starting form · towers that bend the slot grammar (all four are stat profile
+three cards on level-up · <strong>forms and form cards</strong> (2026-07-25: the mechanism, plus Burst and Fan;
+a form costs no slot and is offered only on a maxed base weapon — this section's canonical
+wave-30 draft) · <span class="badge unbuilt">UNBUILT</span> mastery XP as the form unlock (they
+come off lattice nodes for now) · the other eleven forms · weapon priority · starting form · towers that bend the slot grammar (all four are stat profile
 + one extra starting weapon) · <span class="badge proto">PROTOTYPE</span> the mature-tree
 start: it tops out at <em>level 3</em> with 2 banked picks, against a spec asking for ~level
 20, and no wave-skip exists at all.</p>
@@ -645,10 +648,13 @@ bolt reaches max level.</p>
 
 <h2 id="visual-audio"><span class="secnum">8</span>Visual &amp; Audio Language</h2>
 <p class="status"><span class="badge shipped">SHIPPED</span> the Tron/cyber grammar · juice
-with restraint · <span class="badge unbuilt">UNBUILT</span> rhythm-as-loot (needs forms) ·
-haptics · <span class="badge proto">PROTOTYPE</span> radials as the motif — the lattice went
-rectilinear in ADR-0005 and is pinned to come back · the fill law already leaks: the white
-hit-flash fills every damaged shape, so volatile's core is not the only fill on the field.</p>
+with restraint · the fill law holds again — the white hit-flash used to fill
+every damaged shape, so volatile's core was not the only fill on the field; the hit pop is a
+stroke now · <span class="badge proto">PROTOTYPE</span> rhythm-as-loot: forms exist and the
+worn form shows wherever the loadout is, but the payoff is still <em>visual</em> — the audible
+half, a form having its own cadence in the mix, is unbuilt, and that is what the phrase
+actually promises · radials as the motif — the lattice went rectilinear in ADR-0005 and is
+pinned to come back · <span class="badge unbuilt">UNBUILT</span> haptics.</p>
 
 <ul>
   <li><strong>Tron/cyber: simple, shiny, geometric.</strong> Neon strokes on dark;
@@ -671,8 +677,12 @@ hit-flash fills every damaged shape, so volatile's core is not the only fill on 
 <p class="status"><span class="badge shipped">SHIPPED</span> first death at player level 5–10
 (CI-gated by <code>scripts/calibrate</code>) · introduction banners + highlight rings ·
 <span class="badge proto">PROTOTYPE</span> the drip bunches three beats into waves 4-5-6 —
-squarely on the wave where ~45% of fresh runs die — leaves a 4-wave gap at 17→21, and stops
-dead at wave 23 of a run the GDD aims at wave 50–100 ·
+squarely on the wave where ~45% of fresh runs die — and leaves a 4-wave gap at 17→21. The back
+half is answered: modifier stacking lands at wave 40 with its own introduction beat, and waves
+24–39 are deliberately vocabulary-free (the content there is combination, not new pieces).
+Debut waves are <em>stochastic</em> — swift's nominal wave-6 debut fires that wave in only <strong>53%</strong>
+of runs (measured 2026-07-25 over 4000 waves; it was ~45% before cost-weighted composition
+put more bodies on the field), so this spec states as fixed something that is a coin flip ·
 <span class="badge unbuilt">UNBUILT</span> the veteran skip.</p>
 
 <ul>
@@ -777,7 +787,11 @@ bosses ahead of its own order. Content is the reward for scarcity, not a substit
 
 <hr>
 <p class="meta-line">Point Defense GDD v0.2 · living document · edits land like any
-spec change: this file first, then tests, then code. <a href="#top">↑ top</a></p>
+spec change: this file first, then tests, then code. <strong>Status lines are audited, not
+appended</strong> — on 2026-07-25 five of them carried claims the code had outgrown (forms
+"UNBUILT" after forms shipped, burst "still costs a slot" after it stopped, the fill law
+"already leaks" after it was fixed), because new truth kept being added beside old truth
+instead of replacing it. A status line that is half true reads as fully true. <a href="#top">↑ top</a></p>
 
 </main>
 <script src="comments.js" defer></script>

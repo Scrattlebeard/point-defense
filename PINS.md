@@ -269,8 +269,11 @@ Numbers are measured (headless spikes over the real sim), not estimated.*
   content-firehose still coincides with peak difficulty wall. Spreading those is a real
   onboarding improvement and is independent of everything above.
 - **Also unresolved:** debut waves are **stochastic, not deterministic**. Swift's nominal
-  wave-6 debut only fires that wave in ~45% of runs (1.5% roll x ~39 spawns), so the first
-  modifier beat reliably slips to 7-8. The spec states debut waves as if fixed. Either pin
+  wave-6 debut fires that wave in **53%** of runs — re-measured 2026-07-25 over 4000 waves
+  (~49 spawns x a 1.5% roll). It was ~45% when first audited; cost-weighted composition put
+  more bodies on the field and moved it, which is itself the lesson: an inherited number
+  drifts when the system under it changes. So the first modifier beat is a coin flip rather
+  than a beat. The spec states debut waves as if fixed. Either pin
   the first sighting (force the debut variant onto one spawn in its debut wave) or state
   the slip honestly in `core.md`. Pinning it is probably right — a tutorial beat that
   fires "usually" is not a tutorial beat.
