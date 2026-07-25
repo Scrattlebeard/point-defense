@@ -261,8 +261,11 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
   | *Wall n/a* | *Blades n/a* | *Frost 0% (correct)* | |
 
 - **THREE CAVEATS, and the table is misleading without them:**
-  1. **Wall and Blades are UNMEASURED, not weak.** They need a swipe gesture and the robot
-     never swipes. Do not read their 0% as anything at all.
+  1. **Wall and Blades were UNMEASURED, not weak — now measured (2026-07-25).** No robot in
+     this project had ever swiped, so an entire input category was invisible to every
+     instrument. Teaching one to swipe: **Blades 17.2%** of damage — a solid contributor
+     that read as 0%. **Wall: see the note below, because its result nearly became a false
+     finding.**
   2. Hold weapons are measured with a channel held permanently, which flatters them against a
      human who must also aim.
   3. Frost's 0% is correct — it is a slow, not a damage source.
@@ -294,6 +297,22 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
     *guns*, the category bolt already locks out. So the gun-lockout fix has a second half
     nobody had noticed: even once a rival gun can be drafted, it would be a weak replacement
     for a bolt doing 55-70%.
+- **The Force Wall, and a metric trap worth more than the number.** Swiping walls made runs
+  reach **wave 13 instead of 25** in the same 900 seconds, monotonically worse the more walls
+  were placed. That reads as "the wall is actively harmful" — and it is wrong. **Nobody died
+  in any configuration: 0 deaths out of 3, in every policy including the baseline.** The wall
+  does not shorten runs, it *slows the clock*: it roughly halves the rate waves arrive at, at
+  no survival cost. That is time purchased at the largest scale measured here, and it is
+  exactly GDD section 4's "seconds purchased and setups created — not DPS". Two metrics had
+  it wrong in opposite directions: the damage census said 0% (unmeasured), and wave-reached
+  said harmful.
+- **This is a live caveat on the conductor gate, not just on the census.** The gate scores
+  hands by *wave reached*, which is rate-sensitive. A player who uses walls well would post a
+  LOWER wave number while being no worse off — so teaching the gate's robot to swipe would
+  make "hands are worth N waves" go **down**, for a reason that has nothing to do with hands
+  being worthless. The gate measures the aim dimension of hands only, and that limitation
+  should be understood before anyone "improves" the robot. Fixing it properly means a
+  survival-based or time-based comparison, not a wave-count one.
 - **Where:** `src/core/config.js` weapon stats; re-run the census after any change (the script
   shape is in this landing's commit; `S.dmgBy` is the instrument).
 - **Context:** this is the data the pin asked for when ten weapons shipped "sim-verified
