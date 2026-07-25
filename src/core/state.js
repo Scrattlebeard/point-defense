@@ -32,6 +32,11 @@ export function newRun(meta, towerId) {
   for (const w of fx.weapons) pool.add(w);
   for (const id in weapons) if (weapons[id] > 0) pool.add(id);
 
+  // The lattice authors the generic pool too (core.md "Generic cards"): a
+  // techLock'd card is absent until a node's unlockGeneric names it.
+  const generics = new Set(Object.keys(GENERICS).filter(id => !GENERICS[id].techLock));
+  for (const g of fx.generics) generics.add(g);
+
   const maxHp = Math.round((100 + fx.hpBonus) * tower.hpMult);
   const S = {
     towerId, maxHp, hp: maxHp,
@@ -41,7 +46,7 @@ export function newRun(meta, towerId) {
     cdMult: fx.cdMult,
     critChance: fx.critChance, critMult: fx.critMult,
     dmgTakenMult: fx.dmgTakenMult,
-    weapons, pool,
+    weapons, pool, generics,
     lvl: 1, xp: 0, xpNext: xpForLevel(1), pendingLevels: 0,
     wave: 0, kills: 0, bossKills: 0, time: 0,
     // run-scoped introduction record — banners repeat each run (core.md Introductions)
@@ -104,7 +109,7 @@ export function levelChoices(S, rng) {
     }
     opts.push({ type: 'weapon', id, lvl: l });
   }
-  for (const id of Object.keys(GENERICS)) {
+  for (const id of S.generics) {
     if (id === 'repair' && S.hp >= 0.7 * S.maxHp) continue;
     opts.push({ type: 'generic', id });
   }
@@ -124,6 +129,7 @@ export function applyChoice(S, c) {
   else if (c.id === 'bulkhead') { S.maxHp += 25; S.hp = Math.min(S.maxHp, S.hp + 25); }
   else if (c.id === 'overclock') S.dmgMult += 0.1;
   else if (c.id === 'coolant') S.cdMult *= 0.95;
+  else if (c.id === 'crit') S.critChance += 0.10;
 }
 
 /** Wave-clear breather: heal 4% max hp. */

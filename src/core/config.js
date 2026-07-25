@@ -187,12 +187,16 @@ export const WEAPONS = {
   },
 };
 
-// Generic level-up cards (always eligible; repair gated by hp in state.js).
+// Generic level-up cards. The pool is AUTHORED BY THE LATTICE (core.md "Generic
+// cards", GDD section 6): `techLock: true` keeps a card out until some node's
+// `effect.unlockGeneric` names it — the same contract `techLock` weapons have
+// with `unlockWeapon`. Repair is additionally gated by hp in state.js.
 export const GENERICS = {
   repair:    { name: 'Repair',    desc: 'Restore 40% max HP' },
   bulkhead:  { name: 'Bulkhead',  desc: '+25 max HP, healed on the spot' },
   overclock: { name: 'Overclock', desc: '+10% damage this run' },
   coolant:   { name: 'Coolant',   desc: '−5% cooldowns this run' },
+  crit:      { name: 'Critical Systems', desc: '+10% critical hit chance', techLock: true },
 };
 
 // ---------- Achievements ----------
@@ -270,7 +274,7 @@ export const LATTICE = [
   { id: 'over2',      sector: 'Arms', ring: 2, name: 'Overcharge II',  desc: '+8% damage',      cost: 40,  req: ['over1'],    effect: { dmgAdd: 0.08 } },
   { id: 'over3',      sector: 'Arms', ring: 3, name: 'Overcharge III', desc: '+8% damage',      cost: 100, req: ['over2'],    effect: { dmgAdd: 0.08 } },
   { id: 'over4',      sector: 'Arms', ring: 4, name: 'Overcharge IV',  desc: '+10% damage',     cost: 250, req: ['over3'],    effect: { dmgAdd: 0.10 } },
-  { id: 'prec',       sector: 'Arms', ring: 2, name: 'Precision',      desc: '10% crit chance (×2)', cost: 50, req: ['over1'], effect: { critChance: 0.1 } },
+  { id: 'prec',       sector: 'Arms', ring: 2, name: 'Precision',      desc: 'Crit cards join your level-up pool', cost: 50, req: ['over1'], effect: { unlockGeneric: 'crit' } },
   { id: 'prec2',      sector: 'Arms', ring: 3, name: 'Precision II',   desc: '+10% crit chance', cost: 110, req: ['prec'],    effect: { critChance: 0.1 } },
   { id: 'deadeye',    sector: 'Arms', ring: 4, name: 'Deadeye',        desc: '+10% crit chance', cost: 260, req: ['prec2'],   effect: { critChance: 0.1 } },
   { id: 'haste1',     sector: 'Arms', ring: 2, name: 'Haste I',        desc: '−6% cooldowns',   cost: 40,  req: ['over1'],    effect: { cdAdd: -0.06 } },

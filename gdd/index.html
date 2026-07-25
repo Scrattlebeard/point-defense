@@ -504,7 +504,11 @@ designed now.</p>
 <p class="status"><span class="badge shipped">SHIPPED</span> death → shards → lattice · free
 respec · <span class="badge unbuilt">UNBUILT</span> mastery exp · weapon trees · tower trees ·
 milestone-granted QoL (no mechanism exists) · <span class="badge proto">PROTOTYPE</span> the
-organizing principle: 15 of 70 lattice nodes author the draft (21%); the rest are flat stats.
+organizing principle: the <em>mechanism</em> now exists for both halves — weapons via
+<code>unlockWeapon</code> and, since 2026-07-25, generic cards via <code>unlockGeneric</code>
+(Precision buys the crit <em>card</em> rather than a flat stat, which is what makes §7's
+canonical wave-30 draft implementable at all). But only 16 of 70 nodes use it; the other 54
+are still flat stats, so the principle is wired, not yet honoured.
 Two live law violations: six Salvage nodes (×2.35 shard income) break no-meta-accel, and the
 whole 70-node lattice costs ~22 runs — about four hours, not "weeks of play."</p>
 
@@ -714,10 +718,17 @@ the player, and it expires when it reaches zero.</p>
   <tr><td>3</td><td><strong>Threats that bid</strong></td><td>Composition escalates past
     wave 29; chaff is chaff again; the rim is a real place; bosses force focus rather than
     joining the crowd.</td><td><a href="#threat-design">§5</a>, <a href="#the-run">§2</a></td></tr>
-  <tr><td colspan="4" style="font-size:.85em"><em>Phase 3 partially landed 2026-07-25:
-    composition + the boss share (<a href="../adr/0008-chaff-and-delegation-pull-opposite-ways.md">ADR-0008</a>).
-    Still open: the rim dead zone, the content drip past wave 23, variant stacking,
-    legibility errata — see <code>PINS.md</code>.</em></td></tr>
+  <tr><td colspan="4" style="font-size:.85em"><em>Progress 2026-07-25 (overnight):
+    <strong>phase 1 and 2 done</strong> (slot budget; the conductor gate in CI).
+    <strong>Phase 3 all but done</strong> — composition escalates, chaff is chaff, bosses
+    hold their share (<a href="../adr/0008-chaff-and-delegation-pull-opposite-ways.md">ADR-0008</a>,
+    <a href="../adr/0009-an-epithet-changes-the-fight-not-the-arithmetic.md">ADR-0009</a>),
+    modifiers stack from wave 40 and announce themselves, legibility errata fixed. The one
+    item deliberately left is <strong>"the rim is a real place"</strong>: every candidate fix
+    hands the autos more power, so it must be measured alone against the conductor gate, and
+    the more interesting of the two changes a strong image (shapes would stop touching the
+    tower) — a feel call, not a tuning one. <strong>Phase 4 started</strong>: the draft is now
+    lattice-authored. See <code>PINS.md</code>.</em></td></tr>
   <tr><td>4</td><td><strong>The authored draft</strong></td><td>The account changes what
     cards <em>exist</em>, not just how big they are. Mastery, forms, priority.</td>
     <td><a href="#meta-loop">§6</a>, <a href="#builds">§7</a></td></tr>

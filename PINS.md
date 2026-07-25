@@ -217,23 +217,29 @@ Numbers are measured (headless spikes over the real sim), not estimated.*
   a forced first sighting), `core.md` Introductions.
 - **Context:** Do NOT invent new species past 23 to fill 24-39 — that is content ahead of
   the Route's order, and stacking already answers the late game.
-## [phase 4] The generic card pool is hard-coded — it should be lattice-authored
-- **What:** `GENERICS` is a fixed 4-entry object (`config.js:173`) and `state.js:88` pushes
-  all four into every draft unconditionally. Nothing in the lattice can add, remove or modify
-  a generic card. Make it a pool with unlock gates the way weapons already are —
-  `{id, effect, req: nodeId?}` plus a filter in `levelChoices`.
-- **Why:** This is GDD §6's organizing principle — *"the account authors the draft"* — and
-  today **15 of 70 lattice nodes (21%)** do anything of the kind; the other 55 are flat
-  stats. The GDD's canonical wave-30 draft is literally not implementable: it offers a crit
-  card that "joined the pool when we unlocked crits," while `prec`/`prec2`/`deadeye` are
-  permanent passives folded into `S.critChance` at run start. One seam fixes both, and it is
-  the same seam ADR-0003 stage 2's form cards land in.
-- **Where:** `src/core/config.js` GENERICS, `src/core/state.js` levelChoices, `tech.js`
-  effectsOf (crit moves from passive to pool-unlock), `core.md` Generic cards, ADR-0003.
-- **Context:** Cheapest high-leverage change in the meta layer — small diff, and it converts
-  the GDD's top-line meta principle from aspiration to mechanism. Do it before adding more
-  lattice nodes, or every node added is one more flat stat.
-
+## [phase 4] The lattice authors the draft — the seam exists, 54 nodes still ignore it
+- **What (landed 2026-07-25):** `GENERICS` is now a pool with `techLock`, gated by a node's
+  `effect.unlockGeneric`, mirroring the `techLock`/`unlockWeapon` contract weapons already
+  had. `newRun` freezes the unlocked set into `S.generics`; `levelChoices` draws from it.
+  Precision (`prec`) now buys the **crit card** instead of a flat +10%, which is what makes
+  GDD section 7's canonical wave-30 draft implementable at all.
+- **What remains:** only **16 of 70** lattice nodes author anything; the other 54 are flat
+  stats. The seam is wired, the principle is not yet honoured. Converting nodes is now cheap
+  and is the highest-value meta work left — each conversion turns "+8% damage forever" into
+  "a card type your runs can offer you."
+- **Two specific follow-ups:**
+  1. `prec2`/`deadeye` are still flat `critChance`. Converting the whole chain would mean
+     deciding what escalation looks like — a *stronger* crit card, a second card type
+     (crit damage), or **more copies of the same card in the deck** (weight, not power).
+     The third is the most interesting and needs `levelChoices` to weight by copies while
+     still deduping within one draft; that is real machinery, hence not done tonight.
+  2. Deliberate rebalance recorded: a fully-invested crit account now runs **20% base crit
+     instead of 30%**, plus whatever cards it draws. Watch it in playtest.
+- **Where:** `src/core/config.js` GENERICS + LATTICE, `state.js` newRun/levelChoices/
+  applyChoice, `tech.js` effectsOf, `core.md` "Generic cards", `test/draft.test.mjs`.
+- **Context:** This is the same seam ADR-0003 stage 2's **form cards** land in — a form card
+  is a generic whose unlock is a mastery node rather than a lattice node. Build forms on this,
+  do not invent a parallel mechanism.
 ## [phase 4] The mature-tree start reaches level 3, against a spec asking for ~20
 - **What:** `startLevelAdd` exists on exactly two nodes (`head` 45◆, `head2` 250◆, +1 each),
   so a fully-invested veteran starts at **level 3 with 2 banked picks**. There is no

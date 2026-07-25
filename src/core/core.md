@@ -373,9 +373,32 @@ Auto weapons (level-up pool):
 | cascade | 5 | **Cascade** (ADR-0004 wave C, "the chain reaction"): every 5.5−0.4L s hurls a white-hot spark at a random living shape; contact **primes** it (0.6s fuse). A primed shape detonates on fuse-out *or death, whichever first*: 22+10L dmg in r 70, and every living shape caught gains a prime at **×0.75 power** — the chain spreads until damage decays below 8 (or generation 8, the runaway stop). One good cluster is a firework show; the weapon's whole skill is *when*, not *where*. L5: two sparks per volley — **tech-locked** |
 | mortar | 5 | arcing shells lobbed at a random living shape (±30px scatter) every 3.4−0.3L s (floor 1.6); 1.1s flight, then AoE: blast 68+8L, dmg 30+14L; **L5: twin shells** per volley — **tech-locked**. **Shells arc OVER the arena wall**: the mortar is deliberately the one weapon that can strike shapes still outside the walls — bullets die at the wall because they travel *through* the field; a shell was never in it (ADR-0003: the anti-cluster tool, new 2026-07-24) |
 
-Generic cards (always in pool): **Repair** (restore 40% max hp; only offered when
-below 70%), **Bulkhead** (+25 max hp, heals the same), **Overclock** (+10% damage,
-stacking additively on the run's damage multiplier).
+**Generic cards are a pool the lattice authors** (`config.js: GENERICS`), not a fixed
+list — GDD §6's organizing principle: *"lattice unlocks inject card types into the
+in-run pool."* A card marked `techLock: true` is absent until some node's
+`effect.unlockGeneric` names it, exactly as `techLock` weapons wait on
+`unlockWeapon`. `newRun` freezes the unlocked set into `S.generics`; `levelChoices`
+draws from that.
+
+| card | effect | unlocked by |
+|------|--------|-------------|
+| Repair | restore 40% max hp — only offered below 70% | always |
+| Bulkhead | +25 max hp, healed on the spot | always |
+| Overclock | +10% damage (additive on the run multiplier) | always |
+| Coolant | −5% cooldowns | always |
+| **Critical Systems** | **+10% crit chance, stacking within the run** | **`prec` (Precision)** |
+
+*(Added 2026-07-25. The pool was a hard-coded four-entry object that every draft
+received unconditionally — nothing in the lattice could add, remove or modify a
+generic card, so the meta layer's headline principle had no mechanism behind it and
+GDD §7's canonical wave-30 draft was literally unimplementable: it offers a crit card
+that "joined the pool when we unlocked crits," while crit was a permanent passive
+folded into `S.critChance` at run start. **`prec` now buys the card rather than the
+stat** — its old flat +10% is gone, so a fully-invested crit account runs 20% base
+instead of 30% and draws crit cards on top. That is the intended direction: meta
+progression should pay in richer decks, not bigger constants. `prec2`/`deadeye`
+remain flat baseline for now; converting the whole chain to card-authoring is a
+follow-up, pinned. This is also the seam ADR-0003 stage 2's **form cards** land in.)*
 
 Level-up choice generation (`state.js: levelChoices(state, rng)`): 3 distinct options
 drawn from {each owned weapon below max, each unowned *pool-unlocked* weapon, generic

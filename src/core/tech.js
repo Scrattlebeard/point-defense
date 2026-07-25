@@ -31,7 +31,7 @@ export function effectsOf(ownedIds) {
   const fx = {
     hpBonus: 0, regen: 0, critChance: 0, critMult: 2, startLevel: 1,
     dmgMult: 1, xpMult: 1, dmgTakenMult: 1, cdMult: 1, salvageMult: 1,
-    weapons: new Set(), towers: new Set(),
+    weapons: new Set(), towers: new Set(), generics: new Set(),
   };
   let dmgAdd = 0, xpAdd = 0, dtAdd = 0, cdAdd = 0, salvAdd = 0;
   for (const id of ownedIds) {
@@ -40,6 +40,7 @@ export function effectsOf(ownedIds) {
     if (e.hpBonus) fx.hpBonus += e.hpBonus;
     if (e.regen) fx.regen += e.regen;
     if (e.critChance) fx.critChance += e.critChance;
+    if (e.unlockGeneric) fx.generics.add(e.unlockGeneric);
     if (e.startLevelAdd) fx.startLevel += e.startLevelAdd;
     if (e.dmgAdd) dmgAdd += e.dmgAdd;
     if (e.xpAdd) xpAdd += e.xpAdd;
