@@ -52,7 +52,19 @@ prereqs enforced), not exact constants, so tuning stays cheap.
   rest at the wave-10 noble. The first shop visit is nearly guaranteed inside
   Daniel's 5–10-level onboarding band. Durability was the
   lever because volume feeds back: more bodies = more XP, and the player scales with
-  the wave; tried first, moved the median barely. Contact damage stays untouched.)*
+  the wave; tried first, moved the median barely. Contact damage stays untouched.
+  **Round 7 (2026-07-25, paying for the composition change):** linear 0.58→**0.70**.
+  Cost-weighted composition ("Wave composition") deliberately makes early waves
+  chaff-heavy — at wave 5 the mix went from 33/34/32 grunt/dart/tank to 50/33/17,
+  which is the intended design but carries ~12% less total wave HP in cheaper,
+  faster-dying bodies. Measured consequence: the fresh-run median moved from a
+  rock-steady **8** (four consecutive 32-trial runs pre-change) to **9–11**, parking
+  it exactly on the band's upper bound — so the prod gate became a coin flip rather
+  than a guardrail. Durability is the sanctioned compensator (see the round-4/5 note
+  above: budget feeds the player, durability does not), and 0.70 restores median 8
+  with margin. **The mix is the design and was not touched to fix this** — the
+  difficulty loss was paid for separately, which is the whole reason the two levers
+  are kept distinct.)*
 - `enemySpeedMult(w) = min(1.6, 1 + (w-1)*0.012)` — capped so lategame stays readable.
 - `waveBudget(w) = 22 + 7w + 0.21w²` — strictly increasing. *(2026-07-24, same
   reshape: more bodies early, converging with the previous budget ≈ wave 22 and
