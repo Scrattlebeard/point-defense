@@ -210,12 +210,17 @@ Numbers are measured (headless spikes over the real sim), not estimated.*
      is the interesting design work, not a formality.
   2. **Mastery XP as the unlock** (ADR-0003 stage 2). Forms currently come off lattice nodes,
      which is the honest interim; the ADR wants use-earned per-weapon progression.
-  3. **Bolt's ladder re-cut** (ADR-0006 Decision 8): fan volleys move OUT of the level ladder
-     and become the **Fan** form, with the ladder gaining **ricochet** in their place. This
-     was blocked on forms existing. It no longer is — and it is the natural next one, because
-     it is the case that proves forms can carry content the ladder used to hold.
+  3. ~~Bolt's ladder re-cut~~ **DONE 2026-07-25** — fan volleys left the ladder and became the
+     **Fan** form; the ladder gained **ricochet** (L5 one kick, L6 two). They compose, which
+     was the point. Two forms now exist, one redistributing in time and one in space, which is
+     what forced the neutrality rule to generalise from "regroups in time" to "redistributes".
 - **Where:** `config.js` FORMS, `state.js` (formPool/forms/levelChoices/applyChoice),
   `tech.js` unlockForm, `weapons/aim.js` updateBolt, `ui.js` form card, `core.md` "Forms".
+- **Art errata (small, noted not fixed):** `assets/icons/bolt.svg` draws a **three-way fan**,
+  which is now the Fan *form's* identity rather than the base weapon's — the base is a single
+  ricocheting bolt. The icons come from the Design project (provenance in
+  `assets/icons/icons.md`), so redrawing is Daniel's call, not a thing to improvise at 1am. A
+  `fan.svg` was authored for the new form and is deliberately close in spirit.
 - **Context:** the form card's *rendering* is unverified by eye — there is no dev hatch that
   opens a level-up screen, so the card markup has only been exercised by the render smoke and
   by mirroring the weapon card. Worth a look on the first playtest that maxes bolt.

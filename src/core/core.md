@@ -368,7 +368,7 @@ swipe, beam/flame/meteor = hold):
 
 | id | input | max | levels |
 |----|-------|-----|--------|
-| bolt | aim | 6 | auto-fires toward the aim point every 0.34−0.02L s (needs a live enemy); dmg 9+4L; L4: pierce 1. **Two streams, fan volleys.** The *manual stream* fires at your aim; from L3 an *auto stream* fires at the nearest shape *inside the arena walls* (bullets die at the wall — an outside target eats bolts for nothing, 2026-07-23; no in-bounds shape → the auto stream holds fire, the manual stream always fires). **Fans are center-true:** a volley of n = one bolt exactly on the target line + flanks at +0.11/−0.11 rad (n=2: single flank) — the center bolt never straddles the aim point (the 2026-07-23 complaint stays fixed at every level). Ladder: **L3 +auto stream (1+1), L5 both streams fire 2-bolt fans (2+2), L6 MAX 3-bolt fans (3+3)**. *(Rebalanced 2026-07-24: the previous max — 1 aimed + 4 independently-auto-aimed bolts — was "way overpowered" (playtest): independent auto-aims hit near-guaranteed, fan flanks can miss, so five sure hits beat six maybes. Max power returns to fans "like before", one fan per stream. L5 = 2-bolt fans is interpolation — Daniel specified L3 and L6; a smooth 2→4→6 bullet ramp beats a 2→6 cliff at max.)* |
+| bolt | aim | 6 | auto-fires toward the aim point every 0.34−0.02L s (needs a live enemy); dmg 9+6L; L4: pierce 1. **Two streams, one bolt each.** The *manual stream* fires at your aim; from L3 an *auto stream* fires at the nearest shape *inside the arena walls* (bullets die at the wall — an outside target eats bolts for nothing, 2026-07-23; no in-bounds shape → the auto stream holds fire, the manual stream always fires). Ladder: **L3 +auto stream, L4 pierce 1, L5 ricochet 1, L6 MAX ricochet 2** — a bolt that lands **kicks to another shape** within `RICOCHET_RANGE`, re-aiming rather than dying, after its pierce is spent. *(Re-cut 2026-07-25, ADR-0006 Decision 8: the fan volleys L5/L6 used to grant moved **out** of the ladder and became the **Fan** form, because a form must not sell at mastery what levelling already gives away — the same objection that killed *Overpenetrator*, turned on our own draft. The ladder gained ricochet in their place, and per-bolt damage rose 9+4L→9+6L to pay for the lost volume. They **compose**: max bolt wearing Fan throws a spread of bolts that each ricochet, which is a better max-bolt picture than either alone. Prior history: at 2026-07-24 the max was 1 aimed + 4 auto-aimed bolts and was "way overpowered" in playtest, so it returned to center-true fans, one per stream; that shape is now the Fan form rather than the ladder's gift.)* |
 | blades | swipe | 5 | **Force Blades** (swipe slot, ADR-0004): the swipe hurls 2/3/3/4/5 crescent blades, spawned evenly along the swipe segment (trimmed to 200px toward the start, wall rule), all traveling along the segment's tower-away normal at 400 px/s; dmg 15+7L, pierce everything (once per shape per blade), die at the arena wall with the standard flare; cd 0.45s. The wall's defensive cousin inverted: the same gesture, pushed *outward* as pure offense |
 | wall | swipe | 5 | **Force Wall** (reworked twice, 2026-07-23): the swipe conjures a stationary wall **anchored at the gesture's start** (length 150+40L; longer swipes trimmed toward the start — overshooting the tail must not move the wall). The wall is *siegeable*: it has **80+40L HP** that degens passively over ~5s, and shapes in contact **attack it** (their dmg every 0.9s) while being pushed along its tower-away normal at (100+25L)÷mass px/s and taking 5+2L dmg per 0.4s tick. Wall dies at 0 HP, whichever clock runs out first. Active walls: **1 until max level, 2 at L5**; swiping past the cap replaces the oldest; cd 0.4s |
 | flame | hold | 5 | **Flamethrower** (hold slot, ADR-0004): channels a cone toward the hold aim (range 230+18L, half-angle 0.3 rad); every 0.3s each shape in the cone takes 4+1.5L direct AND gains a **burn stack** (max 5): each stack ticks 3+1.5L dps for 2.5s, refreshed per application — the DoT keeps cooking after the shape leaves the cone (that's the weapon's identity: paint the crowd, let it burn). Burn damage is player-sourced but renders flame flicker, not damage-number spam. While channeling, drops **burning ground patches** in the cone (~every 0.35s, r 26, ~2.2s life, 6+3L dps, field-capped ~40) — area denial persists briefly where the cone swept. Heat like beam (slower at L3); **L5: no overheat, always-on toward the standing aim**. Bosses burn like everything else — no stack resistance (frost precedent: the counter-boss tools keep their teeth) |
@@ -412,7 +412,17 @@ Auto weapons (level-up pool):
 
 A **form** changes how a weapon *feels*, never what it *produces*.
 
-> **A form regroups a weapon's output in time; it does not change the output.**
+> **A form redistributes a weapon's output; it never increases it.**
+
+Burst redistributes in **time** (the same volleys, re-timed into a salvo and a beat).
+Fan redistributes in **space** (one bolt becomes a spread of weaker ones). Both are
+neutral in *emission* — shots × damage per second — which is the thing the test
+measures. Note that a spatial form is deliberately **not** neutral in damage *landed*:
+Fan trades single-target for coverage, and that trade is the whole point of it.
+Measuring landed damage against one anvil would have punished exactly the design the
+rule exists to allow. *(The rule first landed 2026-07-25 as "regroups in time", which
+was too narrow — it described the pilot rather than the concept, and Fan broke it the
+next day. Generalised the same day, before the second form shipped.)*
 
 That is the enforceable version of ADR-0006 Decision 6 ("a form that is only
 bigger-slower-more is a stat wearing a name"), and it is pinned by test: a form's
@@ -423,6 +433,7 @@ arithmetic cannot drift even when the base weapon is rebalanced later.
 | form | of | what changes | unlocked by |
 |------|----|--------------|-------------|
 | **Burst** | bolt | the same volleys arrive as a fast salvo of `salvo` shots then a beat, instead of an even stream - *ratatatata-pause-ratatatata* against the default's *bang-pause-bang* (GDD section 4). Gap = `gapFrac` x the base cadence, and the pause makes the cycle exactly `salvo` x base cadence, so shots-per-second is unchanged | the `burst` lattice node (interim) |
+| **Fan** | bolt | each shot becomes a **center-true spread** of `spread` bolts at ±0.11 rad, each carrying `1/spread` of the damage. Coverage instead of concentration; the centre bolt still sits exactly on the aim line, so aim fidelity - bolt's identity - survives the trade | the `fan` lattice node (interim) |
 
 **Forms cost no slot.** They are not weapons: `S.forms[weaponId]` names the active
 form, `S.formPool` is what the account has unlocked, and a form card is offered only

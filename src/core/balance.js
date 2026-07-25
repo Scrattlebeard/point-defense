@@ -59,6 +59,10 @@ export const stackChance = w =>
 export const shardPayout = (wave, kills, bossKills) =>
   Math.max(1, Math.round(2.5 * wave + kills / 9 + 9 * bossKills + 0.18 * wave * wave));
 
+/** How far a ricocheting bolt will reach for its next shape (core.md bolt row).
+ *  Bounded so a kick reads as "it jumped to that one", not as homing. */
+export const RICOCHET_RANGE = 190;
+
 /** Shapes gain inertia with age: knockback and aura slow divide by this (core.md). */
 export const enemyMass = age => 1 + Math.min(2, age / 15);
 

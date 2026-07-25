@@ -2,6 +2,7 @@
 // "AIM is not a slot"): bolt (and its forms), scattergun, howitzer, boomerang, and
 // the shared bullet pool. All hold fire with no live in-bounds shape.
 import { FORMS } from '../../core/config.js';
+import { RICOCHET_RANGE } from '../../core/balance.js';
 import { dist } from '../../core/geom.js';
 import { damageEnemy, nearestEnemies } from '../enemies.js';
 import { shake } from '../fx.js';
@@ -14,10 +15,17 @@ const aimAngle = G => Math.atan2(G.aim.y - G.cy, G.aim.x - G.cx);
 // Center-true fan: one bolt EXACTLY on the target line + flanks at ±0.11 —
 // aim fidelity is the weapon's identity (core.md bolt row, 2026-07-24).
 const FAN_OFFSETS = [[0], [0, 0.11], [0, 0.11, -0.11]];
-function fireFan(G, tx, ty, st) {
+/** One shot toward (tx,ty). The Fan form redistributes it in SPACE: `spread`
+ *  bolts sharing the same damage, centre-true so aim fidelity survives
+ *  (core.md "Forms" / bolt row). Ricochet rides on every bolt, so the two
+ *  compose — ADR-0006 Decision 8. */
+function fireFan(G, tx, ty, st, form) {
   const base = Math.atan2(ty - G.cy, tx - G.cx);
-  for (const off of FAN_OFFSETS[st.volley - 1]) {
-    fireBullet(G.S, G.cx, G.cy, base + off, 540, st.dmg, { pierce: st.pierce, r: 3.5 });
+  const n = form && form.spread ? form.spread : st.volley;
+  const dmg = st.dmg / (form && form.spread ? form.spread : 1);
+  for (const off of FAN_OFFSETS[n - 1]) {
+    fireBullet(G.S, G.cx, G.cy, base + off, 540, dmg,
+      { pierce: st.pierce, r: 3.5, ric: st.ricochet || 0 });
   }
 }
 
@@ -32,16 +40,17 @@ export function updateBolt(G, dt) {
   wt.boltT -= dt;
   if (wt.boltT <= 0) {
     if (S.enemies.some(e => !e.dead)) {
-      if (G.aim) fireFan(G, G.aim.x, G.aim.y, st);
+      if (G.aim) fireFan(G, G.aim.x, G.aim.y, st, form);
       for (const e of nearestEnemies(S, G.cx, G.cy, st.auto, { W: G.W, H: G.H })) {
-        fireFan(G, e.x, e.y, st);
+        fireFan(G, e.x, e.y, st, form);
       }
       sfx('shoot');
-      if (form) {
-        // A form re-times the SAME volleys (core.md "Forms"): `salvo` of them a
-        // short gap apart, then a pause sized so the cycle is exactly
-        // salvo x cd. Shots per second is therefore unchanged by construction —
-        // the feel moves, the output does not.
+      if (form && form.salvo) {
+        // A TIME form re-times the same volleys (core.md "Forms"): `salvo` of
+        // them a short gap apart, then a pause sized so the cycle is exactly
+        // salvo x cd. Shots per second is unchanged by construction — the feel
+        // moves, the output does not. A SPACE form (Fan) leaves cadence alone
+        // and redistributes across bearings instead, so it falls through here.
         const gap = cd * form.gapFrac;
         wt.boltLeft--;
         wt.boltT = wt.boltLeft > 0
@@ -158,6 +167,24 @@ export function updateAimOrdnance(G, dt) {
 
 /** The shared bullet pool (bolt + turret + aim ordnance) — runs after every
  *  spawn site so a bullet fired this frame moves this frame (weapons.md order). */
+/** Steer a spent bolt at the nearest shape it has not already hit. Returns
+ *  false when there is nothing else in range, so a lone target cannot be hit
+ *  twice by one bolt (core.md bolt row). */
+function kickToward(S, b) {
+  let best = null, bestD = RICOCHET_RANGE;
+  for (const e of S.enemies) {
+    if (e.dead || b.hit.has(e)) continue;
+    const d = dist(b.x, b.y, e.x, e.y);
+    if (d < bestD) { bestD = d; best = e; }
+  }
+  if (!best) return false;
+  const sp = Math.hypot(b.vx, b.vy) || 540;
+  const a = Math.atan2(best.y - b.y, best.x - b.x);
+  b.vx = Math.cos(a) * sp; b.vy = Math.sin(a) * sp;
+  b.life = Math.max(b.life, 0.5);
+  return true;
+}
+
 export function updateBullets(G, dt) {
   const S = G.S;
   for (const b of S.bullets) {
@@ -173,8 +200,13 @@ export function updateBullets(G, dt) {
       if (dist(b.x, b.y, e.x, e.y) < e.r + b.r) {
         b.hit.add(e);
         damageEnemy(G, e, b.dmg);
-        if (b.pierce > 0) b.pierce--;
-        else { b.dead = true; break; }
+        // Ricochet BEFORE pierce: ADR-0006 says a bolt "kicks to a second
+        // shape", so the kick must be the second contact, not the third. Spent
+        // kicks fall through to pierce, so a max bolt still passes through at
+        // the end of its chain.
+        if (b.ric > 0 && kickToward(S, b)) { b.ric--; break; }
+        if (b.pierce > 0) { b.pierce--; break; }
+        b.dead = true; break;
       }
     }
   }

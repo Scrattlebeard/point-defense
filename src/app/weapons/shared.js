@@ -30,11 +30,12 @@ export function wallBounce(G, b) {
 }
 
 /** Push a straight bullet into S.bullets, flying along `angle`. */
-export function fireBullet(S, x, y, angle, speed, dmg, { pierce = 0, r = 3, color = '#9ff3ff' } = {}) {
+export function fireBullet(S, x, y, angle, speed, dmg, { pierce = 0, r = 3, color = '#9ff3ff', ric = 0 } = {}) {
   S.bullets.push({
     // life is a safety net only — the arena wall is the real range (app.md)
     x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
     dmg, pierce, r, life: 6, color, hit: new Set(),
+    ric, // ricochet kicks remaining (core.md bolt row)
   });
 }
 

@@ -44,8 +44,13 @@ const onLine = (G, shots, x, y) => shots.filter(b => angErr(G, b, x, y) < 1e-9);
 // fan membership: exactly on the line to (x,y) or within the ±0.11 flank spread
 const inFan = (G, shots, x, y) => shots.filter(b => angErr(G, b, x, y) < 0.111);
 
-test('volley sizes across the ladder: 1 / 1+1 / 2+2 / 3+3', () => {
-  const expect = { 1: 1, 2: 1, 3: 2, 4: 2, 5: 4, 6: 6 };
+// RE-CUT 2026-07-25 (ADR-0006 Decision 8): the ladder no longer grants fans —
+// they became the Fan form — so the expected counts fall from 1/1/2/2/4/6 to
+// one bolt per stream at every level. Not a loosening: the spread behaviour is
+// pinned harder in test/ricochet.test.mjs (emission-neutral AND actually wider),
+// and the ladder's new gift, ricochet, is pinned there too.
+test('volley sizes across the ladder: one bolt per stream, always', () => {
+  const expect = { 1: 1, 2: 1, 3: 2, 4: 2, 5: 2, 6: 2 };
   for (const [l, n] of Object.entries(expect)) {
     const G = makeG(Number(l));
     spawnEnemy(G, 'grunt', null, 650, 300);
@@ -74,10 +79,21 @@ test('every fan is center-true: exactly one bolt on each target line', () => {
   }
 });
 
-test('at L6 the streams split 3+3 between aim and auto target', () => {
+test('at L6 the streams split 1+1 between aim and auto target', () => {
   const G = makeG(6);
   spawnEnemy(G, 'grunt', null, 400, 80); // straight up from center
-  G.aim = { x: 200, y: 500 };            // down-left — fans well separated
+  G.aim = { x: 200, y: 500 };            // down-left — streams well separated
+  const shots = fireOnce(G);
+  assert.equal(inFan(G, shots, 200, 500).length, 1, 'manual stream');
+  assert.equal(inFan(G, shots, 400, 80).length, 1, 'auto stream');
+});
+
+test('wearing the Fan form, each stream spreads again — 3+3', () => {
+  // the picture ADR-0006 wanted: the ladder is lean, the form restores the spread
+  const G = makeG(6);
+  G.S.forms.bolt = 'fan';
+  spawnEnemy(G, 'grunt', null, 400, 80);
+  G.aim = { x: 200, y: 500 };
   const shots = fireOnce(G);
   assert.equal(inFan(G, shots, 200, 500).length, 3, 'manual fan size');
   assert.equal(inFan(G, shots, 400, 80).length, 3, 'auto fan size');
@@ -98,6 +114,6 @@ test('no in-bounds target: the auto stream holds fire, the manual stream fires',
   spawnEnemy(G, 'grunt', null, -40, 300); // only an out-of-bounds shape alive
   G.aim = { x: 200, y: 120 };
   const shots = fireOnce(G);
-  assert.equal(shots.length, 3, 'expected the 3-bolt manual fan alone');
+  assert.equal(shots.length, 1, 'expected the single manual bolt alone');
   assert.equal(onLine(G, shots, 200, 120).length, 1);
 });

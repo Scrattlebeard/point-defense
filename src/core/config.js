@@ -72,10 +72,15 @@ export function chipOf(w) {
 export const WEAPONS = {
   bolt: {
     name: 'Bolt', input: 'aim', category: 'gun', max: 6,
-    descs: ['Auto-fires toward your aim', '+damage', 'A second bolt picks its own target', 'Bolts pierce one extra shape', 'Both bolts fire twin fans', 'MAX: triple fans'],
-    // two streams (manual + auto), each firing a center-true fan of `volley`
-    // bolts (core.md bolt row, 2026-07-24)
-    stats: l => ({ dmg: 9 + 4 * l, volley: l >= 6 ? 3 : l >= 5 ? 2 : 1, auto: l >= 3 ? 1 : 0, pierce: l >= 4 ? 1 : 0, cd: 0.34 - 0.02 * l }),
+    descs: ['Auto-fires toward your aim', '+damage', 'A second bolt picks its own target', 'Bolts pierce one extra shape', 'Bolts ricochet to another shape', 'MAX: bolts ricochet twice'],
+    // Two streams (manual + auto), ONE bolt each — the fan moved out of this
+    // ladder and became the Fan form (ADR-0006 Decision 8, core.md bolt row).
+    // L5/L6 damage is the old ladder's EMISSION collapsed into one bolt
+    // (L5 was 2x29, L6 was 3x33), so the levels are worth what they always
+    // were; ricochet replaces the fan's coverage. L1-L4 are untouched — they
+    // never granted a fan, so buffing them would have moved the onboarding
+    // curve for no reason (it did, in the first attempt: median 8 -> 14).
+    stats: l => ({ dmg: l >= 6 ? 99 : l >= 5 ? 58 : 9 + 4 * l, volley: 1, auto: l >= 3 ? 1 : 0, pierce: l >= 4 ? 1 : 0, ricochet: l >= 6 ? 2 : l >= 5 ? 1 : 0, cd: 0.34 - 0.02 * l }),
   },
   wall: {
     name: 'Force Wall', input: 'swipe', category: 'swipe', max: 5,
@@ -197,6 +202,11 @@ export const WEAPONS = {
 // `req` is the lattice node that unlocks it; mastery trees take that job in
 // ADR-0003 stage 2. Forms cost no weapon slot.
 export const FORMS = {
+  fan: {
+    of: 'bolt', name: 'Fan', req: 'fan',
+    desc: 'Every bolt becomes a center-true spread — coverage instead of concentration',
+    spread: 3,     // bolts per shot; each carries 1/spread of the damage
+  },
   burst: {
     of: 'bolt', name: 'Burst', req: 'burst',
     desc: 'Bolt fires in fast salvos with a beat between — ratatatata, not bang-pause-bang',
@@ -337,6 +347,7 @@ export const LATTICE = [
   // ---- Armory (manual/aim weapon unlocks — ADR-0004) ----
   { id: 'scatter',    sector: 'Armory', ring: 1, name: 'Scattergun', desc: 'Adds the Scattergun to the level-up pool', cost: 30,  req: [],          effect: { unlockWeapon: 'scatter' } },
   { id: 'burst',      sector: 'Armory', ring: 2, name: 'Burst Form',  desc: 'Unlocks the Burst form for a maxed Bolt',  cost: 55,  req: ['scatter'], effect: { unlockForm: 'burst' } },
+  { id: 'fan',        sector: 'Armory', ring: 2, name: 'Fan Form',    desc: 'Unlocks the Fan form for a maxed Bolt',    cost: 55,  req: ['scatter'], effect: { unlockForm: 'fan' } },
   { id: 'heavy',      sector: 'Armory', ring: 3, name: 'Howitzer',   desc: 'Adds the Howitzer to the level-up pool',   cost: 110, req: ['burst'],   effect: { unlockWeapon: 'heavy' } },
   { id: 'boomer',     sector: 'Armory', ring: 2, name: 'Boomerang',  desc: 'Adds the Boomerang to the level-up pool',  cost: 60,  req: ['scatter'], effect: { unlockWeapon: 'boomer' } },
   { id: 'ballistics', sector: 'Armory', ring: 3, name: 'Ballistics', desc: '+6% damage', cost: 100, req: ['burst', 'mun1'], reqMode: 'any', effect: { dmgAdd: 0.06 } },
