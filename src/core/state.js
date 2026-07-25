@@ -57,6 +57,11 @@ export function newRun(meta, towerId) {
   return S;
 }
 
+/** Fraction of max HP restored per level gained (core.md "Run state"): GDD §7's
+ *  three-cards-and-a-heal, and GDD §2's mechanism for keeping chip damage in the
+ *  signal business rather than the death business. */
+export const LEVELUP_HEAL = 0.10;
+
 /** Applies xp multipliers, consumes thresholds. Returns levels gained (also queued on S.pendingLevels). */
 export function addXp(S, amount) {
   S.xp += amount * S.xpMult;
@@ -67,6 +72,7 @@ export function addXp(S, amount) {
     S.xpNext = xpForLevel(S.lvl);
   }
   S.pendingLevels += n;
+  if (n > 0) S.hp = Math.min(S.maxHp, S.hp + n * LEVELUP_HEAL * S.maxHp);
   return n;
 }
 

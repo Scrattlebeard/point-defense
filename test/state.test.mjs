@@ -34,6 +34,32 @@ test('tech effects fold into the run', () => {
   assert.equal(S.pendingLevels, 1, 'head start grants a free pick');
 });
 
+test('every level-up heals: chip damage is recoverable (GDD §2/§7)', () => {
+  // Law·Death-shape: chips are signals, not attrition — recoverable HP is what
+  // keeps them out of the death business. Measured before this existed: median
+  // 40s of bleeding per run of which only 6s was the actual drowning.
+  const S = newRun(defaultMeta(), 'bastion');
+  S.hp = S.maxHp * 0.5;
+  const before = S.hp;
+  addXp(S, xpForLevel(1));
+  assert.equal(S.lvl, 2, 'setup: one level gained');
+  assert.ok(S.hp > before, 'a level-up must heal');
+  assert.ok(Math.abs(S.hp - (before + 0.10 * S.maxHp)) < 0.01, '10% of max hp per level');
+});
+
+test('banked levels each pay their heal, and healing never overshoots max', () => {
+  const S = newRun(defaultMeta(), 'bastion');
+  S.hp = S.maxHp * 0.2;
+  const before = S.hp;
+  addXp(S, xpForLevel(1) + xpForLevel(2) + xpForLevel(3)); // three at once
+  assert.ok(S.lvl >= 4, `setup: expected 3+ levels, got ${S.lvl}`);
+  assert.ok(S.hp > before + 0.25 * S.maxHp, 'three banked levels should pay three heals');
+  const S2 = newRun(defaultMeta(), 'bastion');
+  S2.hp = S2.maxHp; // already full
+  addXp(S2, xpForLevel(1));
+  assert.equal(S2.hp, S2.maxHp, 'heal must not overshoot max hp');
+});
+
 test('addXp levels up across thresholds and reports the count', () => {
   const S = newRun(defaultMeta(), 'bastion');
   const need = xpForLevel(1);

@@ -171,33 +171,37 @@ Numbers are measured (headless spikes over the real sim), not estimated.*
   alternate rhythm, the slot cost disappears, and the levelChoices `formOf` gate + this
   interim classification are deleted.
 
-## [phase 3] Besiegers sit in a dead zone the infrastructure autos cannot reach
-- **What:** Orbit, frost, mine and caltrop deal **literally zero** damage to anything holding
-  the rim. Measured over 12s against a parked besieger, every level: orbit 0, frost 0, mine 0,
-  caltrop 0. Besiegers stop at `e.r + 24` (rim 34–42px); orbit's ring is 88+8L = **96–128px**;
-  mines and caltrops seed at radius ≥120; frost slow is meaningless on a stopped shape.
-  Orbit *does* hit a besieging boss at L1 and **stops hitting it as it levels up** — the
-  upgrade is an anti-synergy.
-- **Why:** It is the mechanism behind the death-shape problem (measured full-bar deaths run
-  54–195s, median 90, of which only the last 4–15s is the actual drowning — the rest is
-  exactly the "invoicing" Law·Death-shape outlaws). It also makes GDD §3's canonical
-  narration false: *"the frost aura and orbitals slow their progress immensely when they
-  approach the Point"* describes something the code cannot do.
-- **Where:** `src/app/weapons/auto.js` (orbit radius/hit test), `src/app/enemies.js:231`
-  (siege standoff distance), `src/core/config.js` orbit ring, `core.md` Enemies + Weapons.
-- **Context:** Two candidate fixes, and the second is more interesting: contract the orbit
-  band to cover the rim, **or** push the siege standoff *out* to the orbit band so the ring
-  becomes the literal wall the horde piles against — which is the picture GDD §8 wants
-  anyway. Sequence after the slot budget: with ≤5 autos, enemies actually reach the rim and
-  the feel of either fix changes. Companion to the siege-readability pin above.
-- **Law-vs-law warning (ADR-0008 Alt 3, 2026-07-25):** every candidate fix here **gives autos
-  more power**, so it fixes Law·Death-shape while pushing the conductor gate's number *down*.
-  Measure it against `scripts/conductor.mjs` on its own — do not land it beside another change
-  that moves the same number, or neither effect will be attributable. Budget for the
-  possibility that the honest outcome is "the rim fix costs N waves of hands, and that is the
-  price of a non-invoicing death" — which is a decision for Daniel, recorded, not a tuning
-  problem to make disappear.
-
+## [phase 3] The rim dead zone — re-measured 2026-07-25, and the pin was partly wrong
+- **What:** Orbit, mines and caltrops deal **literally zero** damage to a shape holding the
+  rim, at every level. Re-measured 2026-07-25 against a grunt parked at the rim for 12s:
+  orbit 0, mine 0, caltrop 0 — while every *targeting* auto works fine there (nova 72-280,
+  tesla 114-470, turret 156-1680, seek 60-1400, mortar 176-1000). The gap is specific to
+  the **positional** autos: a grunt besieges at 36px from centre, orbit's ring is 96-128px,
+  and mines/caltrops seed no closer than 120px.
+- **Correction to the original pin:** it listed **frost** as a fourth dead-zone weapon. That
+  is wrong in a way worth keeping. Frost's aura is 126-230px and *does* cover the rim — the
+  zero is because slowing a shape that has already stopped is meaningless. That is inherent,
+  not geometric, and no radius change fixes it. The pin also called GDD §3's narration
+  ("the frost aura and orbitals slow their progress when they approach the Point") false;
+  for frost it is **true** — it describes the approach, which frost does slow. Only the
+  orbital half of that sentence is unmet.
+- **Why it is still not fixed, and this is the interesting part:** the pin framed this as the
+  mechanism behind the invoicing-death problem. Measured, the bigger lever was elsewhere —
+  the missing level-up heal (GDD §2's named mechanism) cut median invoicing from 34s to 19s
+  on its own, and cost the delegation law nothing. The rim fix, by contrast, **gives autos
+  more power**: it fixes Law·Death-shape while pushing the conductor number down (ADR-0008
+  Alt 3). Sequence it as its own change, measured alone against `scripts/conductor.mjs`.
+- **Where:** `src/app/weapons/auto.js` (orbit radius/hit test), `src/app/enemies.js` siege
+  standoff (`e.r + TOWER_R`), `src/core/config.js` orbit ring + mine/caltrop seed ring,
+  `core.md` Enemies + Weapons.
+- **Context:** Two candidate fixes remain, and the second is still the more interesting:
+  contract the orbit band to cover the rim, **or** push the siege standoff *out* to the
+  orbit band so the ring becomes the literal wall the horde piles against (the picture GDD
+  §8 wants). Note the second changes a strong image — shapes would no longer touch the
+  tower — so it is a feel call for Daniel, not a tuning one. Also note orbit's radius was
+  pushed *out* deliberately in 2026-07-24 as a nerf; contracting it undoes a considered
+  decision and should say so. Companion: the siege-readability pin (damage attribution is
+  the other half of why a chip death reads as bookkeeping).
 ## [phase 3] The content drip stops at wave 23
 - **What:** Introductions land at waves 1,2,4,5,6,8,11,14,17,21,23 and then **nothing, ever**.
   Three beats bunch into waves 4-5-6 (tank, boss, swift) — squarely on the wave where ~45% of
@@ -229,20 +233,6 @@ Numbers are measured (headless spikes over the real sim), not estimated.*
 - **Context:** Cheapest high-leverage change in the meta layer — small diff, and it converts
   the GDD's top-line meta principle from aspiration to mechanism. Do it before adding more
   lattice nodes, or every node added is one more flat stat.
-
-## [phase 4] The level-up heal doesn't exist
-- **What:** GDD §7 specifies three cards **plus a ~10% heal** at every level-up. There is no
-  such heal. The only free heal is `waveCleared`'s 4% max HP (`state.js:110`) — a different
-  trigger on a different clock.
-- **Why:** Two GDD arguments rest on it. §2's "chips are signals, not attrition" names
-  level-up heals as what keeps chip damage out of the death business — currently untrue, and
-  the measured invoicing deaths are the consequence. §7's doom-clock ("the xp curve stretches,
-  the heals rarify, exactly when pressure peaks") is structurally *inverted* by a per-wave
-  heal, which does not rarify with the xp curve at all.
-- **Where:** `src/core/state.js` (the level-up path), `core.md` Run state, GDD §7 if the
-  number moves off 10%.
-- **Context:** Tiny change, and it is the cheapest lever on death-shape — do it alongside the
-  rim fix and re-measure the 54–195s death window before touching anything bigger.
 
 ## [phase 4] The mature-tree start reaches level 3, against a spec asking for ~20
 - **What:** `startLevelAdd` exists on exactly two nodes (`head` 45◆, `head2` 250◆, +1 each),

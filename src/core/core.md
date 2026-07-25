@@ -450,6 +450,17 @@ One hold at a time; concurrent other pointers still resolve as taps/swipes
 `maxHp = (100 + hpBonus) * tower.hpMult`, `dmgMult = (1 + dmgMults) * tower.dmgMult`,
 etc. XP: `addXp` applies xp multipliers, consumes `xpForLevel` thresholds, and returns
 the number of level-ups gained (the shell opens one choice screen per pending level).
+**Every level-up heals 10% max HP** (`LEVELUP_HEAL`, applied in `addXp` per level
+gained, so banked levels each pay). This is GDD §7's third half of a level-up — three
+cards *and* a heal — and GDD §2 names it as the mechanism that keeps chip damage "in
+the signal business and out of the death business": a single leaker taking a bite is
+information, not attrition, only if the bite is recoverable. *(Added 2026-07-25; it
+had never existed. Measured before, 12 fresh runs: median **40s of bleeding of which
+only 6s was the actual drowning** — 85% invoicing, with individual runs at 292s bleed
+/ 6s drowning (98%). Law·Death-shape outlaws exactly that shape.)* The heal scales
+with the xp curve rather than the wave clock, which is deliberate: GDD §7's doom clock
+wants heals to *rarify* as levels stretch and pressure peaks.
+
 Wave-clear heals 4% max hp. `payout(state, meta)` computes shards (with salvage) and
 returns the new meta (shards added, best wave maxed, no other mutation).
 
