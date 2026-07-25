@@ -614,3 +614,11 @@ innocent. Do not start optimising before measuring which.
 **Standing lesson to carry past this bug:** every gate built this week measures whether the
 game is *correct*. None measures whether it is *playable*. Both are laws; only one had an
 instrument.
+
+**Playtest outcome, same run (2026-07-25):** died wave 18. Daniel's own account — *"started
+paying less attention and optimising less."* That reads as Law·Delegation landing on a human
+instead of a robot, which would be the best datum this build has. **It is confounded and
+must not be cited as proof:** the framerate degradation above begins at wave 17, one wave
+earlier. Inattention and a chugging game are indistinguishable from here. Re-measure the
+delegation claim on a fresh run *after* the perf fix, and until then quote this as
+suggestive, never as evidence.
