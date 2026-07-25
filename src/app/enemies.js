@@ -284,13 +284,26 @@ export function updateEnemies(G, dt) {
     if (e.moveId) runBossMove(G, e, dt);
     // frost aura slow, resisted by age-mass (core.md enemyMass)
     let slow = 1;
+    let frostCut = 0, calCut = 0;
     if (G.aura && d < G.aura.r + e.r) {
-      slow = 1 - G.aura.slow / enemyMass(e.age);
+      frostCut = G.aura.slow / enemyMass(e.age);
+      slow = 1 - frostCut;
     }
     // caltrop prick: brief, multiplicative with frost, mass-resisted (core.md)
     if (e.calSlowT > 0) {
       e.calSlowT -= dt;
-      slow *= 1 - e.calSlow / enemyMass(e.age);
+      calCut = e.calSlow / enemyMass(e.age);
+      slow *= 1 - calCut;
+    }
+    // Seconds purchased (core.md Run state): a shape held at half speed for two
+    // seconds has been denied one second of approach. Sources multiply, so the
+    // denied second is split in proportion to each one's own reduction rather
+    // than credited twice — the ledger totals what was actually denied.
+    const denied = (1 - slow) * dt;
+    if (denied > 0) {
+      const share = frostCut + calCut;
+      if (frostCut > 0) S.slowBy.frost = (S.slowBy.frost || 0) + denied * (frostCut / share);
+      if (calCut > 0) S.slowBy.caltrop = (S.slowBy.caltrop || 0) + denied * (calCut / share);
     }
     // seek the Point — stop at the rim: besiegers hold position, they don't
     // burrow (core.md Enemies "besiege"). Knockback rides on top unclamped,

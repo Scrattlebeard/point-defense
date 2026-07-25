@@ -53,6 +53,9 @@ export function newRun(meta, towerId) {
     wave: 0, kills: 0, bossKills: 0, time: 0,
     // damage attributed to its source (core.md Run state); 'other' is explicit
     dmgBy: {},
+    // control measured in shape-seconds of progress denied (core.md Run state):
+    // the swipe/field weapons are judged by seconds bought, never by DPS
+    slowBy: {},
     // run-scoped introduction record — banners repeat each run (core.md Introductions)
     // run-scoped introduction record; `stacked` is the wave-40 regime beat
     introduced: { enemies: new Set(), variants: new Set(), stacked: false },

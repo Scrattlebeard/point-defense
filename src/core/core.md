@@ -704,6 +704,27 @@ only 6s was the actual drowning** — 85% invoicing, with individual runs at 292
 with the xp curve rather than the wave clock, which is deliberate: GDD §7's doom clock
 wants heals to *rarify* as levels stretch and pressure peaks.
 
+**Control is measured in seconds, not damage** (`S.slowBy`, a `sourceId → seconds`
+map). GDD section 4 judges the control weapons by *"seconds purchased and setups
+created — **not** DPS"*, so a damage ledger structurally understates them: it
+correctly reports frost at 0% (frost deals none) and misleadingly reports caltrops
+near zero (their job is a 45% slow, not their 21 damage).
+
+The unit is **shape-seconds of progress denied**: each frame, every slowed shape
+contributes `(1 − slowFactor) × dt`. A shape held at half speed for two seconds has
+been denied one second of approach — which is exactly the thing the swipe/field
+weapons are supposed to be buying. Mass resistance is already inside `slowFactor`,
+so an aged shape correctly yields fewer seconds than a fresh one (core.md
+`enemyMass`), and a stationary besieger yields none, because slowing something that
+has already arrived buys nothing.
+
+When several sources slow the same shape their effects multiply, so the denied
+second is split **proportionally to each source's own reduction** rather than being
+double-counted — the ledger's total stays equal to the progress actually denied.
+
+*(Added 2026-07-25, after a damage census ranked caltrops 0.4% and I recorded that
+the metric, not the weapon, was what the census had wrong.)*
+
 **Damage is attributed to its source** (`S.dmgBy`, a `weaponId → total` map). Every
 `damageEnemy` call names what dealt it, and damage that genuinely has no weapon
 behind it — a volatile's medic-bomb, a shape walking into another shape's blast —
