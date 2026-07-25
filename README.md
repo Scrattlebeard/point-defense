@@ -44,7 +44,11 @@ photographed — keep N ≲ 15: besiegers grind the undefended tower down, so lo
 warps photograph the death screen) · `&gear=frost:4,orbit:2` grants weapon levels after autostart (visual
 dev — capped at each weapon's max) · `&form=bolt:fan` wears a form (maxes its base
 weapon first; forms are otherwise only reachable by a full run) · `&sparks` enables the ambient grid sparks
-in-battle (menu has them by default — app.md "Grid sparks") · `?bestiary` opens a fully-revealed bestiary,
+in-battle (menu has them by default — app.md "Grid sparks") · **`?cards`** opens the level-up screen showing one of every card type at once (new
+weapon · upgrade · form · passive) — form cards otherwise need a maxed base weapon and an
+unlocked-but-unworn form, so the markup is hard to reach by playing ·
+`?pause` opens the pause
+panel on a furnished run (the other click-gated loadout surface) · `?bestiary` opens a fully-revealed bestiary,
 in-memory only · `?lattice&shards=N` opens the Lattice with a faked balance
 (in-memory only — node states photographable) · **`?specimen`** lays stacked-variant
 specimens out on a *frozen* field so the highlight grammar can be photographed —

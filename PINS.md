@@ -79,6 +79,19 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
 - **Context:** GitHub Pages hosting stays static throughout — no server of ours at
   any step. Discussed 2026-07-24 (chat); Daniel: "put a pin in it."
 
+## Canvas announcements collide with overlay titles
+- **What:** the lingering on-field announcement (wave banner, "DEFEND THE POINT", debut
+  banners — 15s each per app.md) is canvas-drawn at top-left and shows through the
+  translucent level-up and pause overlays, colliding with their centred titles. Visible in
+  `?cards` and `?pause` plates: "DEFEND THE POINT" overlaps "LEVEL UP".
+- **Why it is worth a look:** level-ups are frequent and banners are long-lived, so the
+  overlap is the normal case rather than a corner. Seeing the field through the overlay is a
+  deliberate choice; two texts fighting for the same pixels probably is not.
+- **Where:** `styles.css` overlay backdrop, or `render.js` could skip announcements while an
+  overlay is up (`G.mode !== 'play'`), or `fx.js` could park them lower.
+- **Context:** cosmetic and a matter of taste, which is why it is pinned rather than fixed —
+  it may read fine in motion with the real backdrop. Judge it from the two plates.
+
 ## Siege pile-up feel — the telegraph landed, the death shape still needs thumbs
 - **What (landed 2026-07-25):** besiegers now telegraph. `e.sieging` and `e.strike` are
   explicit sim state (the shell owns the fact, the view reads it), and a **collapsing red

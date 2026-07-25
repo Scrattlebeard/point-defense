@@ -232,10 +232,22 @@ function loadoutHTML(S) {
 
 // Live per-weapon stat readout, computed from the same WEAPONS.stats tables the
 // sim uses — hand-written numbers drift, these can't (app.md "Loadout visibility").
-function statLine(id, l) {
+/** `form` is the worn form id, if any: a form redistributes the weapon's output
+ *  (core.md Forms), so the base numbers stop describing what the player is
+ *  holding. Reporting them unchanged is a small lie the pause panel used to tell —
+ *  it read "2 bolts" while a fanned bolt fires six. */
+function statLine(id, l, form = null) {
   const st = WEAPONS[id].stats(l);
+  const f = form ? FORMS[form] : null;
   switch (id) {
-    case 'bolt':   return `DMG ${st.dmg} · ${st.volley * (1 + st.auto)} bolt${st.volley * (1 + st.auto) > 1 ? 's' : ''}${st.auto ? ' (2 streams)' : ''}${st.pierce ? ' · pierce' : ''} · ${st.cd.toFixed(2)}s`;
+    case 'bolt': {
+      const per = (f && f.spread) ? f.spread : st.volley;
+      const n = per * (1 + st.auto);
+      const dmg = Math.round(st.dmg / ((f && f.spread) ? f.spread : 1));
+      return `DMG ${dmg} · ${n} bolt${n > 1 ? 's' : ''}${st.auto ? ' (2 streams)' : ''}`
+        + `${st.pierce ? ' · pierce' : ''}${st.ricochet ? ` · ricochet ×${st.ricochet}` : ''}`
+        + `${f && f.salvo ? ` · salvos of ${f.salvo}` : ''} · ${st.cd.toFixed(2)}s`;
+    }
     case 'wall':   return `HP ${st.hp} · DMG ${st.dmg} · LEN ${st.len}${st.maxWalls > 1 ? ' · ×2' : ''}`;
     case 'beam':   return `DPS ${st.dps}${st.alwaysOn ? ' · always on' : ''}`;
     case 'orbit':  return `${st.n} blade${st.n > 1 ? 's' : ''} · DMG ${st.dmg}`;
@@ -268,7 +280,7 @@ function statsHTML(S) {
     rows.push(
       `<div class="srow"><span class="sname">${r.name}` +
       `${r.form ? ` <span class="lform">${r.formName.toUpperCase()}</span>` : ''}</span>${pips(r.lvl, r.max)}` +
-      `<span class="sstat">${r.isMax ? '<span class="lmax">MAX</span> · ' : ''}${statLine(r.id, r.lvl)}</span></div>`);
+      `<span class="sstat">${r.isMax ? '<span class="lmax">MAX</span> · ' : ''}${statLine(r.id, r.lvl, r.form)}</span></div>`);
   }
   const mods = [];
   if (Math.abs(S.dmgMult - 1) > 1e-9) mods.push(`DMG ×${S.dmgMult.toFixed(2)}`);

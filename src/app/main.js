@@ -180,6 +180,44 @@ if (location.search.includes('bestiary')) {
     ui.showOnly('bestiary');
   });
 }
+// Dev hatch: ?pause opens the pause panel on a furnished run — the other loadout
+// surface that needs a click to reach, so it had never been photographed either.
+if (location.search.includes('pause')) {
+  startRun();
+  Object.assign(G.S.weapons, { bolt: WEAPONS.bolt.max, beam: 3, orbit: 2, frost: 4 });
+  G.S.forms.bolt = 'fan';   // a worn form must show here too (core.md Forms)
+  G.S.wave = 12; G.S.lvl = 14; G.S.kills = 233;
+  ui.renderPause(G);
+  ui.showOnly('pause');
+  G.frozen = true;
+}
+
+// Dev hatch: ?cards opens the level-up screen showing one of EVERY card type at
+// once — a new weapon, an upgrade, a generic, and a form. Card markup is otherwise
+// only reachable by playing to a level-up with the right run state (a form card
+// needs a maxed base weapon AND an unlocked-but-unworn form), which is why these
+// had never been looked at (app.md "Level-up cards").
+if (location.search.includes('cards')) {
+  startRun();
+  const S = G.S;
+  S.weapons.bolt = WEAPONS.bolt.max;   // so the form is eligible
+  S.formPool.add('fan');               // unlocked, deliberately NOT worn
+  S.hp = S.maxHp * 0.4;                // so Repair is offered rather than filtered
+  ui.renderLevelUp(G, [
+    { type: 'weapon', id: 'orbit', lvl: 0 },   // NEW
+    { type: 'weapon', id: 'bolt', lvl: 4 },    // upgrade
+    { type: 'form', id: 'fan', of: 'bolt' },   // form
+    { type: 'generic', id: 'repair' },         // passive
+  ]);
+  ui.showOnly('levelup');
+  // cards deal in with a staggered animation and `backwards` fill, so an
+  // unmodified screenshot catches them before their turn and photographs an
+  // empty row. A plate has to be static to be a plate.
+  document.getElementById('levelup').classList.remove('dealing');
+  for (const el of document.querySelectorAll('#cardRow .card')) el.style.animation = 'none';
+  G.frozen = true;
+}
+
 // Dev hatch: ?specimen lays out stacked-variant specimens on a frozen field so
 // the highlight grammar can be photographed (app.md "Stacked highlights"). This
 // is the tool the legibility check is supposed to use — eyeballing a live wave-40
