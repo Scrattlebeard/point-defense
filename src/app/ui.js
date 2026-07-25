@@ -23,6 +23,7 @@ export function initUI(G, hooks) {
   $('techBack').addEventListener('click', () => { renderMenu(G); showOnly(G.returnTo || 'menu'); if (G.returnTo === 'over') renderGameOver(G, G.lastEarned); });
   $('muteBtn').addEventListener('click', () => H.onMute());
   $('hapticBtn').addEventListener('click', () => H.onHaptics());
+  $('fsBtn').addEventListener('click', () => H.onFullscreen());
   // two-tap reset: arm, then confirm within 4s (app.md "Reset progress")
   let resetArmedUntil = 0;
   $('resetBtn').addEventListener('click', () => {
@@ -62,6 +63,11 @@ export function renderMenu(G) {
   const canBuzz = typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function';
   $('hapticBtn').classList.toggle('hidden', !canBuzz);
   $('hapticBtn').textContent = m.haptics === false ? '📴 HAPTICS OFF' : '📳 HAPTICS ON';
+  // fullscreen: the honest lever for reclaiming the URL bar's screen. Hidden where
+  // the API does not exist (notably iOS Safari), rather than offering a dead button.
+  const canFs = typeof document !== 'undefined' && !!document.documentElement.requestFullscreen;
+  $('fsBtn').classList.toggle('hidden', !canFs);
+  $('fsBtn').textContent = document.fullscreenElement ? '🗗 EXIT FULLSCREEN' : '🗖 FULLSCREEN';
   $('storageWarn').classList.toggle('hidden', storageOk);
   if (!towerUnlocked(m, m.tower)) m.tower = 'bastion';
 

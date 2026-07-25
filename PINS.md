@@ -8,22 +8,31 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
 - **Where:** `src/core/balance.js`, `src/core/config.js`; spec intent in `src/core/core.md`.
 - **Context:** Daniel + second playtester (2026-07-23) are the balance authority. Round 2.5 (second-playtester feedback, same day) reshaped bolt again: aimed bolt is always single/true, extras are auto-aimed (L3/L5/L6 = +1/+2/+4) — the twin-volley question is obsolete; new question is whether the auto pack makes bolt *too* much of a fire-and-forget carry at L6 (old L6 ~6 spread bolts with misses vs new 5 near-guaranteed hits). Round 3 (2026-07-24) steepened the onboarding curve — fresh-run robot death median wave 14 → 9 (method + numbers in core.md `enemyHpMult` note; the spike is 5 minutes to rebuild from the sim.test harness: run-to-death loop, report wave/lvl/time over ~10 trials). **Open:** does a fresh *human* run now die at the wave-5 or wave-10 boss as intended, and does it feel like a wall or like a cheap shot? Also still open: deep-wave pacing for tech-loaded veterans (curve now converges w~35 but budget runs ~10% under at 40), tech-tree cost curve vs shard income, beam cadence now that overheat is legible (heat gauge with re-arm notch shipped — if beam still "feels wonky" after that, the problem is mechanics, not display).
 
-## PWA-ify: manifest + fullscreen button (the honest route to orientation control)
-- **What:** Web app manifest (installable to home screen, standalone display, icon) + an
-  in-menu fullscreen toggle. Optionally `"orientation"` in the manifest and
-  `screen.orientation.lock()` behind the fullscreen gesture on Android.
-- **Why:** True landscape-forcing is impossible on the mobile web (iOS Safari has no
-  orientation lock at all; Android allows it only in fullscreen from a user gesture) —
-  a manifest is the only legitimate lever, and it also kills the URL bar, which is worth
-  more screen than any orientation trick. Decision 2026-07-23: do NOT force landscape —
-  the game is radially symmetric, portrait one-thumb play is a feature; orientation
-  stays player's choice.
-- **Where:** new `manifest.webmanifest` + link tag (build script must inline-or-emit it —
-  Pages can serve a second file, so no inlining contortions needed), `src/app/ui.js`
-  (menu button), README Deployment.
-- **Context:** Deploy is GitHub Pages since 2026-07-23, so multi-file output is fine.
-  Icon could reuse the 🎯 motif; service worker/offline explicitly out of scope until wanted.
-
+## PWA: installable, and the fullscreen toggle — what is left is a phone check
+- **What (landed 2026-07-25):** `manifest.webmanifest` + `icon-192/512.png` ship beside
+  `dist/index.html`, so the game installs to a home screen and runs `display: standalone` —
+  which kills the URL bar, worth more screen than any orientation trick. An in-menu
+  **FULLSCREEN** toggle covers the not-installed case, and hides itself where the API does
+  not exist (iOS Safari) rather than offering a dead button. `orientation` is deliberately
+  `"any"`: the arena is radially symmetric and portrait one-thumb play is a feature, so
+  rotation stays the player's choice — pinned by test so a future "helpful" edit cannot
+  quietly force landscape.
+- **Deliberately NOT done:** no service worker. The game is one file with no runtime deps,
+  so offline caching buys nothing worth the complexity, and a stale cached build is a real
+  cost on a project that ships several times a night.
+- **What remains, and it needs a phone:** nobody has installed it. Unverified by anything
+  here: whether the icon reads at home-screen size against a real wallpaper, whether
+  `standalone` actually reclaims the URL bar on Daniel's device, whether the fullscreen
+  button behaves on Android Chrome (it is verified only in headless Firefox, where the
+  button correctly appears and haptics correctly does not).
+- **Where:** `manifest.webmanifest`, `assets/app-icon.svg` (+ `app-icon.md` for the
+  regeneration recipe), `scripts/build.mjs` (emits the extra files), `.github/workflows/
+  pages.yml` (each channel copies them — `dist/` is no longer a single file), `src/app/ui.js`
+  + `main.js` (the toggle), README "Deployment".
+- **Context / trap for the next person:** `firefox --headless --screenshot` on a bare SVG
+  **crops** rather than scales, so rendering the 512 source at 192 gives a corner of the
+  artwork. The recipe in `app-icon.md` wraps the SVG in a sized HTML page; `test/pwa.test.mjs`
+  reads PNG headers so a mis-rendered icon fails loudly instead of shipping.
 ## Mastery progression (ADR-0003, ACCEPTED — stage 1 SHIPPED 2026-07-24)
 - **What:** Full design: `adr/0003-mastery-progression.md` — that file is the truth.
   **Stage 1 (mega-lattice) shipped**: 57-node radial web (6 sectors × 5 rings,

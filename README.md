@@ -132,6 +132,15 @@ deployed from branches — not separate repos):
   and because the whole sweep costs ~1s, flake resistance is nearly free; a
   persistent boundary-flake means the band or the trial count needs an explicit
   decision, not a re-run-until-green.
+- **Installable (2026-07-25).** `manifest.webmanifest` + `icon-192/512.png` ship
+  alongside `dist/index.html`, so the game can be added to a home screen and run in
+  `display: standalone` — which kills the URL bar, and on a phone that is worth more
+  screen than any orientation trick. `orientation` is deliberately **`"any"`**: the
+  arena is radially symmetric and portrait one-thumb play is a feature, so rotation
+  stays the player's choice (decided 2026-07-23). No service worker — the game is one
+  file with no runtime deps, so offline caching buys nothing worth the complexity, and
+  a stale cached build is a real cost. `dist/` is therefore no longer a single file;
+  the Pages workflow copies the whole directory per channel.
 - Pages serves `dist/index.html` — the **full standalone document**, so the game owns
   its `<head>` (viewport meta, `user-scalable=no`) with no wrapper between the
   browser and the canvas. This is why Pages is canonical: the Claude Artifact viewer
