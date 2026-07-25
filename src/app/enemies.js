@@ -227,6 +227,9 @@ export function damageEnemy(G, e, raw, { noMult = false, silent = false, src = n
   if (!noMult && S.critChance > 0 && Math.random() < S.critChance) {
     dmg *= S.critMult; crit = true;
   }
+  // guarded bosses (core.md "Boss signature moves"): scalar, not a shield —
+  // applied before attribution so a guarded hit is recorded at what it dealt
+  if (e.guard != null && e.guard < 1) dmg *= e.guard;
   // attribute before anything can kill the shape (core.md Run state). Damage with
   // no weapon behind it lands in 'other' rather than vanishing — a breakdown that
   // silently drops damage reads as complete and is not.
@@ -240,6 +243,7 @@ export function damageEnemy(G, e, raw, { noMult = false, silent = false, src = n
 }
 
 /** Execute a boss's signature move. The BOSS_MOVES table owns every number. */
+let S_TOKEN = 0; // distinguishes one Marquis's shards from a later one's
 function runBossMove(G, e, dt) {
   const mv = Object.values(BOSS_MOVES).find(m => m.id === e.moveId);
   if (!mv) return;
@@ -260,6 +264,35 @@ function runBossMove(G, e, dt) {
     // worst option, which is the focus dilemma the move exists to pose
     const surging = e.hp < e.maxHp * mv.belowHp;
     e.spd = e.baseSpd * (surging ? mv.spdMult : 1);
+  } else if (mv.id === 'sunder') {
+    // sheds its sides ONCE at the threshold, and is guarded until they are
+    // cleared: the dilemma is "stop hitting the boss" (core.md Boss signature moves)
+    if (!e.sundered && e.hp < e.maxHp * mv.belowHp) {
+      e.sundered = true;
+      e.wardToken = `sunder${S_TOKEN++}`;
+      for (let i = 0; i < mv.count; i++) {
+        const a = e.rot + (i / mv.count) * Math.PI * 2;
+        spawnEnemy(G, mv.child, null, e.x + Math.cos(a) * (e.r + 10), e.y + Math.sin(a) * (e.r + 10));
+        const shard = G.S.enemies[G.S.enemies.length - 1];
+        if (shard) shard.wardOf = e.wardToken;
+      }
+      burst(G.fx, e.x, e.y, e.color, 22, 240, 0.5, 3);
+      shake(G.fx, 6);
+      sfx('boss');
+    }
+    const warded = e.sundered && G.S.enemies.some(x => !x.dead && x.wardOf === e.wardToken);
+    e.guard = warded ? mv.guard : 1;
+  } else if (mv.id === 'bulwark') {
+    // plants and hardens on a cycle. It stops moving too, so the window costs the
+    // player tempo rather than health — seconds are the currency (GDD §4)
+    e.moveT -= dt;
+    if (e.moveT <= 0) {
+      e.planted = !e.planted;
+      e.moveT = e.planted ? mv.dur : mv.every;
+      if (e.planted) { burst(G.fx, e.x, e.y, e.color, 14, 120, 0.4, 2); sfx('shield'); }
+    }
+    e.guard = e.planted ? mv.guard : 1;
+    e.spd = e.planted ? 0 : e.baseSpd;
   }
 }
 

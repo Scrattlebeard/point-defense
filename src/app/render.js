@@ -660,6 +660,20 @@ function drawEnemies(G) {
     // the rim grows a bright spur toward the Point through the last of its cadence,
     // and pops white on the strike itself. The wind-up is the load-bearing half —
     // a tell that arrives with the damage cannot be answered.
+    // A GUARDED boss (core.md "Boss signature moves"): sunder's shards are up, or
+    // bulwark is planted. Without a tell this reads as "my weapons stopped working"
+    // — the player sees small numbers and blames the game, which is the same
+    // failure the siege telegraph fixed. Channel: a solid gold double-ring that
+    // breathes. Not grey (armored's plate), not blue arcs (shielded), not red
+    // dashes (siege), not white (took damage) — the four already spoken for.
+    if (e.guard != null && e.guard < 1) {
+      const breathe = 0.55 + 0.45 * Math.sin(S.time * 6);
+      ctx.strokeStyle = `rgba(255, 209, 102, ${0.45 + 0.4 * breathe})`;
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 9, 0, TAU); ctx.stroke();
+      ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 14, 0, TAU); ctx.stroke();
+    }
     if (e.sieging || e.strike > 0) {
       // A ring that COLLAPSES onto the attacker as its strike nears, then pops.
       // Drawn around the shape, never toward the Point: an inward spur lands in

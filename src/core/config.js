@@ -34,6 +34,11 @@ export const BOSS_NAMES = [
 export const BOSS_MOVES = {
   'SIR CUMFERENCE': { id: 'adds', every: 6, count: 2, child: 'dart' },
   'THE OBTUSE ONE': { id: 'surge', belowHp: 0.35, spdMult: 1.6 },
+  // Attention displaced in SPACE: there is another target you must deal with.
+  'MARQUIS DE SIDES': { id: 'sunder', belowHp: 0.55, count: 4, child: 'dart', guard: 0.25 },
+  // Attention displaced in TIME: there is a window in which this is the wrong
+  // target. The boss also stops — the window is a trade, not extra punishment.
+  'THE FINAL VERTEX': { id: 'bulwark', every: 9, dur: 3, guard: 0.25 },
 };
 
 // ---------- Variants: the color/highlight grammar ----------

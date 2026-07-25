@@ -56,6 +56,17 @@ simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not un
     unreadable and the generic tower shake was the only feedback. The wind-up is
     the load-bearing half — a tell that arrives *before* the damage is what makes
     the threat answerable at all.
+  - **A guarded boss shows it, in gold** *(2026-07-25, with sunder and bulwark)*.
+    `e.guard < 1` (core.md "Boss signature moves") draws a **breathing gold
+    double-ring** at `r+9` and `r+14`. This is not decoration: both new moves work by
+    making the player's damage temporarily worthless, and *"my numbers got small"*
+    with no tell reads as a broken weapon rather than a boss doing something. Same
+    lesson as the besieger wind-up directly above — a state the player must respond
+    to needs a channel of its own. Gold was picked because the other four are spoken
+    for: **grey plate** = armored, **rotating blue arcs** = shielded, **red dashes** =
+    siege wind-up, **white** = took damage. Pinned by `test/render.test.mjs`, which
+    asserts the ring is absent before `guard` is set and present after — no other test
+    sets `e.guard`, so the branch would otherwise never execute under a green suite.
   - **Stacked highlights allocate annulus slots** *(2026-07-25, with variant
     stacking)*. Three of the five modifier channels live outside the silhouette, and
     two of them — armored's thick outline and shielded's rotating arcs — sat at fixed

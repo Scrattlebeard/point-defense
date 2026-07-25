@@ -254,8 +254,16 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
   ninety seconds verbatim. **The Obtuse One: surge** — +60% speed below 35% hp, so chip
   damage without commitment becomes the worst option. Moves fire from **wave 10**, leaving
   the wave-5 noble a clean ram.
-- **What remains:** five names still differ only by HP — Lord Rhombus, Grandmaster Hexley,
-  Polygothra, Marquis de Sides, The Final Vertex. Each wants ONE move posing a distinct
+- **Two more built 2026-07-25, from Daniel's first playtest.** He fought waves 30 and 35 —
+  `bossIdx` 5 and 6, **Marquis de Sides** and **The Final Vertex** — and reported *"felt a
+  bit underwhelming to have a single boss attack racing against their hp bar."* The reason
+  was structural, not tuning: **both bosses he met were the ram-only ones**, the two names
+  furthest down this list. **sunder** (Marquis, sheds 4 shards at 55% and is guarded until
+  they are cleared) displaces attention in *space*; **bulwark** (Final Vertex, plants and
+  hardens for 3s every 9s, stationary while planted) displaces it in *time*. Shared
+  mechanism: `e.guard`, a 0–1 damage scalar, plus a gold ring so it is legible.
+- **What remains:** three names still differ only by HP — Lord Rhombus, Grandmaster Hexley,
+  Polygothra. Each wants ONE move posing a distinct
   focus dilemma; the mechanism is built, so each is now a table entry plus a small branch.
   Candidate directions (not decided): a radial projectile burst (forces walls/positioning
   rather than aim), a shielded phase (forces sustained focus over chip), a slow field that

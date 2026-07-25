@@ -338,7 +338,25 @@ recirculated noble brings its signature back with it. Decisions live in the tabl
 |------|------|----------------------|
 | Sir Cumference | **adds** — shakes 2 darts out of its sides every ~6s | split your aim or let leakers through. This is GDD §3's canonical ninety seconds verbatim: *"Sir Cumference shakes himself and more enemies fly out from his sides"* — the one boss behaviour the target experience explicitly names |
 | The Obtuse One | **surge** — +60% speed below 35% hp | finish it or buy time; a wounded boss is a *faster* boss, so chip damage without commitment is the worst option |
-| *(the other five)* | ram only, for now | deliberately unbuilt — see PINS. Five more moves is content, and content is cheap to add badly |
+| Marquis de Sides | **sunder** — at 55% hp, once, sheds 4 shards and is **guarded (×0.25 damage) while any shard lives** | *stop hitting the boss.* Your DPS is now being wasted; the fight demands a target switch and a return |
+| The Final Vertex | **bulwark** — every ~9s, plants itself for 3s: **guarded (×0.25 damage) and completely stationary** | *stop hitting the boss, for a while.* It is not threatening you during the window either — the seconds are a gift you waste by dumping damage into armour instead of clearing trash or placing setups |
+| *(the other three)* | ram only, for now | deliberately unbuilt — see PINS |
+
+**The two 2026-07-25 moves are deliberately opposite in *when* they free your attention,
+and they exist because of a playtest.** Daniel fought waves 30 and 35 — `bossIdx` 5 and 6,
+**Marquis de Sides and The Final Vertex, the two names furthest down the unbuilt list** —
+and reported: *"felt a bit underwhelming to have a single boss attack racing against their
+hp bar."* He was right, and the reason was structural rather than tuning: both bosses he
+met were the ram-only ones. `sunder` displaces attention in **space** (there is another
+target you must deal with); `bulwark` displaces it in **time** (there is a window in which
+this target is the wrong one). Neither adds damage to the player — Law·Bosses asks for a
+focus-forcer, and *"deal more"* is the move a boss makes when nobody could think of one.
+
+**`e.guard`** is the shared mechanism: a 0–1 multiplier applied in `damageEnemy` after
+crit and before attribution, so a guarded hit is *recorded at the damage it actually
+dealt* and the ledger keeps adding up (core.md Run state). Default 1. It is not a shield
+(which eats whole hits and is a variant); it is a scalar, and it is the only thing either
+move needed.
 
 *(Added 2026-07-25. **Moves fire from wave 10 onward**, so only the very first noble
 — the wave-5 onboarding wall, where ~45% of fresh runs end — is a clean ram. One

@@ -15,6 +15,7 @@ import { resetWaveDirector, updateGame } from '../src/app/game.js';
 import { spawnEnemy } from '../src/app/enemies.js';
 import { renderFrame } from '../src/app/render.js';
 import { mulberry32 } from '../src/core/rng.js';
+import { VARIANTS } from '../src/core/config.js';
 
 /** A 2D context that records call volume and swallows everything else. */
 function stubCtx() {
@@ -96,4 +97,39 @@ test('an empty field and a menu-mode frame both draw', () => {
   const G = { ctx, W: 430, H: 900, cx: 215, cy: 450, fx: makeFx(), S: null, mode: 'menu', stats };
   renderFrame(G);
   assert.ok(stats.calls > 0, 'menu frame drew nothing');
+});
+
+// A guarded boss must LOOK guarded (core.md "Boss signature moves", app.md).
+// Without a tell, sunder and bulwark read as "my weapons stopped working" — the
+// player sees small numbers and blames the game. The suite being green proves
+// nothing here: no other test ever sets e.guard, so the branch is otherwise
+// unexecuted. This asserts it draws, and in its own colour channel.
+test('a guarded boss draws its own tell, in a channel nothing else uses', () => {
+  const { ctx } = stubCtx();
+  const strokes = [];
+  const spy = new Proxy(ctx, {
+    get: (t, k) => t[k],
+    set: (t, k, v) => { if (k === 'strokeStyle') strokes.push(String(v)); t[k] = v; return true; },
+  });
+  const meta = defaultMeta();
+  const G = { W: 430, H: 900, cx: 215, cy: 450, S: newRun(meta, 'bastion'), fx: makeFx(), meta, ctx: spy, mode: 'play' };
+  resetWeapons(G); resetWaveDirector(G);
+  G.S.wave = 30;
+  const b = spawnEnemy(G, 'boss');
+  b.x = 215; b.y = 300;
+
+  renderFrame(G);
+  const before = strokes.filter(s => s.includes('255, 209, 102')).length;
+  assert.equal(before, 0, 'an unguarded boss shows no guard ring');
+
+  strokes.length = 0;
+  b.guard = 0.25;
+  renderFrame(G);
+  const after = strokes.filter(s => s.includes('255, 209, 102')).length;
+  assert.ok(after > 0, 'a guarded boss draws the gold ring');
+
+  // The four channels already spoken for, per the comment block in render.js.
+  const taken = [VARIANTS.armored.color, VARIANTS.shielded.color, '255, 92, 108', '#ffffff'];
+  assert.ok(!taken.some(c => '#ffd166'.toLowerCase() === String(c).toLowerCase()),
+    'gold must not collide with armored grey, shielded blue, siege red or hit-flash white');
 });
