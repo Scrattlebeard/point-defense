@@ -592,7 +592,8 @@ function drawEnemies(G) {
     const pulse = Math.sin(S.time * 8 + e.rot * 3);
 
     // variant under-glow
-    if (e.variant === 'swift') {
+    const has = id => e.variants.includes(id);
+    if (has('swift')) {
       ctx.shadowColor = '#ffffff';
       ctx.shadowBlur = 14;
     }
@@ -608,21 +609,33 @@ function drawEnemies(G) {
     ctx.stroke();
     ctx.shadowBlur = 0;
 
-    if (e.variant === 'armored') {
-      ctx.strokeStyle = e.vdef.color;
-      ctx.lineWidth = 3.5;
-      poly(ctx, e.x, e.y, e.r + 4, e.sides, e.rot);
+    // Outer channels claim successive annulus slots so a stack reads as distinct
+    // concentric rings instead of one smudge (app.md "Stacked highlights").
+    let slot = e.r + 4;
+    if (has('armored')) {
+      // plating reads by CONTRAST, not just presence: a mid-grey ring one step
+      // outside a bright species hue was the faintest channel on the specimen
+      // plate, and armored is the costliest modifier to misread (×2.5 hp).
+      // A dark backing stroke separates it from the body colour underneath.
+      ctx.strokeStyle = 'rgba(6, 9, 16, 0.9)';
+      ctx.lineWidth = 6;
+      poly(ctx, e.x, e.y, slot, e.sides, e.rot);
       ctx.stroke();
+      ctx.strokeStyle = VARIANTS.armored.color;
+      ctx.lineWidth = 3.5;
+      poly(ctx, e.x, e.y, slot, e.sides, e.rot);
+      ctx.stroke();
+      slot += 5;
     }
-    if (e.variant === 'volatile') {
-      ctx.fillStyle = e.vdef.color;
+    if (has('volatile')) {
+      ctx.fillStyle = VARIANTS.volatile.color;
       ctx.beginPath(); ctx.arc(e.x, e.y, e.r * (0.35 + 0.12 * pulse), 0, TAU); ctx.fill();
     }
-    if (e.variant === 'regen') {
+    if (has('regen')) {
       // pulsating green plus inside the shape (core.md variants, 2026-07-24);
       // own half-speed phase — a calm breath, not the shared hit-pulse jitter
       const slow = Math.sin(S.time * 4 + e.rot * 3);
-      ctx.strokeStyle = e.vdef.color;
+      ctx.strokeStyle = VARIANTS.regen.color;
       ctx.lineWidth = 2.5;
       const pr = e.r * (0.42 + 0.1 * slow);
       ctx.beginPath();
@@ -630,13 +643,17 @@ function drawEnemies(G) {
       ctx.moveTo(e.x, e.y - pr); ctx.lineTo(e.x, e.y + pr);
       ctx.stroke();
     }
-    if (e.variant === 'shielded' && e.shield > 0) {
-      ctx.strokeStyle = e.vdef.color;
+    if (has('shielded') && e.shield > 0) {
+      ctx.strokeStyle = VARIANTS.shielded.color;
       ctx.lineWidth = 2.5;
-      for (let s = 0; s < e.shield; s++) {
-        const a0 = S.time * 1.6 + (s * TAU) / 3;
-        ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 6, a0, a0 + TAU / 4.2); ctx.stroke();
+      // arcs cap at 3 drawn segments: a boss carries 12 charges (ADR-0009) and
+      // twelve overlapping arcs are a solid ring, not a shield read
+      const arcs = Math.min(3, e.shield);
+      for (let s = 0; s < arcs; s++) {
+        const a0 = S.time * 1.6 + (s * TAU) / arcs;
+        ctx.beginPath(); ctx.arc(e.x, e.y, slot + 2, a0, a0 + TAU / 4.2); ctx.stroke();
       }
+      slot += 5;
     }
 
     // primed shapes carry a pulsing white diamond — marker, not ring (app.md)
@@ -670,7 +687,7 @@ function drawEnemies(G) {
       ctx.globalAlpha = a * (0.55 + 0.35 * Math.sin(S.time * 9));
       ctx.lineWidth = 2;
       ctx.setLineDash([5, 6]);
-      ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 11 + 2 * pulse, 0, TAU); ctx.stroke();
+      ctx.beginPath(); ctx.arc(e.x, e.y, slot + 5 + 2 * pulse, 0, TAU); ctx.stroke();
       ctx.setLineDash([]);
       ctx.globalAlpha = 1;
     }

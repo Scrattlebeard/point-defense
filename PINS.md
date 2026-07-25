@@ -91,12 +91,6 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
 - **Where:** `src/app/lattice.js`, ADR-0005 (supersede via new ADR if done); GDD visual-language section once it exists.
 - **Context:** "Probably" — a candidate, not a commitment. Revisit against whatever made 0005 abandon radial (check the ADR's alternatives before re-deciding).
 
-## Variant stacking past wave ~40 (GDD session, 2026-07-24)
-- **What:** From roughly the epithet threshold (wave 40, where recirculating bosses gain guaranteed variants), regular spawns should begin rolling **multiple stacked variants** ("armor + fast + regen is going to be hell" — Daniel). Escalating composition is the lategame content doctrine; stacking is its deepest gear.
-- **Why:** GDD-level: the bullshit generator is composition, not (yet) random events; the modifier pool compounds so run depth stays structurally surprising. Legibility holds because highlights occupy distinct visual channels (outline / glow / inner glyph / ring / core) — verify all pairs on one silhouette before shipping.
-- **Where:** `src/core/waves.js` rollVariant (single-roll today), `core.md` Variants, xp mults need a stacking rule (multiplicative?).
-- **Context:** Future work, deliberately unscheduled. GDD threat-design section will carry the intent; this pin is the mechanical breadcrumb.
-
 ## Salvage sector violates the new no-meta-acceleration rule (GDD session, 2026-07-24)
 - **What:** GDD rule ratified: **no upgrades that speed up meta-progression** (no +shards, no meta-exp boosters) — managing the in-run-power-vs-rewards tradeoff is not fun (Daniel). The entire Salvage income line (salv1–4, goldrush, quartermaster's salvage half) violates it and must be redesigned; the sector needs a new theme (its non-income nodes — warchest etc. — can stay).
 - **Why:** Two laws convict it: the ratified rule, plus the focus law (income nodes are an optimizer's no-brainer first-buy — never a real choice). Corollary rule: QoL unlocks are milestone-granted by total investment (e.g. third hold weapon → hold-priority auto-unlocks), never explicit purchases.
@@ -260,21 +254,19 @@ Numbers are measured (headless spikes over the real sim), not estimated.*
 - **Context:** Watch for this in the first post-cap playtest — if a capped run feels like
   hoping rather than choosing, this is why, and it jumps the queue.
 
-## [phase 3] Stacked-highlight legibility is still unverified at depth
-- **What:** The three errata from the audit are FIXED (2026-07-25): the hit flash is a
-  stroke pop not a polygon fill, burn licks moved to the rim in hot-yellow away from
-  volatile's orange core, and the hp sliver gate is wave-relative (`hpBarThreshold`).
-  What remains is the check those fixes were clearing the way for: **verify every stacked
-  highlight pair on one silhouette** before variant stacking ships.
-- **Why:** Armored and shielded already overlap physically at `r+4`-`r+6` in two cool
-  greys, and three of five channels are outer-annulus - so a stacked dart could wear
-  concentric rings out to ~24px around a 10px triangle. The channel that dies under
-  stacking is **shape = species**, the load-bearing one (Law-Legibility).
-- **Where:** `src/app/render.js` variant highlight branches (note: every branch is
-  `e.variant === 'x'` - singular - so stacking rewrites this zone anyway), `core.md`
-  Variants, GDD section 5 modifier-channel table.
-- **Context:** Headless single-frame screenshots verified the *fill law* holds in a live
-  frame (enemies are outlines; chaff carries no bars) but they cannot judge a wave-30
-  read - the shots land at wave 1-2 because the robot clears everything. **A dev hatch
-  that spawns one shape wearing N chosen variants is the cheap tool this needs**, and is
-  worth building as step one of stacking rather than eyeballing it.
+## [phase 3] Stacked legibility on a real phone (the plate says yes; thumbs haven't)
+- **What:** Variant stacking shipped 2026-07-25 with an annulus allocator (outer channels
+  claim successive slots) and an armored contrast fix (a dark backing stroke — it was the
+  faintest channel on the plate, and the costliest to misread at x2.5 hp). Verified with the
+  new `?specimen` hatch at 3x magnification: every single, every pair, every three-way stack,
+  on both the smallest silhouette (dart) and a large one (elite). **The shape channel
+  survives** — a triple-stacked dart still reads as a triangle, which was the load-bearing
+  worry.
+- **Why it is still open:** the plate is frozen, magnified and uncluttered. A wave-45 fight
+  is none of those. What is NOT verified: stacked shapes in motion, overlapping each other,
+  behind flame licks and nova rings, at 1x on a phone in daylight.
+- **Where:** `?specimen` (README dev hatches), `src/app/render.js` variant branches,
+  app.md "Stacked highlights".
+- **Context:** Cheap to check — `?specimen&kind=dart` on the dev channel from a phone, then
+  a real run past wave 40. If a channel drowns, the annulus allocator is the place to widen
+  slots and the armored backing-stroke trick generalises to any channel that needs contrast.

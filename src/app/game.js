@@ -1,6 +1,6 @@
 // Per-frame simulation orchestration + wave director. Decisions (composition,
 // healing, payout) come from core; this file only sequences them in time.
-import { composeWave, rollVariant, pickVariant } from '../core/waves.js';
+import { composeWave, rollVariants, pickVariant } from '../core/waves.js';
 import { waveCleared } from '../core/state.js';
 import { BOSS_NAMES, VARIANTS } from '../core/config.js';
 import { spawnEnemy, updateEnemies } from './enemies.js';
@@ -50,7 +50,7 @@ function directWaves(G, dt) {
         G.bossIdx++;
         sfx('boss');
       } else {
-        spawnEnemy(G, kind, rollVariant(S.wave, Math.random));
+        spawnEnemy(G, kind, rollVariants(S.wave, Math.random));
       }
       wd.spawnT += wd.plan.interval;
     }

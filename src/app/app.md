@@ -47,6 +47,15 @@ simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not un
     `#ff8630` core, so with a flamethrower build "medic-bomb or just on fire?" was a
     live misread. Zone and hue now both separate them: fire clings to the surface,
     the volatile core sits inside.
+  - **Stacked highlights allocate annulus slots** *(2026-07-25, with variant
+    stacking)*. Three of the five modifier channels live outside the silhouette, and
+    two of them — armored's thick outline and shielded's rotating arcs — sat at fixed
+    `r+4` and `r+6` in two cool greys, close enough to read as one smudge on a small
+    shape. Outer channels now claim successive slots at draw time (armored first, then
+    shielded, then the introduction ring), so a stack reads as *concentric distinct
+    rings* rather than overlapping strokes, and a shape wearing none is unchanged.
+    The inner channels (regen's plus, volatile's core) never competed and are
+    untouched. **Verify with `?specimen`** — the hatch exists for exactly this check.
   - **The hp sliver is wave-relative, not absolute** *(fixed 2026-07-25)* — shown
     when a shape is beefy *for its wave* (`balance.js: hpBarThreshold`), plus always
     on bosses. The old gate was `maxHp > 40`, an absolute number against a curve that

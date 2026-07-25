@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { composeWave, rollVariant, pickVariant } from '../src/core/waves.js';
+import { composeWave, rollVariants, pickVariant } from '../src/core/waves.js';
 import { ENEMIES, VARIANTS } from '../src/core/config.js';
 import { waveBudget } from '../src/core/balance.js';
 import { mulberry32 } from '../src/core/rng.js';
@@ -104,11 +104,48 @@ test('composition is frozen nowhere: wave 100 differs from wave 30', () => {
   assert.ok(drift > 0.05, `wave 30 and wave 100 have the same mix (drift ${drift.toFixed(3)})`);
 });
 
-test('rollVariant: never before wave 6, valid id or null after', () => {
-  assert.equal(rollVariant(5, () => 0), null);
-  const v = rollVariant(10, () => 0);
-  assert.ok(Object.keys(VARIANTS).includes(v));
-  assert.equal(rollVariant(10, () => 0.999), null);
+test('rollVariants: never before wave 6, valid ids or empty after', () => {
+  assert.deepEqual(rollVariants(5, () => 0), []);
+  const v = rollVariants(10, () => 0);
+  assert.ok(v.length >= 1 && v.every(id => Object.keys(VARIANTS).includes(id)));
+  assert.deepEqual(rollVariants(10, () => 0.999), []);
+});
+
+test('stacking is the wave-40 regime change: nothing stacks before it', () => {
+  // core.md Variants "Stacking" — same threshold as boss recirculation on purpose
+  for (const w of [10, 20, 30, 39]) {
+    for (let seed = 0; seed < 120; seed++) {
+      assert.ok(rollVariants(w, mulberry32(seed)).length <= 1,
+        `wave ${w} produced a stack before the regime change`);
+    }
+  }
+});
+
+test('stacking appears past wave 40, escalates, and never exceeds three', () => {
+  const stackRate = w => {
+    let stacked = 0, withVariant = 0, most = 0;
+    for (let seed = 0; seed < 900; seed++) {
+      const v = rollVariants(w, mulberry32(seed));
+      most = Math.max(most, v.length);
+      if (v.length >= 1) withVariant++;
+      if (v.length >= 2) stacked++;
+    }
+    return { frac: stacked / withVariant, most };
+  };
+  const at45 = stackRate(45), at70 = stackRate(70), at120 = stackRate(120);
+  assert.ok(at45.frac > 0, 'nothing stacked at wave 45');
+  assert.ok(at70.frac > at45.frac, `stacking must escalate (${at45.frac.toFixed(2)} → ${at70.frac.toFixed(2)})`);
+  for (const r of [at45, at70, at120]) {
+    assert.ok(r.most <= 3, `stack of ${r.most} exceeds the three-channel cap`);
+  }
+});
+
+test('a stack never repeats a variant: three channels, three distinct modifiers', () => {
+  for (let seed = 0; seed < 600; seed++) {
+    const v = rollVariants(80, mulberry32(seed));
+    assert.equal(new Set(v).size, v.length, `duplicate modifier in stack ${v.join('+')}`);
+    for (const id of v) assert.ok(VARIANTS[id].minWave <= 80, `${id} debuted early`);
+  }
 });
 
 test('pickVariant: guaranteed pick from the debuted pool (recirculating bosses)', () => {
@@ -119,16 +156,16 @@ test('pickVariant: guaranteed pick from the debuted pool (recirculating bosses)'
   }
 });
 
-test('rollVariant respects per-variant debut waves', () => {
+test('rollVariants respects per-variant debut waves', () => {
   for (let seed = 0; seed < 60; seed++) {
-    const v = rollVariant(12, mulberry32(seed));
-    if (v) assert.ok(VARIANTS[v].minWave <= 12, `${v} debuted early at wave 12`);
+    for (const v of rollVariants(12, mulberry32(seed))) {
+      assert.ok(VARIANTS[v].minWave <= 12, `${v} debuted early at wave 12`);
+    }
   }
   // deep wave: the full pool is reachable
   const seen = new Set();
   for (let seed = 0; seed < 500; seed++) {
-    const v = rollVariant(30, mulberry32(seed));
-    if (v) seen.add(v);
+    for (const v of rollVariants(30, mulberry32(seed))) seen.add(v);
   }
   assert.equal(seen.size, Object.keys(VARIANTS).length, 'full pool never surfaced at wave 30');
 });

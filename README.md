@@ -44,7 +44,14 @@ warps photograph the death screen) · `&gear=frost:4,orbit:2` grants weapon leve
 dev — capped at each weapon's max) · `&sparks` enables the ambient grid sparks
 in-battle (menu has them by default — app.md "Grid sparks") · `?bestiary` opens a fully-revealed bestiary,
 in-memory only · `?lattice&shards=N` opens the Lattice with a faked balance
-(in-memory only — node states photographable).
+(in-memory only — node states photographable) · **`?specimen`** lays stacked-variant
+specimens out on a *frozen* field so the highlight grammar can be photographed —
+bare `?specimen` gives every single and every pair, `=triples` every three-way stack,
+`=armored+regen,swift+volatile` explicit combos, `&kind=dart|elite|…` picks the
+silhouette (default `dart`, the smallest and so the worst case for ring crowding).
+This is the tool the stacked-legibility check uses; eyeballing a live wave-40 fight
+is how the channel collisions got shipped in the first place. Magnify it with the
+dpr profile trick above (`devPixelsPerPx = 3`).
 
 Balance tooling: `node scripts/calibrate.mjs [trials]` runs fresh no-tech robot
 runs to death and checks the median against the onboarding band (ADR-0003

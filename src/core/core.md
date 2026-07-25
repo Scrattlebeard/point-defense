@@ -75,6 +75,10 @@ prereqs enforced), not exact constants, so tuning stays cheap.
   → "Wave composition"): 0 until the elite debut at wave 14, reaching 0.55 at wave
   54. Species budget share ∝ `cost^mixTilt`, pick weight ∝ `cost^(mixTilt−1)`.
 - `xpForLevel(l) = round(10 + 8(l−1) + 1.2(l−1)²)` — XP needed to go from level l to l+1.
+- `stackChance(w) = w < 40 ? 0 : clamp(0.12 + 0.012(w−40), 0, 0.55)` — the chance a
+  variant-bearing spawn gains *another* variant, rolled repeatedly to a cap of 3
+  (Variants → "Stacking"). At wave 60 roughly an eighth of all spawns carry two or
+  more; stacked shapes are meant to be a scary minority, never the texture.
 - `hpBarThreshold(w) = 2.4 · grunt.hp · enemyHpMult(w)` — a shape shows an HP sliver
   when it is beefy *for its wave* (app.md "fill encodes allegiance"; bosses always
   show one). ≈ the old absolute `40` at wave 1 by construction (38.4 — deliberately just under, so an armored grunt, at exactly ×2.5, clears it), and unlike it
@@ -229,9 +233,30 @@ Shape encodes species; highlight encodes the variation (pillar 3).
 | shielded | rotating ring segments | absorbs first 3 damage instances (ring depletes visibly) | 1.6 | 21 |
 | volatile | pulsing orange core | on death: burst r=70 — **heals nearby shapes 30% of their max hp** and damages the Point if in range (reworked 2026-07-23: friendly fire made popping them a free win; a medic-bomb makes target priority a real decision) | 1.4 | 23 |
 
-Roll: from wave 6, each non-boss spawn has `min(0.35, 0.015*(w−5))` chance of one
-variant chosen uniformly **from those whose `from wave` has arrived** — the pool
-widens as the run deepens, so each variant gets its own debut. Debut waves avoid
+Roll (`waves.js: rollVariants` → an array, possibly empty): from wave 6, each
+non-boss spawn has `min(0.35, 0.015*(w−5))` chance of a first variant chosen
+uniformly **from those whose `from wave` has arrived** — the pool widens as the run
+deepens, so each variant gets its own debut.
+
+**Stacking — the wave-40 regime change (GDD §5).** A spawn that already carries a
+variant rolls for *another*, at `stackChance(w)`, repeatedly, to a hard cap of
+**three**. Zero before wave 40, which is deliberately the same threshold as boss
+recirculation: wave 40 is where the whole game changes gear, and one threshold is
+more legible than two. The cap is three because GDD §5 pictures exactly that —
+*"three modifiers read as three channels lit on one silhouette"* — and because it
+bounds the legibility problem to something verifiable rather than open-ended.
+
+- **Stats compose multiplicatively** (hp, speed, xp): an armored swift is ×2.5 hp
+  *and* ×1.7 speed and pays ×1.3·×1.6 xp. Compounding is the point — GDD §5's content
+  doctrine is that the game gets crueler by mixing known ingredients, not by adding
+  new ones. Flags (shield charges, regen %, the volatile burst) take the strongest
+  present rather than summing, since only one variant of each kind can be in a stack.
+- **Bosses do not stack.** A recirculated noble carries exactly one variant, worn as
+  an epithet — *"SIR CUMFERENCE, THE ARMORED"*. A name is one word; a boss wearing
+  three modifiers is a stat block, not a character. (ADR-0009's `boss` overrides still
+  apply to that one.)
+- **Rendering allocates annulus slots** so stacked outer-ring channels cannot overlap
+  — see app.md "Stacked highlights". Verified with the `?specimen` hatch. Debut waves avoid
 boss waves (multiples of 5) so introduction banners and boss-name banners don't
 land together — hence shielded at 21, not 20. (Ordering intent: mechanically
 simplest first; volatile last because its lesson costs the most to learn.)

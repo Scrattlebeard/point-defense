@@ -1,6 +1,6 @@
 // Wave composition: budget → spawn plan. Deterministic given the injected rng.
 import { ENEMIES, VARIANTS } from './config.js';
-import { waveBudget, spawnInterval, variantChance, mixTilt } from './balance.js';
+import { waveBudget, spawnInterval, variantChance, stackChance, mixTilt } from './balance.js';
 
 /** @returns {{spawns: string[], interval: number, boss: boolean}} */
 export function composeWave(w, rng) {
@@ -32,9 +32,24 @@ export function pickVariant(w, rng) {
   return pool.length ? pool[Math.floor(rng() * pool.length)] : null;
 }
 
-/** One variant id or null, for a single non-boss spawn. Pool = variants whose debut wave has arrived. */
-export function rollVariant(w, rng) {
+/** Modifier stack for one non-boss spawn — an array, possibly empty (core.md
+ *  Variants "Stacking"). First variant on `variantChance`; from the regime wave
+ *  each carrier rolls again on `stackChance`, to a hard cap of three distinct
+ *  modifiers (GDD §5: "three modifiers read as three channels on one silhouette"). */
+export const MAX_STACK = 3;
+
+export function rollVariants(w, rng) {
   const c = variantChance(w);
-  if (c <= 0 || rng() >= c) return null;
-  return pickVariant(w, rng);
+  if (c <= 0 || rng() >= c) return [];
+  const first = pickVariant(w, rng);
+  if (!first) return [];
+  const out = [first];
+  const s = stackChance(w);
+  while (out.length < MAX_STACK && s > 0 && rng() < s) {
+    const rest = Object.keys(VARIANTS)
+      .filter(id => VARIANTS[id].minWave <= w && !out.includes(id));
+    if (!rest.length) break;
+    out.push(rest[Math.floor(rng() * rest.length)]);
+  }
+  return out;
 }

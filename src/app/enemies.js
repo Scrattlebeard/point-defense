@@ -10,18 +10,25 @@ import { sfx } from './audio.js';
 const TOWER_R = 24;
 const COMBAT_R = 280; // inertia-age accrual zone (core.md enemyMass)
 
-export function spawnEnemy(G, kind, variantId = null, x = null, y = null) {
+export function spawnEnemy(G, kind, variants = null, x = null, y = null) {
   const S = G.S;
   const def = ENEMIES[kind];
-  const vRaw = variantId ? VARIANTS[variantId] : null;
   const isBoss = kind === 'boss';
-  // An epithet changes the fight, not the arithmetic: a boss's HP is a share of
-  // the whole wave, so trash multipliers compound against a curve they were
-  // never sized for (core.md "Boss variants"). Everything downstream — regen,
-  // shield, explode, color — reads this merged view via e.vdef.
-  const v = vRaw && isBoss && vRaw.boss ? { ...vRaw, ...vRaw.boss } : vRaw;
+  // A stack composes multiplicatively; flags take the strongest present, since a
+  // stack never repeats a modifier (core.md Variants "Stacking"). An epithet
+  // changes the fight, not the arithmetic — a boss's HP is a share of the whole
+  // wave, so trash multipliers compound against a curve they were never sized
+  // for, hence the `.boss` override (core.md "Boss variants" / ADR-0009).
+  const ids = (Array.isArray(variants) ? variants : variants ? [variants] : [])
+    .filter(id => VARIANTS[id]);
+  const vdefs = ids.map(id => {
+    const raw = VARIANTS[id];
+    return isBoss && raw.boss ? { ...raw, ...raw.boss } : raw;
+  });
+  const prod = key => vdefs.reduce((m, v) => m * (v[key] || 1), 1);
+  const strongest = key => vdefs.reduce((m, v) => Math.max(m, v[key] || 0), 0);
   const baseHp = isBoss ? bossHp(S.wave) : def.hp * enemyHpMult(S.wave);
-  const hp = baseHp * (v?.hpMult || 1);
+  const hp = baseHp * prod('hpMult');
   // Wave spawns: on the wall, speed normalized so time-to-Point is constant
   // (core.md "Spawn geometry"). Splits pass explicit x,y and stay unscaled.
   let laneMult = 1;
@@ -33,13 +40,15 @@ export function spawnEnemy(G, kind, variantId = null, x = null, y = null) {
     kind, def, sides: def.sides, color: def.color,
     x, y, r: def.r,
     hp, maxHp: hp,
-    spd: def.spd * enemySpeedMult(S.wave) * (v?.spdMult || 1) * laneMult,
+    spd: def.spd * enemySpeedMult(S.wave) * prod('spdMult') * laneMult,
     dmg: def.dmg,
-    xp: Math.round(def.xp * (v?.xpMult || 1)),
+    xp: Math.round(def.xp * prod('xpMult')),
     rot: Math.random() * Math.PI * 2,
     rotSpd: (Math.random() < 0.5 ? -1 : 1) * (0.5 + Math.random() * 1.2),
-    variant: variantId, vdef: v,
-    shield: v?.shield || 0,
+    variants: ids, vdefs,
+    regenPct: strongest('regenPct'),
+    explode: vdefs.find(d => d.explode)?.explode || null,
+    shield: strongest('shield'),
     kbx: 0, kby: 0, contactCd: 0, flash: 0, orbHit: 0, age: 0, wallAtk: 0,
     beamHeat: 0, beamTick: 0,
     burnStacks: 0, burnLeft: 0, burnTick: 0, // flamethrower DoT (core.md flame row)
@@ -52,7 +61,7 @@ export function spawnEnemy(G, kind, variantId = null, x = null, y = null) {
   const seen = G.meta?.seen;
   if (seen) {
     if (!seen.enemies.includes(kind)) seen.enemies.push(kind);
-    if (variantId && !seen.variants.includes(variantId)) seen.variants.push(variantId);
+    for (const id of ids) if (!seen.variants.includes(id)) seen.variants.push(id);
   }
   // on-field introductions repeat every run (core.md "Introductions" — tutorial
   // beat, not trophy). Bosses introduce themselves by name banner instead.
@@ -67,10 +76,13 @@ export function spawnEnemy(G, kind, variantId = null, x = null, y = null) {
         sfx('discover');
       }
     }
-    if (variantId && !intro.variants.has(variantId)) {
-      intro.variants.add(variantId);
-      announce(G.fx, `NEW SPECIMEN: ${v.name.toUpperCase()}`, v.color, v.desc,
-        { sides: def.sides, color: def.color, variant: variantId });
+    // one banner per newly-sighted modifier, even when several arrive stacked
+    for (let i = 0; i < ids.length; i++) {
+      if (intro.variants.has(ids[i])) continue;
+      intro.variants.add(ids[i]);
+      const vd = VARIANTS[ids[i]];
+      announce(G.fx, `NEW SPECIMEN: ${vd.name.toUpperCase()}`, vd.color, vd.desc,
+        { sides: def.sides, color: def.color, variant: ids[i] });
       e.introduce = 3;
       sfx('discover');
     }
@@ -161,10 +173,10 @@ function killEnemy(G, e) {
     }
   }
   if (e.primed) detonatePrimed(G, e); // death lights the fuse instantly (core.md cascade)
-  if (e.vdef?.explode) {
+  if (e.explode) {
     // medic-bomb (core.md volatile): the burst heals its own kind, harms only the Point
-    const { r, healPct } = e.vdef.explode;
-    burst(G.fx, e.x, e.y, e.vdef.color, 22, 220);
+    const { r, healPct } = e.explode;
+    burst(G.fx, e.x, e.y, VARIANTS.volatile.color, 22, 220);
     sfx('boom');
     for (const o of S.enemies) {
       if (o.dead || o === e) continue;
@@ -188,7 +200,7 @@ export function damageEnemy(G, e, raw, { noMult = false, silent = false } = {}) 
   if (e.shield > 0) {
     e.shield--;
     e.flash = 0.08;
-    burst(G.fx, e.x, e.y, e.vdef?.color || '#7fd8ff', 4, 90, 0.3, 2);
+    burst(G.fx, e.x, e.y, VARIANTS.shielded.color, 4, 90, 0.3, 2);
     sfx('shield');
     return 0;
   }
@@ -216,8 +228,8 @@ export function updateEnemies(G, dt) {
     e.flash = Math.max(0, e.flash - dt);
     e.contactCd = Math.max(0, e.contactCd - dt);
     e.rot += e.rotSpd * dt;
-    if (e.vdef?.regenPct && e.hp < e.maxHp) {
-      e.hp = Math.min(e.maxHp, e.hp + e.maxHp * e.vdef.regenPct * dt);
+    if (e.regenPct && e.hp < e.maxHp) {
+      e.hp = Math.min(e.maxHp, e.hp + e.maxHp * e.regenPct * dt);
     }
     // frost aura slow, resisted by age-mass (core.md enemyMass)
     let slow = 1;

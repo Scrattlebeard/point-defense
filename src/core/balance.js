@@ -44,6 +44,16 @@ export const hpBarThreshold = w => 2.4 * ENEMIES.grunt.hp * enemyHpMult(w);
 /** Chance that a non-boss spawn rolls a variant. Zero early, capped so lategame stays readable. */
 export const variantChance = w => (w <= 5 ? 0 : Math.min(0.35, 0.015 * (w - 5)));
 
+/** Wave at which the game changes gear: bosses recirculate with epithets AND
+ *  regular spawns start stacking modifiers (core.md Variants "Stacking"). One
+ *  threshold, not two — the regime change should read as a single event. */
+export const REGIME_WAVE = 40;
+
+/** Chance a variant-bearing spawn gains ANOTHER variant, rolled repeatedly to a
+ *  cap of 3 (core.md Variants "Stacking"). Stacked shapes are a scary minority. */
+export const stackChance = w =>
+  w < REGIME_WAVE ? 0 : clamp(0.12 + 0.012 * (w - REGIME_WAVE), 0, 0.55);
+
 /** Losing must always buy something (README pillar 4). Superlinear wave term
  *  added with the Lattice (ADR-0003): deep rings cost 250-600, deep runs pay deep. */
 export const shardPayout = (wave, kills, bossKills) =>

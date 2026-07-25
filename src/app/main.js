@@ -8,7 +8,7 @@ import { loadMeta, saveMeta } from './meta.js';
 import { makeFx, updateFx, settleFx, announce } from './fx.js';
 import { setMuted, sfx } from './audio.js';
 import { resetWeapons } from './weapons/index.js';
-import { nearestEnemy } from './enemies.js';
+import { nearestEnemy, spawnEnemy } from './enemies.js';
 import { resetWaveDirector, updateGame } from './game.js';
 import { initInput, updateInput, clearInput } from './input.js';
 import { renderFrame } from './render.js';
@@ -143,7 +143,7 @@ function loop(now) {
   // zero" (enemy flash, cooldowns) into a generator. Sim time never rewinds.
   const dt = Math.max(0, Math.min(0.033, (now - last) / 1000));
   last = now;
-  if (G.mode === 'play') {
+  if (G.mode === 'play' && !G.frozen) {
     updateInput(G);
     const sig = updateGame(G, dt);
     updateFx(G.fx, dt);
@@ -177,6 +177,50 @@ if (location.search.includes('bestiary')) {
     ui.showOnly('bestiary');
   });
 }
+// Dev hatch: ?specimen lays out stacked-variant specimens on a frozen field so
+// the highlight grammar can be photographed (app.md "Stacked highlights"). This
+// is the tool the legibility check is supposed to use — eyeballing a live wave-40
+// fight is exactly how the channel collisions got shipped in the first place.
+//   ?specimen           — every single + every pair (the collision-prone set)
+//   ?specimen=triples   — every three-way stack
+//   ?specimen=armored+regen,swift+volatile — explicit combos
+//   &kind=dart          — silhouette to wear them (default dart: the smallest,
+//                         so it is the worst case for outer-annulus crowding)
+const specimenMatch = location.search.match(/specimen(?:=([\w+,]+))?/);
+if (specimenMatch) {
+  const V = ['swift', 'armored', 'regen', 'shielded', 'volatile'];
+  const arg = specimenMatch[1];
+  let combos;
+  if (!arg) {
+    combos = V.map(v => [v]);
+    for (let i = 0; i < V.length; i++) for (let j = i + 1; j < V.length; j++) combos.push([V[i], V[j]]);
+  } else if (arg === 'triples') {
+    combos = [];
+    for (let i = 0; i < V.length; i++) for (let j = i + 1; j < V.length; j++)
+      for (let k = j + 1; k < V.length; k++) combos.push([V[i], V[j], V[k]]);
+  } else {
+    combos = arg.split(',').map(c => c.split('+').filter(Boolean));
+  }
+  const kind = (location.search.match(/kind=(\w+)/) || [])[1] || 'dart';
+  startRun();
+  G.S.wave = 45; // past the regime wave, so the stacks are honest ones
+  // suppress the tutorial layer BEFORE spawning: intro banners and their dashed
+  // rings would otherwise cover the plate we came here to read
+  G.S.introduced.variants = new Set(V);
+  G.S.introduced.enemies = new Set(Object.keys({ grunt: 1, dart: 1, tank: 1, splitter: 1, elite: 1, boss: 1 }));
+  const cols = Math.ceil(Math.sqrt(combos.length * (G.W / G.H) * 1.6)) || 1;
+  const rows = Math.ceil(combos.length / cols);
+  combos.forEach((combo, i) => {
+    const cx = ((i % cols) + 0.5) * (G.W / cols);
+    const cy = ((Math.floor(i / cols)) + 0.7) * (G.H / rows);
+    const e = spawnEnemy(G, kind, combo, cx, cy);
+    e.hp = e.maxHp * 0.6; // damaged: the hp sliver joins the composition
+    e.spd = 0;
+  });
+  G.fx.texts.length = 0; G.fx.notes && (G.fx.notes.length = 0);
+  G.frozen = true;
+}
+
 // Dev/smoke-test hatches: ?autostart skips the menu; ?turbo pre-simulates ~40s
 // (auto-picking level-ups) so a headless screenshot lands mid-battle; ?warp=N
 // pre-simulates exactly N seconds instead.
