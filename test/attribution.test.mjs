@@ -37,9 +37,11 @@ test('damage lands under the weapon that dealt it', () => {
 test('several weapons are tracked separately', () => {
   const G = rig({ bolt: 3, nova: 3, orbit: 3 });
   anvil(G);
-  // orbit grinds at its ring radius (~112px at L3), so a distant anvil is
-  // physically out of its reach — it needs a body inside the band
-  const near = spawnEnemy(G, 'boss', null, G.cx + 100, G.cy);
+  // orbit grinds at its ring radius, so it needs a body ON the band — read the
+  // radius from config rather than hardcoding it, or moving the ring silently
+  // breaks a test that is not about the ring
+  const ring = WEAPONS.orbit.stats(3).radius;
+  const near = spawnEnemy(G, 'boss', null, G.cx + ring, G.cy);
   near.hp = near.maxHp = 1e12;
   run(G, 8);
   for (const id of ['bolt', 'nova', 'orbit']) {

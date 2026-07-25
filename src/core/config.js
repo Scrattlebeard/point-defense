@@ -99,7 +99,7 @@ export const WEAPONS = {
     name: 'Orbitals', input: 'none', category: 'auto', max: 5,
     descs: ['Two blades circle the Point, grinding shapes they touch', '+1 blade', '+damage & radius', '+1 blade', 'MAX: 5 blades'],
     // radius pushed out 2026-07-24 — deliberate slight nerf (core.md orbit row)
-    stats: l => ({ n: [0, 2, 3, 3, 4, 5][l], dmg: 10 + 6 * l, radius: 88 + 8 * l, speed: 2.3 + 0.18 * l }),
+    stats: l => ({ n: [0, 2, 3, 3, 4, 5][l], dmg: 10 + 6 * l, radius: l >= 5 ? 218 : l >= 4 ? 168 : 88 + 8 * l, speed: 2.3 + 0.18 * l }),
   },
   nova: {
     name: 'Nova', input: 'none', category: 'auto', max: 5,

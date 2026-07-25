@@ -311,37 +311,28 @@ Numbers are measured (headless spikes over the real sim), not estimated.*
   the **pause stats panel** are still unverified by eye — both need a click no headless shot can
   make — though all three now render from the same tested `loadout(S)` query, so the risk is
   markup rather than logic. Worth a look on the first playtest that maxes bolt.
-## [phase 3] The rim dead zone — re-measured 2026-07-25, and the pin was partly wrong
-- **What:** Orbit, mines and caltrops deal **literally zero** damage to a shape holding the
-  rim, at every level. Re-measured 2026-07-25 against a grunt parked at the rim for 12s:
-  orbit 0, mine 0, caltrop 0 — while every *targeting* auto works fine there (nova 72-280,
-  tesla 114-470, turret 156-1680, seek 60-1400, mortar 176-1000). The gap is specific to
-  the **positional** autos: a grunt besieges at 36px from centre, orbit's ring is 96-128px,
-  and mines/caltrops seed no closer than 120px.
-- **Correction to the original pin:** it listed **frost** as a fourth dead-zone weapon. That
-  is wrong in a way worth keeping. Frost's aura is 126-230px and *does* cover the rim — the
-  zero is because slowing a shape that has already stopped is meaningless. That is inherent,
-  not geometric, and no radius change fixes it. The pin also called GDD §3's narration
-  ("the frost aura and orbitals slow their progress when they approach the Point") false;
-  for frost it is **true** — it describes the approach, which frost does slow. Only the
-  orbital half of that sentence is unmet.
-- **Why it is still not fixed, and this is the interesting part:** the pin framed this as the
-  mechanism behind the invoicing-death problem. Measured, the bigger lever was elsewhere —
-  the missing level-up heal (GDD §2's named mechanism) cut median invoicing from 34s to 19s
-  on its own, and cost the delegation law nothing. The rim fix, by contrast, **gives autos
-  more power**: it fixes Law·Death-shape while pushing the conductor number down (ADR-0008
-  Alt 3). Sequence it as its own change, measured alone against `scripts/conductor.mjs`.
-- **Where:** `src/app/weapons/auto.js` (orbit radius/hit test), `src/app/enemies.js` siege
-  standoff (`e.r + TOWER_R`), `src/core/config.js` orbit ring + mine/caltrop seed ring,
-  `core.md` Enemies + Weapons.
-- **Context:** Two candidate fixes remain, and the second is still the more interesting:
-  contract the orbit band to cover the rim, **or** push the siege standoff *out* to the
-  orbit band so the ring becomes the literal wall the horde piles against (the picture GDD
-  §8 wants). Note the second changes a strong image — shapes would no longer touch the
-  tower — so it is a feel call for Daniel, not a tuning one. Also note orbit's radius was
-  pushed *out* deliberately in 2026-07-24 as a nerf; contracting it undoes a considered
-  decision and should say so. Companion: the siege-readability pin (damage attribution is
-  the other half of why a chip death reads as bookkeeping).
+## [phase 3] The rim dead zone — the diagnosis was WRONG, and the data says so
+- **Correction (2026-07-25, from the new damage ledger).** This pin spent days telling the
+  next person to fix orbit by **contracting** its band toward the rim, or by pushing besiegers
+  **out** to meet it. Measured, both would have made things worse, because the premise was
+  wrong: the problem was never that orbit could not reach shapes *holding the rim*. It was
+  that **nothing gets that deep at all**. Death-radius distribution at wave 35+: zero deaths
+  inside 120px, and 83% between 120 and 240px. The inner field is empty because shapes die
+  where the shooting is.
+- **And it was not weakness.** Against a stationary crowd standing in its band orbit does
+  **616 dmg/s**, next to nova's 672. It was starved of *exposure*, not damage — a thin band
+  behind the killing zone, crossed briefly.
+- **Fixed by moving the ring OUT, not in:** 96/104/112 for L1-3 (unchanged, so the onboarding
+  band is untouched — every early widening pushed the median to the top edge), then 168 at L4
+  and 218 at L5. Orbit went **0% → 19%** of a maxed build's damage, and bolt's dominance fell
+  **69% → 55%**. Both gates hold.
+- **What remains here:** besiegers genuinely holding the rim are still unreachable by orbit,
+  mines and caltrops — but that is now known to be a **rare** case rather than the main one,
+  so it should be priced accordingly before anyone spends a mechanic on it. The
+  siege-readability telegraph already covers the *legibility* half.
+- **Standing lesson:** this pin was written from a plausible mechanism and read as fact for
+  days. The ledger existed for one hour before it overturned it. **Prefer a measurement to a
+  mechanism, especially a mechanism that sounds right.**
 ## [phase 3] The content drip: the front is still bunched, the back is answered
 - **What (resolved half, 2026-07-25):** the drip no longer ends at 23. Variant stacking
   lands at wave 40 with its own introduction beat — **"MODIFIERS ARE COMPOUNDING"**,
