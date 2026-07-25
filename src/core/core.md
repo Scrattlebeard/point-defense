@@ -91,11 +91,16 @@ prereqs enforced), not exact constants, so tuning stays cheap.
 - `bossHp(w) = BOSS_HP_SHARE/(1−BOSS_HP_SHARE) · waveTrashHp(w)` — **a boss is
   always the same fraction of its wave's total HP** (`BOSS_HP_SHARE`, currently
   0.31 — the measured wave-5 value, which playtesting validated as the onboarding
-  wall, and independently a **measured threshold**: at share 0.22 the boss kills a
-  do-nothing run but the robot dies at the same wave, so hands buy nothing; at 0.31
-  hands are worth 10 waves. Somewhere between, the boss crosses from "the autos
-  grind it down eventually" to "you must point at it" — that crossing *is*
-  Law·Bosses, and ADR-0008 has the sweep). *(Re-sloped 2026-07-25. The old curve `1500·(1+0.3(w−5))` was **linear
+  wall, and independently a **measured threshold**. Re-measured 2026-07-25 in
+  survival units (ADR-0010) on the conductor's own build: share 0.22 → hands buy
+  **×1.084** survival time (below the ≥1.12 band, parked deaths 8/11); 0.26 →
+  **×1.189**; 0.31 → **×1.176**. So the crossing sits between 0.22 and 0.26, and
+  0.26 vs 0.31 is inside set-to-set noise (±0.03) — 0.31 is *above* the threshold,
+  not measurably optimal within it. Note the refinement the old unit could not
+  express: at 0.22 hands are not worth **nothing**, they are worth 8% and that is
+  simply not enough. Somewhere in that band the boss crosses from "the autos grind
+  it down eventually" to "you must point at it" — that crossing *is* Law·Bosses.
+  ADR-0008 has the original sweep, in the retired wave-delta unit). *(Re-sloped 2026-07-25. The old curve `1500·(1+0.3(w−5))` was **linear
   against a quartic wave-HP curve**: measured, a named boss was 31% of its wave's
   HP at wave 5 and **4.9% by wave 45** — Law·Bosses ("focus-forcers that cannot be
   delegated") decaying into one chunky elite among forty-four. Deriving the boss

@@ -106,6 +106,29 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
   ("taxonomy now, purposes after a playtest under the cap") — this is the measurement that
   playtest was supposed to inform.
 
+## The conductor's robot only aims — hold and swipe hands are unproven
+- **What:** teach `scripts/conductor.mjs`'s robot to *hold* a channel and *swipe* a gesture,
+  so the gate proves Law·Delegation across all three input dimensions instead of one.
+- **Why now, and why it was impossible before:** ADR-0010 replaced the gate's wave-delta with
+  a survival-time ratio precisely so this could be done. Under the old metric, a robot that
+  used walls well would have posted a *lower* wave number and driven "hands are worth N waves"
+  **down** — the instrument inverted on exactly the play it was meant to reward. That trap is
+  gone; the metric now moves the right way. What remains is honest work rather than a
+  contradiction.
+- **The design question to settle first (this is the real content of the pin):** what does a
+  *fair* hold/swipe robot do? Holding a channel permanently flatters hold weapons (the Armory
+  census records this bias explicitly), and a swipe robot that walls on every cooldown is not
+  a player either. The parked/robot pairing needs a policy that is defensible as "hands, used
+  reasonably" — otherwise the gate measures the policy rather than the law. Candidate:
+  a fixed attention budget (N actions per second, spent on whichever hand-weapon is off
+  cooldown), which is closer to what the law actually claims — attention is the scarce thing.
+- **Where:** `scripts/conductor.mjs` `runOnce` (the robot branch), `README.md` delegation
+  tooling, GDD §3 status line, ADR-0010 Consequences (which names this as the open gap).
+  `scoreConductor` needs no change — that is the point of extracting it.
+- **Context:** the swipe rig from the 2026-07-25 census is the starting code (see that
+  landing's commit); the wall measurement inside the Armory pin is the evidence that a
+  swiping robot behaves very differently from an aiming one.
+
 ## The achievement set predates a week of new systems
 - **What:** 14 achievements, and **none** of them reference anything built this week —
   no form worn, no stacked modifier survived, no epithet boss felled, nothing about the
@@ -306,13 +329,13 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
   exactly GDD section 4's "seconds purchased and setups created — not DPS". Two metrics had
   it wrong in opposite directions: the damage census said 0% (unmeasured), and wave-reached
   said harmful.
-- **This is a live caveat on the conductor gate, not just on the census.** The gate scores
-  hands by *wave reached*, which is rate-sensitive. A player who uses walls well would post a
-  LOWER wave number while being no worse off — so teaching the gate's robot to swipe would
-  make "hands are worth N waves" go **down**, for a reason that has nothing to do with hands
-  being worthless. The gate measures the aim dimension of hands only, and that limitation
-  should be understood before anyone "improves" the robot. Fixing it properly means a
-  survival-based or time-based comparison, not a wave-count one.
+- **This was a live caveat on the conductor gate — RESOLVED 2026-07-25 by ADR-0010.** The
+  gate scored hands by *wave reached*, which is rate-sensitive: a player who uses walls well
+  posts a LOWER wave number while being no worse off. It now scores the median survival-time
+  ratio, which moves in the correct direction for time-purchasing play. (Re-measuring also
+  turned up a second defect the wall finding had not: wave-reached is **quantized to 5**,
+  because deaths land on boss waves — 63 of 63 measured deaths at wave 30/35/40/45 — so the
+  old `≥ 3 waves` band sat below one quantum of its own metric. See the ADR.)
 - **Where:** `src/core/config.js` weapon stats; re-run the census after any change (the script
   shape is in this landing's commit; `S.dmgBy` is the instrument).
 - **Context:** this is the data the pin asked for when ten weapons shipped "sim-verified

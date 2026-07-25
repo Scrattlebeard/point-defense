@@ -86,14 +86,25 @@ gate** (GDD §3 Law·Delegation; ADR-0006/0007 consequences): same-seed pairs of
 40-sim-minute headless runs on the strongest slot-budget-legal delegation build
 (`--scan` re-derives it) — one with the aim parked at t=0 and never touched, one
 with the 0.2s-retargeting robot. Two ratchets, both required, raised on
-re-measure and never quietly lowered: **hands worth ≥ 3 waves** (median robot −
-parked), and **the parked run must die ≥ 2 times per set** — "autos are
-deliberately insufficient alone" as a number; this second clause is what catches
-a future weapon quietly re-automating the game. Measured 2026-07-25 post-slot-
-budget: hands 4–11 waves at depth, parked deaths 7–9 of 11 (pre-cap baseline:
-parked survived to wave 58 at 100% HP — the do-nothing run could not die at
-all). Deterministic given the code (every rng call seeded), so a trip always
-means the sim changed. Wired into the prod gate beside calibrate.
+re-measure and never quietly lowered: **hands buy ≥ 1.12× survival time**
+(median `robot.time / parked.time`), and **the parked run must die ≥ 2 times per
+set** — "autos are deliberately insufficient alone" as a number; this second
+clause is what catches a future weapon quietly re-automating the game. Measured
+2026-07-25 over three 11-pair sets: survival ratio 1.176 / 1.204 / 1.194, parked
+deaths 11/11 in every set (pre-cap baseline: parked survived to wave 58 at 100%
+HP — the do-nothing run could not die at all). Deterministic given the code
+(every rng call seeded), so a trip always means the sim changed. Wired into the
+prod gate beside calibrate.
+
+The gate scores **survival time, not wave reached** (ADR-0010). Wave-reached is
+rate-sensitive — a Force Wall halves the rate waves arrive at with no survival
+cost, so good play posts a *lower* wave number — and it is quantized to 5,
+because deaths land on boss waves (63 of 63 measured deaths at wave 30/35/40/45).
+The old `hands ≥ 3 waves` band therefore sat below one quantum of its own metric.
+Δwave is still printed, ungated, labelled with its resolution. **Known coverage
+gap:** the robot only *aims*, so the gate proves one of Law·Delegation's three
+input dimensions; hold and swipe are unmeasured. The metric no longer inverts if
+the robot is taught them, which is what makes that work possible.
 
 ## Deployment (GitHub Pages — canonical)
 

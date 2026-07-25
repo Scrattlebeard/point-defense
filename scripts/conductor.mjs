@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // scripts/conductor — the delegation gate (GDD §3 Law·Delegation; ADR-0006
-// Consequences, ADR-0007 Consequences, PINS [phase 2] → this file).
+// Consequences, ADR-0007 Consequences, ADR-0010 for the metric).
 //
 // Two headless runs from the same seed, on the strongest slot-budget-legal
 // delegation build (BUILD below, chosen by --scan): one with the aim parked at
@@ -20,9 +20,10 @@
 // - The build is maxed from t=0 (no tech, bastion): the gate measures the
 //   weapon layer's ceiling, not the leveling path. Level-ups still fire and
 //   both modes spend them on random generics — symmetric by construction.
-// - N is a RATCHET (PINS [phase 2]): re-measure and raise when hands get more
-//   valuable; never lower it quietly to make a new weapon fit. A law-breaking
-//   chassis gets its own declared band, not an exemption (ADR-0007).
+// - COVERAGE GAP (ADR-0010 Consequences): the robot only *aims*. Hold and swipe
+//   hands are unmeasured, so this gate proves one of Law·Delegation's three
+//   input dimensions. The survival metric no longer inverts if the robot is
+//   taught the other two — which is what makes that work possible.
 import { mulberry32 } from '../src/core/rng.js';
 import { defaultMeta, newRun, levelChoices, applyChoice } from '../src/core/state.js';
 import { makeFx, updateFx } from '../src/app/fx.js';
@@ -35,15 +36,33 @@ import { nearestEnemy } from '../src/app/enemies.js';
 // waves ~45–55 where the parked build cracks. CAP env overrides for exploration.
 const CAP_S = Number(process.env.CAP || 2400);
 
-// The two clauses, measured 2026-07-25 post-slot-budget (see README balance
-// tooling; both are RATCHETS — raise on re-measure, never quietly lower):
-// - hands: median (robot − parked) wave over the pairs. Measured set-medians
-//   4/7/10 across three 11-pair sets; band one step under the observed floor.
-// - parkedDeaths: the do-nothing run must be ABLE to die — parked deaths per
-//   11-pair set measured 7–9; the pre-cap world scored 0, twice, at 100% hp.
-//   This clause is what catches a future weapon quietly re-automating the game
-//   even if the hands median survives.
-const BAND = { hands: 3, parkedDeaths: 2 };
+// The two clauses, measured 2026-07-25 over three 11-pair sets (README balance
+// tooling; ADR-0010). Both are RATCHETS — raise on re-measure, never quietly lower:
+// - ratio: median (robot.time / parked.time). Survival time, NOT wave reached —
+//   wave-reached punishes time-purchasing play and is quantized to the boss
+//   cadence. Set medians measured 1.176/1.204/1.194; band one step under the floor.
+// - parkedDeaths: the do-nothing run must be ABLE to die — measured 11/11 in every
+//   set; the pre-cap world scored 0, twice, at 100% hp. This clause is what catches
+//   a future weapon quietly re-automating the game even if the ratio survives.
+export const BAND = { ratio: 1.12, parkedDeaths: 2 };
+
+const median = xs => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)];
+
+// The scoring rule, pure and unit-tested (test/conductor.test.mjs) so the
+// 40-minute sims stay gate-only. Runs still alive at the cap are scored AT the
+// cap — that understates hands, which is the safe direction for a floor
+// (ADR-0010 Decision 3): it can produce a false BROKEN, never a false HOLDS.
+export function scoreConductor(pairs, band = BAND) {
+  const ratio = median(pairs.map(p => p.robot.time / p.parked.time));
+  const parkedDeaths = pairs.filter(p => p.parked.died).length;
+  const handsOk = ratio >= band.ratio;
+  const dieOk = parkedDeaths >= band.parkedDeaths;
+  return {
+    ratio, parkedDeaths, handsOk, dieOk, ok: handsOk && dieOk,
+    // Reported, never gated: deaths land on boss waves, so this is quantized to 5.
+    waveDelta: median(pairs.map(p => p.robot.wave - p.parked.wave)),
+  };
+}
 
 // The delegation-max build: strongest parked performer from --scan, one gun
 // (the default bolt) + 5 autos, ≤6/≤1-gun legal under ADR-0006's budget.
@@ -99,7 +118,7 @@ function runOnce(seed, robot, build = BUILD) {
 
 const fmt = r => `wave ${String(r.wave).padStart(2)} ${r.died ? `died @${r.time}s` : `alive ${r.hpPct}% hp`}`;
 
-if (process.argv.includes('--scan')) {
+function scan() {
   const n = Number(process.argv[3] || 3);
   console.log(`parked-survival scan, ${n} seeds per candidate, cap ${CAP_S}s\n`);
   const rows = [];
@@ -117,28 +136,33 @@ if (process.argv.includes('--scan')) {
   rows.sort((a, b) => b.median - a.median);
   console.log('\nparked median by candidate (the gate should use the top one):');
   for (const r of rows) console.log(`  ${r.name.padEnd(10)} ${String(r.median).padStart(2)}  [${r.autos.join(' ')}]`);
-  process.exit(0);
 }
 
-const pairs = Number(process.argv[2] || 11);
-const seed0 = Number(process.env.SEED0 || 0); // exploration only: shift the seed set
-const deltas = [];
-let parkedDeaths = 0;
-for (let i = 1; i <= pairs; i++) {
-  const seed = seed0 + i * 1000 + 7;
-  const parked = runOnce(seed, false);
-  const robot = runOnce(seed, true);
-  deltas.push(robot.wave - parked.wave);
-  if (parked.died) parkedDeaths++;
-  console.log(`pair ${i}: parked ${fmt(parked)} · robot ${fmt(robot)} · hands ${robot.wave - parked.wave >= 0 ? '+' : ''}${robot.wave - parked.wave}`);
+function gate() {
+  const n = Number(process.argv[2] || 11);
+  const seed0 = Number(process.env.SEED0 || 0); // exploration only: shift the seed set
+  const pairs = [];
+  for (let i = 1; i <= n; i++) {
+    const seed = seed0 + i * 1000 + 7;
+    const parked = runOnce(seed, false);
+    const robot = runOnce(seed, true);
+    pairs.push({ parked, robot });
+    console.log(`pair ${i}: parked ${fmt(parked)} · robot ${fmt(robot)} · ` +
+      `survived ×${(robot.time / parked.time).toFixed(2)}`);
+  }
+  const s = scoreConductor(pairs);
+  console.log(`\nhands buy ×${s.ratio.toFixed(3)} survival time · band ≥ ${BAND.ratio} → ` +
+    `${s.handsOk ? 'ok' : 'BROKEN'}`);
+  console.log(`parked deaths ${s.parkedDeaths}/${n} · band ≥ ${BAND.parkedDeaths} → ` +
+    `${s.dieOk ? 'ok' : 'BROKEN (the do-nothing run has become unkillable)'}`);
+  console.log(`(Δwave median ${s.waveDelta} — reported, not gated: quantized to 5, ADR-0010)`);
+  console.log(s.ok ? 'CONDUCTOR HOLDS ✓' : 'DELEGATION LAW BROKEN ✗');
+  return s.ok;
 }
-deltas.sort((a, b) => a - b);
-const median = deltas[Math.floor(pairs / 2)];
-const handsOk = median >= BAND.hands;
-const dieOk = parkedDeaths >= BAND.parkedDeaths;
-console.log(`\nhands are worth ${median} waves (median of ${deltas.join(',')}) · ` +
-  `band ≥ ${BAND.hands} → ${handsOk ? 'ok' : 'BROKEN'}`);
-console.log(`parked deaths ${parkedDeaths}/${pairs} · band ≥ ${BAND.parkedDeaths} → ` +
-  `${dieOk ? 'ok' : 'BROKEN (the do-nothing run has become unkillable)'}`);
-console.log(handsOk && dieOk ? 'CONDUCTOR HOLDS ✓' : 'DELEGATION LAW BROKEN ✗');
-process.exit(handsOk && dieOk ? 0 : 1);
+
+// CLI only when run directly — the test imports scoreConductor and must not
+// trigger 22 forty-minute sims.
+if (process.argv[1] && import.meta.url === new URL(`file://${process.argv[1]}`).href) {
+  if (process.argv.includes('--scan')) { scan(); process.exit(0); }
+  process.exit(gate() ? 0 : 1);
+}

@@ -252,13 +252,17 @@ the signal business and out of the death business.</p>
 <h2 id="focus-economy"><span class="secnum">3</span>The Focus Economy</h2>
 <p class="status"><span class="badge proto">PROTOTYPE</span> The delegation law now holds
 <em>at depth</em>, and is enforced (<code>scripts/conductor.mjs</code>, in the prod gate).
-Measured 2026-07-25 post-slot-budget: the strongest do-nothing build dies in most
-40-minute runs (median death ~wave 48; hands are worth 4–11 waves at the wave-45+ crack),
-where the pre-cap baseline survived to wave 58 at 100% HP — the do-nothing run could not
-die at all. Still false in the first ~30 waves: parked and robot both clear everything
-until the crack, so the veteran's ninety seconds below remains a target — phase 3's
-threats-that-bid is what closes that gap. The gate ratchets: hands ≥ 3 waves, parked must
-die ≥ 2 of 11 pairs.</p>
+Measured 2026-07-25 over three 11-pair sets: the strongest do-nothing build dies in
+<em>every</em> 40-minute run (33/33, median death wave 35), where the pre-cap baseline
+survived to wave 58 at 100% HP — the do-nothing run could not die at all. Hands buy
+<strong>1.19× survival time</strong> at the crack. Still false in the first ~30
+waves: parked and robot both clear everything until the crack, so the veteran's ninety
+seconds below remains a target — phase 3's threats-that-bid is what closes that gap. The
+gate ratchets: survival ratio ≥ 1.12, parked must die ≥ 2 of 11 pairs. It scores survival
+time rather than wave reached, because wave-reached punishes time-purchasing play and is
+quantized to the boss cadence
+(<a href="../adr/0010-the-conductor-measures-survival-not-depth.md">ADR-0010</a>) — and it
+still measures only the <em>aim</em> dimension of hands, not hold or swipe.</p>
 
 <div class="law" id="law-delegation">
   <span class="law-name">Law · Delegation</span><br>
