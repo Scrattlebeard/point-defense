@@ -210,7 +210,23 @@ sighting **of the run** fires an on-field introduction: a banner ("NEW SHAPE:
 DART — fast and fragile" / "NEW SPECIMEN: REGEN — heals 3% max HP per second") plus a
 ~3s pulsing highlight ring around the arriving specimen so it can be found on screen.
 The banner repeats each run by design — it's a tutorial beat, not a trophy; the
-run-scoped record lives in `S.introduced`. Forever-firsts still record to `meta.seen`
+run-scoped record lives in `S.introduced`.
+
+**The regime change announces itself.** The first *stacked* shape of a run (two or
+more modifiers on one body, so from wave 40 — Variants → "Stacking") fires its own
+introduction: **"MODIFIERS ARE COMPOUNDING"**, carrying the actual stacked specimen
+as its icon. Without it the wave-40 gear change is invisible — the player meets a
+shape that is quietly ×4 harder and has no way to know a rule changed rather than
+the dice going badly. It is the same tutorial contract as every other debut: teach
+the piece the first time it appears.
+
+*The drip, end to end:* introductions land at waves 1, 2, 4, 5, 6, 8, 11, 14, 17,
+21, 23 — and then **40**, where stacking and boss epithets arrive together. The
+stretch from 24 to 39 is deliberately empty of *new pieces*: the content there is
+combination, not vocabulary. GDD §9 asks for a new shape or modifier every 2–3 waves
+"stretching past wave 20"; past 23 the game escalates by mixing what you already
+know, which is GDD §5's content doctrine, not a gap in it. Filling 24–39 with
+invented species would be content ahead of the Route's order. Forever-firsts still record to `meta.seen`
 (the bestiary). Bosses introduce themselves by name banner instead — no generic card.
 
 ## Variants (`config.js: VARIANTS`) — the color/highlight grammar

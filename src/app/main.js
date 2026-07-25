@@ -207,7 +207,8 @@ if (specimenMatch) {
   // suppress the tutorial layer BEFORE spawning: intro banners and their dashed
   // rings would otherwise cover the plate we came here to read
   G.S.introduced.variants = new Set(V);
-  G.S.introduced.enemies = new Set(Object.keys({ grunt: 1, dart: 1, tank: 1, splitter: 1, elite: 1, boss: 1 }));
+  G.S.introduced.enemies = new Set(['grunt', 'dart', 'tank', 'splitter', 'elite', 'boss']);
+  G.S.introduced.stacked = true; // the regime beat too — this is a plate, not a run
   const cols = Math.ceil(Math.sqrt(combos.length * (G.W / G.H) * 1.6)) || 1;
   const rows = Math.ceil(combos.length / cols);
   combos.forEach((combo, i) => {
@@ -217,7 +218,6 @@ if (specimenMatch) {
     e.hp = e.maxHp * 0.6; // damaged: the hp sliver joins the composition
     e.spd = 0;
   });
-  G.fx.texts.length = 0; G.fx.notes && (G.fx.notes.length = 0);
   G.frozen = true;
 }
 

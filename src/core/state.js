@@ -45,7 +45,8 @@ export function newRun(meta, towerId) {
     lvl: 1, xp: 0, xpNext: xpForLevel(1), pendingLevels: 0,
     wave: 0, kills: 0, bossKills: 0, time: 0,
     // run-scoped introduction record — banners repeat each run (core.md Introductions)
-    introduced: { enemies: new Set(), variants: new Set() },
+    // run-scoped introduction record; `stacked` is the wave-40 regime beat
+    introduced: { enemies: new Set(), variants: new Set(), stacked: false },
     // sim entity arrays, owned here so a run is one object; the shell fills them
     enemies: [], bullets: [], missiles: [], rings: [], zaps: [], mines: [], shells: [],
     boomers: [], blades: [], fires: [], boulders: [], caltrops: [], sparks: [],

@@ -196,21 +196,27 @@ Numbers are measured (headless spikes over the real sim), not estimated.*
   pushed *out* deliberately in 2026-07-24 as a nerf; contracting it undoes a considered
   decision and should say so. Companion: the siege-readability pin (damage attribution is
   the other half of why a chip death reads as bookkeeping).
-## [phase 3] The content drip stops at wave 23
-- **What:** Introductions land at waves 1,2,4,5,6,8,11,14,17,21,23 and then **nothing, ever**.
-  Three beats bunch into waves 4-5-6 (tank, boss, swift) — squarely on the wave where ~45% of
-  fresh runs die — and there is a 4-wave gap at 17→21.
-- **Why:** GDD §9 says "roughly one new shape or modifier every 2–3 waves, stretching past
-  wave 20." Satisfied on the letter (23 > 20), violated in spirit by the other 77 waves of a
-  run the GDD aims at wave 50–100. Peak content-firehose currently coincides with peak
-  difficulty wall.
-- **Where:** `config.js` ENEMIES.minWave + VARIANTS.minWave, `core.md` Introductions.
-- **Context:** New species/modifiers past 23 are phase-3 content and shouldn't be invented to
-  fill the gap — variant *stacking* is the intended late-run "new thing." Also note the debut
-  waves are stochastic, not deterministic: swift's nominal wave-6 debut only fires that wave
-  in ~45% of runs (1.5% roll × ~39 spawns), so the first beat reliably slips to 7–8. Spec
-  states them as if fixed; either pin the first sighting or record the slip.
-
+## [phase 3] The content drip: the front is still bunched, the back is answered
+- **What (resolved half, 2026-07-25):** the drip no longer ends at 23. Variant stacking
+  lands at wave 40 with its own introduction beat — **"MODIFIERS ARE COMPOUNDING"**,
+  carrying the actual stacked specimen as its icon — alongside boss epithets at the same
+  wave. Waves 24-39 are now deliberately empty of *new pieces*: the content there is
+  combination, not vocabulary, which is GDD section 5's doctrine rather than a gap in it.
+  That position is written into `core.md` Introductions so it reads as a decision.
+- **What remains:** the *front* of the drip is still bunched. Three beats land on waves
+  4-5-6 (tank, boss, swift) — squarely where ~45% of fresh runs die — so peak
+  content-firehose still coincides with peak difficulty wall. Spreading those is a real
+  onboarding improvement and is independent of everything above.
+- **Also unresolved:** debut waves are **stochastic, not deterministic**. Swift's nominal
+  wave-6 debut only fires that wave in ~45% of runs (1.5% roll x ~39 spawns), so the first
+  modifier beat reliably slips to 7-8. The spec states debut waves as if fixed. Either pin
+  the first sighting (force the debut variant onto one spawn in its debut wave) or state
+  the slip honestly in `core.md`. Pinning it is probably right — a tutorial beat that
+  fires "usually" is not a tutorial beat.
+- **Where:** `config.js` ENEMIES.minWave + VARIANTS.minWave, `waves.js` rollVariants (for
+  a forced first sighting), `core.md` Introductions.
+- **Context:** Do NOT invent new species past 23 to fill 24-39 — that is content ahead of
+  the Route's order, and stacking already answers the late game.
 ## [phase 4] The generic card pool is hard-coded — it should be lattice-authored
 - **What:** `GENERICS` is a fixed 4-entry object (`config.js:173`) and `state.js:88` pushes
   all four into every draft unconditionally. Nothing in the lattice can add, remove or modify

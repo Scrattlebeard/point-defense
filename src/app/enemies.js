@@ -76,6 +76,17 @@ export function spawnEnemy(G, kind, variants = null, x = null, y = null) {
         sfx('discover');
       }
     }
+    // The regime change teaches itself (core.md Introductions): the first shape
+    // wearing two or more modifiers gets its own beat, carrying the actual stack
+    // as its icon. Without it the wave-40 gear change is invisible — a shape
+    // several times harder reads as bad dice, not as a rule that changed.
+    if (ids.length >= 2 && !intro.stacked) {
+      intro.stacked = true;
+      announce(G.fx, 'MODIFIERS ARE COMPOUNDING', '#ff5c9d',
+        'shapes now wear more than one', { sides: def.sides, color: def.color, variants: ids });
+      e.introduce = 3;
+      sfx('discover');
+    }
     // one banner per newly-sighted modifier, even when several arrive stacked
     for (let i = 0; i < ids.length; i++) {
       if (intro.variants.has(ids[i])) continue;

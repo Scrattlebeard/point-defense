@@ -783,35 +783,44 @@ function drawHeat(G) {
   ctx.textAlign = 'left';
 }
 
-// mini wireframe specimen for banners: shape + variant highlight grammar at r≈9
+// mini wireframe specimen for banners: shape + the full variant highlight
+// grammar at r≈9, stacks included (core.md Introductions — the regime banner
+// teaches the actual stack it is announcing). Same annulus rule as the field.
 function drawMiniSpecimen(ctx, x, y, icon) {
   const r = 9;
-  const v = icon.variant ? VARIANTS[icon.variant] : null;
-  if (icon.variant === 'swift') { ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 8; }
+  const ids = icon.variants || (icon.variant ? [icon.variant] : []);
+  const has = id => ids.includes(id);
+  if (has('swift')) { ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 8; }
   ctx.lineWidth = 1.8;
   ctx.strokeStyle = icon.color;
   poly(ctx, x, y, r, icon.sides, -Math.PI / 2);
   ctx.stroke();
   ctx.shadowBlur = 0;
-  if (!v) return;
-  if (icon.variant === 'armored') {
-    ctx.strokeStyle = v.color; ctx.lineWidth = 2.2;
-    poly(ctx, x, y, r + 3, icon.sides, -Math.PI / 2); ctx.stroke();
-  } else if (icon.variant === 'volatile') {
-    ctx.fillStyle = v.color;
+  let slot = r + 3;
+  if (has('armored')) {
+    ctx.strokeStyle = 'rgba(6, 9, 16, 0.9)'; ctx.lineWidth = 3.6;
+    poly(ctx, x, y, slot, icon.sides, -Math.PI / 2); ctx.stroke();
+    ctx.strokeStyle = VARIANTS.armored.color; ctx.lineWidth = 2.2;
+    poly(ctx, x, y, slot, icon.sides, -Math.PI / 2); ctx.stroke();
+    slot += 3.5;
+  }
+  if (has('volatile')) {
+    ctx.fillStyle = VARIANTS.volatile.color;
     ctx.beginPath(); ctx.arc(x, y, r * 0.4, 0, TAU); ctx.fill();
-  } else if (icon.variant === 'regen') {
-    ctx.strokeStyle = v.color; ctx.lineWidth = 1.8;
+  }
+  if (has('regen')) {
+    ctx.strokeStyle = VARIANTS.regen.color; ctx.lineWidth = 1.8;
     const pr = r * 0.5;
     ctx.beginPath();
     ctx.moveTo(x - pr, y); ctx.lineTo(x + pr, y);
     ctx.moveTo(x, y - pr); ctx.lineTo(x, y + pr);
     ctx.stroke();
-  } else if (icon.variant === 'shielded') {
-    ctx.strokeStyle = v.color; ctx.lineWidth = 1.6;
-    for (let s = 0; s < 3; s++) {
-      const a0 = 0.4 + (s * TAU) / 3;
-      ctx.beginPath(); ctx.arc(x, y, r + 3.5, a0, a0 + TAU / 4.2); ctx.stroke();
+  }
+  if (has('shielded')) {
+    ctx.strokeStyle = VARIANTS.shielded.color; ctx.lineWidth = 1.6;
+    for (let sg = 0; sg < 3; sg++) {
+      const a0 = 0.4 + (sg * TAU) / 3;
+      ctx.beginPath(); ctx.arc(x, y, slot + 0.5, a0, a0 + TAU / 4.2); ctx.stroke();
     }
   }
 }
