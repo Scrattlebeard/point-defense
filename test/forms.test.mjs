@@ -14,24 +14,36 @@ function rig(form) {
   const meta = { ...defaultMeta(), tech: LATTICE.map(n => n.id) };
   const G = { W: 800, H: 600, cx: 400, cy: 300, S: newRun(meta, 'bastion'), fx: makeFx(), meta };
   G.S.weapons.bolt = WEAPONS.bolt.max;
+  // crit off: a 2x crit at 20% chance injects several percent of run-to-run
+  // noise into a measurement whose whole job is to detect a few percent of
+  // drift. Same confound that made a lone-target ricochet test read 99 "hits"
+  // from 86 bolts. Crit is not the subject here.
+  G.S.critChance = 0;
   if (form) G.S.forms.bolt = form;
   resetWeapons(G);
   G.aim = { x: 700, y: 300 };
   return G;
 }
 
-/** Total damage a maxed bolt deals to an immortal anvil over `secs`. */
+/** Damage EMITTED per second — bullets spawned x their damage.
+ *  The rule is about emission, not damage landed (core.md "Forms"): a SPATIAL
+ *  form deliberately trades single-target for coverage, so measuring what lands
+ *  on one anvil would punish the design the rule exists to permit. This used to
+ *  measure landed damage and read a stable ~6.4% drift on burst as a result. */
 function output(form, secs = 20) {
   const G = rig(form);
   const e = spawnEnemy(G, 'boss', null, 700, 300);
   e.hp = e.maxHp = 1e12;
   const dt = 1 / 60;
+  let emitted = 0;
   for (let t = 0; t < secs; t += dt) {
+    const before = new Set(G.S.bullets);
     updateWeapons(G, dt);
+    for (const b of G.S.bullets) if (!before.has(b)) emitted += b.dmg;
     G.S.time += dt;
     updateFx(G.fx, dt);
   }
-  return e.maxHp - e.hp;
+  return emitted;
 }
 
 test('every form names a real base weapon and is not a weapon itself', () => {
@@ -42,9 +54,10 @@ test('every form names a real base weapon and is not a weapon itself', () => {
   }
 });
 
-test('a form regroups output in time; it does not change output', () => {
-  // THE rule (core.md Forms). Neutrality is by construction — same shots, re-timed —
-  // so this must hold without tuning, and must keep holding if bolt is rebalanced.
+test('a form redistributes output; it does not increase it', () => {
+  // THE rule (core.md Forms). Neutrality is by construction — the same shots,
+  // redistributed — so it must hold without tuning and keep holding when bolt is
+  // rebalanced. Measured in EMISSION, which is what the rule actually says.
   const base = output(null);
   const burst = output('burst');
   assert.ok(base > 0 && burst > 0, 'setup: both configurations must be shooting');

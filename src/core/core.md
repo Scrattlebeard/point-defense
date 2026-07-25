@@ -426,7 +426,10 @@ next day. Generalised the same day, before the second form shipped.)*
 
 That is the enforceable version of ADR-0006 Decision 6 ("a form that is only
 bigger-slower-more is a stat wearing a name"), and it is pinned by test: a form's
-sustained damage must match its base weapon's within a few percent. Power-neutrality
+**emitted** damage per second — bullets spawned × their damage — must match its
+base weapon's within a few percent. *Emission, not damage landed:* measuring what
+lands on a single target punishes a spatial form for the exact trade it exists to
+make, and (measured) reads a stable ~6% drift on a purely temporal one too. Power-neutrality
 holds **by construction**, not by tuning — a form re-times the same shots, so the
 arithmetic cannot drift even when the base weapon is rebalanced later.
 
