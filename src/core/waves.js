@@ -1,14 +1,23 @@
 // Wave composition: budget → spawn plan. Deterministic given the injected rng.
 import { ENEMIES, VARIANTS } from './config.js';
-import { waveBudget, spawnInterval, variantChance } from './balance.js';
+import { waveBudget, spawnInterval, variantChance, mixTilt } from './balance.js';
 
 /** @returns {{spawns: string[], interval: number, boss: boolean}} */
 export function composeWave(w, rng) {
   const avail = Object.entries(ENEMIES).filter(([id, e]) => id !== 'boss' && e.minWave <= w);
+  // Each species is allocated a share of the budget (∝ cost^tilt) and spends it
+  // at its own cost, so pick weight ∝ cost^(tilt−1): cheap species are numerous,
+  // and the tilt shifts the allocation toward the expensive ones as the wave
+  // deepens (core.md "Wave composition").
+  const k = mixTilt(w) - 1;
+  const weights = avail.map(([, e]) => Math.pow(e.cost, k));
+  const total = weights.reduce((a, b) => a + b, 0);
   let budget = waveBudget(w);
   const spawns = [];
   while (budget > 0) {
-    const [id, e] = avail[Math.floor(rng() * avail.length)];
+    let r = rng() * total, i = 0;
+    while (i < weights.length - 1 && (r -= weights[i]) >= 0) i++;
+    const [id, e] = avail[i];
     spawns.push(id);
     budget -= e.cost;
   }

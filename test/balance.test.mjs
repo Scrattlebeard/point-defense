@@ -34,6 +34,19 @@ test('xpForLevel is a positive-integer increasing curve', () => {
   }
 });
 
+test('a boss holds its share of the wave: never decays into the crowd', () => {
+  // core.md bossHp: Law·Bosses says a boss is a focus-forcer. The regression this
+  // replaces had bossHp linear against a quartic wave curve — 31% of wave HP at
+  // wave 5, 4.9% by wave 45. Share, not the constant, is the pinned truth.
+  const share = w => B.bossHp(w) / (B.bossHp(w) + B.waveTrashHp(w));
+  const shares = [5, 10, 15, 20, 30, 40, 50, 60].map(share);
+  for (const s of shares) {
+    assert.ok(s > 0.2 && s < 0.45, `boss share ${(100 * s).toFixed(1)}% left the band`);
+  }
+  const spread = Math.max(...shares) - Math.min(...shares);
+  assert.ok(spread < 0.05, `boss share drifts ${(100 * spread).toFixed(1)}% across the run`);
+});
+
 test('bossHp grows across boss waves', () => {
   assert.ok(B.bossHp(10) > B.bossHp(5));
   assert.ok(B.bossHp(15) > B.bossHp(10));

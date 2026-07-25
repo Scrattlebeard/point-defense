@@ -171,28 +171,6 @@ Numbers are measured (headless spikes over the real sim), not estimated.*
   alternate rhythm, the slot cost disappears, and the levelChoices `formOf` gate + this
   interim classification are deleted.
 
-## [phase 3] The wave stops escalating at 29, and the boss dissolves into the crowd
-- **What:** Three linked fixes to `waves.js` / `balance.js`. (1) `composeWave` picks a
-  species **uniformly** and only subtracts `e.cost` afterward, so cost regulates wave *size*
-  and never the *mix* — spend the budget instead of rolling it. (2) Every composition lever
-  is inert past wave 29 (species mix freezes at wave 14, spawnInterval floors at 18, variant
-  pool completes at 23, variantChance caps at 29): past 29 the threat *distribution* is
-  identical at every wave forever. (3) `bossHp` is linear against a quartic wave-HP curve.
-- **Why:** GDD §5's content doctrine is "escalating composition is the bullshit generator" —
-  all three of its named mechanisms (denser, meaner, deeper stacks) are dead by wave 29, in
-  a game aimed at wave 50–100. Measured: species share is 20/20/20/20/20 at wave 14 and at
-  wave 500; **elites are 52% of wave HP, grunts 6%** — so "chaff the autos eat" barely
-  exists and there is one answer to "what now?", violating Law·Focus. A named boss is 31%
-  of the wave's HP at wave 5 and **4.9% at wave 45** — Law·Bosses ("cannot be delegated")
-  degrades into one chunky elite among forty-four.
-- **Where:** `src/core/waves.js` composeWave + rollVariant, `src/core/balance.js` bossHp,
-  `core.md` Enemies/Variants, `test/waves.test.mjs` (**no test pins composition proportions
-  today** — the mix is invisible at the reviewed tier, which is why this rotted unseen).
-- **Context:** Variant stacking (its own pin, above) is the natural post-29 lever. Sequence
-  the cost-weighted roll first — it is the cheapest change and the one that most changes how
-  a wave *feels*. Splitter children spawn outside the budget (`enemies.js:152`), so real body
-  counts run ~40% over budget at depth; decide whether that is intended and record it.
-
 ## [phase 3] Besiegers sit in a dead zone the infrastructure autos cannot reach
 - **What:** Orbit, frost, mine and caltrop deal **literally zero** damage to anything holding
   the rim. Measured over 12s against a parked besieger, every level: orbit 0, frost 0, mine 0,
@@ -212,6 +190,13 @@ Numbers are measured (headless spikes over the real sim), not estimated.*
   becomes the literal wall the horde piles against — which is the picture GDD §8 wants
   anyway. Sequence after the slot budget: with ≤5 autos, enemies actually reach the rim and
   the feel of either fix changes. Companion to the siege-readability pin above.
+- **Law-vs-law warning (ADR-0008 Alt 3, 2026-07-25):** every candidate fix here **gives autos
+  more power**, so it fixes Law·Death-shape while pushing the conductor gate's number *down*.
+  Measure it against `scripts/conductor.mjs` on its own — do not land it beside another change
+  that moves the same number, or neither effect will be attributable. Budget for the
+  possibility that the honest outcome is "the rim fix costs N waves of hands, and that is the
+  price of a non-invoicing death" — which is a decision for Daniel, recorded, not a tuning
+  problem to make disappear.
 
 ## [phase 3] The content drip stops at wave 23
 - **What:** Introductions land at waves 1,2,4,5,6,8,11,14,17,21,23 and then **nothing, ever**.

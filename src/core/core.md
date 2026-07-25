@@ -59,10 +59,33 @@ prereqs enforced), not exact constants, so tuning stays cheap.
   running ~10% under at wave 40 — the deep waves lean on tougher shapes instead.)*
 - `spawnInterval(w) = clamp(1.1 − 0.05w, 0.22, 1.1)` seconds between spawns (pacing
   tightened alongside the bigger early waves).
+- `mixTilt(w) = clamp(0.55·(w−14)/40, 0, 0.55)` — the composition tilt (Enemies
+  → "Wave composition"): 0 until the elite debut at wave 14, reaching 0.55 at wave
+  54. Species budget share ∝ `cost^mixTilt`, pick weight ∝ `cost^(mixTilt−1)`.
 - `xpForLevel(l) = round(10 + 8(l−1) + 1.2(l−1)²)` — XP needed to go from level l to l+1.
-- `bossHp(w) = 1500 * (1 + 0.3*(w−5))` for boss waves (w = 5, 10, 15…). *(Tripled
-  2026-07-23: a boss's radius means multi-bolt volleys connect in full, so effective
-  TTK was near a tank's — bosses must outlast the trash by an order of feel.)*
+- `waveTrashHp(w) = waveBudget(w) · E[hp per cost] · enemyHpMult(w)` — the expected
+  total HP of a wave's non-boss bodies, where `E[hp per cost]` follows the same mix
+  weights `composeWave` uses (Enemies → "Wave composition"). Exists so the boss
+  curve can be *derived from* the wave rather than drifting against it.
+- `bossHp(w) = BOSS_HP_SHARE/(1−BOSS_HP_SHARE) · waveTrashHp(w)` — **a boss is
+  always the same fraction of its wave's total HP** (`BOSS_HP_SHARE`, currently
+  0.31 — the measured wave-5 value, which playtesting validated as the onboarding
+  wall, and independently a **measured threshold**: at share 0.22 the boss kills a
+  do-nothing run but the robot dies at the same wave, so hands buy nothing; at 0.31
+  hands are worth 10 waves. Somewhere between, the boss crosses from "the autos
+  grind it down eventually" to "you must point at it" — that crossing *is*
+  Law·Bosses, and ADR-0008 has the sweep). *(Re-sloped 2026-07-25. The old curve `1500·(1+0.3(w−5))` was **linear
+  against a quartic wave-HP curve**: measured, a named boss was 31% of its wave's
+  HP at wave 5 and **4.9% by wave 45** — Law·Bosses ("focus-forcers that cannot be
+  delegated") decaying into one chunky elite among forty-four. Deriving the boss
+  from `waveTrashHp` makes the decay structurally impossible: change the budget or
+  the mix and the boss follows.)*
+  - **Bounded above by the stall constraint, which is load-bearing:** the wave
+    director will not start wave w+1 until the field is empty (`game.js`, phase
+    `clear`), so a boss too tanky to kill does not raise difficulty — it *freezes
+    the run* at that wave. The share is therefore tuning with a hard ceiling that
+    playtest and the conductor gate must both respect, and any future increase must
+    re-check time-to-kill, not just the share.
 - `shardPayout(wave, kills, bossKills) = round(2.5*wave + kills/9 + 9*bossKills +
   0.18*wave²)`, minimum 1 — **losing must always buy something** (pillar 4). Salvage
   tech multiplies. *(Superlinear term added with the Lattice, ADR-0003 stage 1: the
@@ -123,6 +146,42 @@ multipliers (swift ×1.7) stack on top: a swift is still a swift *relative to it
 *(Balance round 6, 2026-07-24: ~+10% base hp and speed across every species —
 human play after round 5 still outran the pressure; base stats moved rather than
 the wave curves so the change is uniform from wave 1. Calibrate band re-verified.)*
+
+### Wave composition (`waves.js: composeWave`)
+
+**Each available species is allocated a share of the wave budget, and spends that
+share on bodies at its own cost.** So a species' *body count* is its budget share
+divided by its cost: cheap species are numerous, expensive ones are rare, and cost
+governs the mix rather than merely the wave's size. Picking is therefore weighted
+`∝ share / cost`, not uniform.
+
+**The tilt — composition is the escalation lever.** Shares are equal until wave 14
+(the elite debut); from there the allocation **tilts toward the expensive species**,
+reaching its endpoint at wave 54 and holding: `share ∝ cost^tilt(w)`, so the pick
+weight is `cost^(tilt−1)`. Deep waves buy fewer, meaner bodies out of the same
+budget point. Measured trajectory (share of wave HP): elites **24% at wave 14 → 39%
+at wave 60**; grunts 23% → 12%; body counts rise the whole way (77 at w14, 293 at
+w45, 1016 at w100).
+
+*(Rewritten 2026-07-25. The previous rule picked a species **uniformly** and only
+subtracted its cost afterward, so cost regulated wave size and never the mix. The
+measured result: the species share was **20/20/20/20/20 at wave 14 and identical at
+wave 500**, elites were 52% of wave HP against grunts' 6% — "chaff the autos eat"
+barely existed, there was one answer to "what now?", and the threat distribution was
+frozen from wave 14 forever, in a game aimed at wave 50–100. The tilt is what makes
+GDD §5's content doctrine — "denser and meaner" — true past wave 29, where every
+other composition lever is inert. Tilt endpoint and reach are tuning; the pinned
+truths are structural: cheap species outnumber expensive ones, and the expensive
+share rises with the wave.)*
+
+**This change does not stand alone, and must not be re-tuned alone — ADR-0008.**
+Restoring chaff *broke* Law·Delegation on its own (the conductor gate went to
+hands-worth-1-wave, parked deaths 0/11): chaff is exactly what autos eat, and a
+conserved budget means buying cheap bodies takes budget from expensive ones. A
+steep tilt makes the gate pass by producing a **59%-elite mix — worse than the bug
+being fixed**. The boss re-slope below is what actually restores the law; the mix
+is guarded at the test tier (chaff never below 15% of bodies) so a future change
+cannot buy a green gate by deleting the chaff.
 
 **Introductions (2026-07-23 playtest):** content is deliberately drip-fed — roughly one
 new shape or variant every 2–3 waves, stretching past wave 20 — and every first

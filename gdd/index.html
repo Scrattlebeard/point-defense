@@ -420,11 +420,17 @@ what levelling already gives away.</p>
 <h2 id="threat-design"><span class="secnum">5</span>Threat Design</h2>
 <p class="status"><span class="badge shipped">SHIPPED</span> five species · five modifiers
 in disjoint channels · boss epithets on recirculation ·
+<span class="badge shipped">SHIPPED</span> cost-weighted composition — chaff is chaff again
+(grunts 42% of bodies at wave 14) and the mix <em>escalates</em> instead of freezing: elite
+HP share 24% at wave 14 → 39% at wave 60 · bosses hold 31% of their wave's HP at every depth
+(was 4.9% by wave 45) ·
 <span class="badge unbuilt">UNBUILT</span> modifier stacking · boss signature moves (there
-is exactly one boss behaviour: the ram) · <span class="badge proto">PROTOTYPE</span> species
-composition: the wave roll ignores cost, so the mix is frozen at 20/20/20/20/20 from wave 14
-forever — elites are 52% of wave HP, grunts 6%. Every composition lever is inert past wave
-29; a boss decays from 31% of the wave's HP to 4.9% by wave 45.</p>
+is exactly one boss behaviour: the ram).
+<strong>Read <a href="../adr/0008-chaff-and-delegation-pull-opposite-ways.md">ADR-0008</a>
+before re-tuning any of this:</strong> restoring chaff <em>broke</em>
+<a href="#law-delegation">Law·Delegation</a> on its own, and a steeper mix tilt makes the
+conductor gate pass by producing a 59%-elite wave — greener than the bug it replaces, and
+worse. The boss share is what restores the law.</p>
 
 <div class="law" id="law-legibility">
   <span class="law-name">Law · Legibility</span><br>
@@ -697,6 +703,10 @@ the player, and it expires when it reaches zero.</p>
   <tr><td>3</td><td><strong>Threats that bid</strong></td><td>Composition escalates past
     wave 29; chaff is chaff again; the rim is a real place; bosses force focus rather than
     joining the crowd.</td><td><a href="#threat-design">§5</a>, <a href="#the-run">§2</a></td></tr>
+  <tr><td colspan="4" style="font-size:.85em"><em>Phase 3 partially landed 2026-07-25:
+    composition + the boss share (<a href="../adr/0008-chaff-and-delegation-pull-opposite-ways.md">ADR-0008</a>).
+    Still open: the rim dead zone, the content drip past wave 23, variant stacking,
+    legibility errata — see <code>PINS.md</code>.</em></td></tr>
   <tr><td>4</td><td><strong>The authored draft</strong></td><td>The account changes what
     cards <em>exist</em>, not just how big they are. Mastery, forms, priority.</td>
     <td><a href="#meta-loop">§6</a>, <a href="#builds">§7</a></td></tr>
