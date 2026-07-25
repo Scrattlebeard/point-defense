@@ -63,14 +63,10 @@ test('Decision 7 roster assignments: guns, holds, swipes, the boomer demotion', 
   }
 });
 
-test('burst is the demoted form of bolt: gated on bolt mastery (ADR-0006 D7/Alt-4)', () => {
-  assert.equal(WEAPONS.burst.formOf, 'bolt');
-  const S = newRun(defaultMeta(), 'bastion');
-  S.pool.add('burst');
-  assert.ok(!offeredNew(S).has('burst'), 'burst offered before bolt is mastered');
-  S.weapons.bolt = WEAPONS.bolt.max;
-  assert.ok(offeredNew(S).has('burst'), 'burst never offered despite maxed bolt');
-});
+// ('burst is the demoted form of bolt' MOVED to test/forms.test.mjs, 2026-07-25 —
+// burst stopped being an interim slot-costing weapon and became a real form, so
+// the behaviour it pinned is now the form contract: offered only at max base
+// level, costing no slot, and power-neutral.)
 
 test('budget: at 6 owned weapons no new weapon is offered; upgrades continue', () => {
   const S = newRun(defaultMeta(), 'bastion');

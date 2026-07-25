@@ -408,6 +408,38 @@ Auto weapons (level-up pool):
 | cascade | 5 | **Cascade** (ADR-0004 wave C, "the chain reaction"): every 5.5−0.4L s hurls a white-hot spark at a random living shape; contact **primes** it (0.6s fuse). A primed shape detonates on fuse-out *or death, whichever first*: 22+10L dmg in r 70, and every living shape caught gains a prime at **×0.75 power** — the chain spreads until damage decays below 8 (or generation 8, the runaway stop). One good cluster is a firework show; the weapon's whole skill is *when*, not *where*. L5: two sparks per volley — **tech-locked** |
 | mortar | 5 | arcing shells lobbed at a random living shape (±30px scatter) every 3.4−0.3L s (floor 1.6); 1.1s flight, then AoE: blast 68+8L, dmg 30+14L; **L5: twin shells** per volley — **tech-locked**. **Shells arc OVER the arena wall**: the mortar is deliberately the one weapon that can strike shapes still outside the walls — bullets die at the wall because they travel *through* the field; a shell was never in it (ADR-0003: the anti-cluster tool, new 2026-07-24) |
 
+## Forms (`config.js: FORMS`) — ADR-0006 Decisions 6-8, the pilot
+
+A **form** changes how a weapon *feels*, never what it *produces*.
+
+> **A form regroups a weapon's output in time; it does not change the output.**
+
+That is the enforceable version of ADR-0006 Decision 6 ("a form that is only
+bigger-slower-more is a stat wearing a name"), and it is pinned by test: a form's
+sustained damage must match its base weapon's within a few percent. Power-neutrality
+holds **by construction**, not by tuning — a form re-times the same shots, so the
+arithmetic cannot drift even when the base weapon is rebalanced later.
+
+| form | of | what changes | unlocked by |
+|------|----|--------------|-------------|
+| **Burst** | bolt | the same volleys arrive as a fast salvo of `salvo` shots then a beat, instead of an even stream - *ratatatata-pause-ratatatata* against the default's *bang-pause-bang* (GDD section 4). Gap = `gapFrac` x the base cadence, and the pause makes the cycle exactly `salvo` x base cadence, so shots-per-second is unchanged | the `burst` lattice node (interim) |
+
+**Forms cost no slot.** They are not weapons: `S.forms[weaponId]` names the active
+form, `S.formPool` is what the account has unlocked, and a form card is offered only
+when its base weapon is **at max level**, its form is unlocked, and it is not already
+active. That is GDD section 7's canonical wave-30 draft: *"since our gun is maxed at
+level 6, we were lucky enough to draw a variant card that lets us change it from the
+default form into the burst."*
+
+*(Landed 2026-07-25. Burst previously existed as a **weapon** carrying `formOf` - an
+interim recorded at the time as a known lie. Measurement convicted it: on a mature
+account burst was offered in **0% of 60 runs**, because a slot-costing weapon cannot
+win a budget that is full by level ~8. A form costs nothing, so the content is
+reachable again. The **mastery** half of ADR-0003 stage 2 - use-earned XP, per-weapon
+trees - remains unbuilt; forms unlock from the lattice for now, which is the honest
+interim and is pinned.)*
+
+
 **Generic cards are a pool the lattice authors** (`config.js: GENERICS`), not a fixed
 list — GDD §6's organizing principle: *"lattice unlocks inject card types into the
 in-run pool."* A card marked `techLock: true` is absent until some node's

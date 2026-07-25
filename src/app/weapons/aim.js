@@ -1,6 +1,7 @@
 // Everything that fires toward the standing aim (README pillar 1 + ADR-0004
-// "AIM is not a slot"): bolt, scattergun, repeater, howitzer, boomerang, and
+// "AIM is not a slot"): bolt (and its forms), scattergun, howitzer, boomerang, and
 // the shared bullet pool. All hold fire with no live in-bounds shape.
+import { FORMS } from '../../core/config.js';
 import { dist } from '../../core/geom.js';
 import { damageEnemy, nearestEnemies } from '../enemies.js';
 import { shake } from '../fx.js';
@@ -26,6 +27,8 @@ export function updateBolt(G, dt) {
   const wt = G.wt;
   if (lvl(S, 'bolt') < 1) return;
   const st = stats(S, 'bolt');
+  const cd = st.cd * S.cdMult;
+  const form = FORMS[S.forms?.bolt];
   wt.boltT -= dt;
   if (wt.boltT <= 0) {
     if (S.enemies.some(e => !e.dead)) {
@@ -34,7 +37,19 @@ export function updateBolt(G, dt) {
         fireFan(G, e.x, e.y, st);
       }
       sfx('shoot');
-      wt.boltT = st.cd * S.cdMult;
+      if (form) {
+        // A form re-times the SAME volleys (core.md "Forms"): `salvo` of them a
+        // short gap apart, then a pause sized so the cycle is exactly
+        // salvo x cd. Shots per second is therefore unchanged by construction —
+        // the feel moves, the output does not.
+        const gap = cd * form.gapFrac;
+        wt.boltLeft--;
+        wt.boltT = wt.boltLeft > 0
+          ? gap
+          : (wt.boltLeft = form.salvo, form.salvo * cd - (form.salvo - 1) * gap);
+      } else {
+        wt.boltT = cd;
+      }
     } else wt.boltT = 0.1;
   }
 }
@@ -61,27 +76,6 @@ export function updateAimOrdnance(G, dt) {
         sfx('shoot');
         wt.scatT = st.cd * S.cdMult;
       } else wt.scatT = 0.1;
-    }
-  }
-
-  // repeater: salvo state machine; each shot tracks the LIVE aim (core.md)
-  if (lvl(S, 'burst') >= 1) {
-    const st = stats(S, 'burst');
-    if (wt.burstLeft > 0) {
-      wt.burstGapT -= dt;
-      if (wt.burstGapT <= 0 && G.aim) {
-        fireBullet(S, G.cx, G.cy, aimAngle(G), st.speed, st.dmg);
-        sfx('shoot');
-        wt.burstLeft--;
-        wt.burstGapT += st.gap;
-        if (wt.burstLeft === 0) wt.burstT = st.cd * S.cdMult;
-      }
-    } else {
-      wt.burstT -= dt;
-      if (wt.burstT <= 0) {
-        if (aimReady(G)) { wt.burstLeft = st.n; wt.burstGapT = 0; }
-        else wt.burstT = 0.1;
-      }
     }
   }
 

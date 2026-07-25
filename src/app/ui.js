@@ -1,6 +1,6 @@
 // DOM overlays + HUD. Reads core tables directly; all game actions go through
 // hooks injected by main.js (no circular imports, no rules in here).
-import { TOWERS, WEAPONS, GENERICS, ENEMIES, VARIANTS, ACHIEVEMENTS, chipOf } from '../core/config.js';
+import { TOWERS, WEAPONS, GENERICS, FORMS, ENEMIES, VARIANTS, ACHIEVEMENTS, chipOf } from '../core/config.js';
 import { towerUnlocked } from '../core/state.js';
 import { storageOk } from './meta.js';
 import { poly } from './render.js';
@@ -233,7 +233,6 @@ function statLine(id, l) {
     case 'mine':   return `${st.cap} mines · DMG ${st.dmg} · R ${st.blast}`;
     case 'mortar': return `DMG ${st.dmg}${st.shells > 1 ? ' ×2' : ''} · R ${st.blast} · ${st.cd.toFixed(1)}s`;
     case 'scatter': return `${st.pellets} pellets · DMG ${st.dmg} · ${st.cd.toFixed(1)}s`;
-    case 'burst':  return `${st.n}-bolt salvo · DMG ${st.dmg} · ${st.cd.toFixed(1)}s`;
     case 'heavy':  return `3× DMG ${st.lightDmg} + shell DMG ${st.heavyDmg}`;
     case 'boomer': return `DMG ${st.dmg}×2 legs${st.n > 1 ? ' · twin' : ''} · ${st.cd.toFixed(1)}s`;
     case 'flame':  return `BURN ${st.burnDps}/stack ×${st.maxStacks} · R ${st.range}${st.alwaysOn ? ' · always on' : ''}`;
@@ -305,6 +304,17 @@ export function renderLevelUp(G, choices) {
         `<span class="cname">${w.name}</span></span>` +
         `<span class="clvl">${isNew ? '<b class="newmark">NEW</b> — Level 1' : `Lv ${c.lvl} → ${c.lvl + 1}`}</span>` +
         `<span class="cdesc">${w.descs[c.lvl]}</span>`;
+    } else if (c.type === 'form') {
+      // A form is not a weapon and not a passive: its own chip, and the line
+      // says what it replaces, because the player is changing a rhythm they
+      // already know rather than adding a thing (core.md "Forms").
+      const f = FORMS[c.id];
+      el.innerHTML =
+        `<span class="chead"><span class="cicon">${WEAPON_ICONS[c.id]}</span>` +
+        `<span class="chip FORM">FORM</span>` +
+        `<span class="cname">${f.name}</span></span>` +
+        `<span class="clvl"><b class="newmark">FORM</b> — reshapes ${WEAPONS[f.of].name}</span>` +
+        `<span class="cdesc">${f.desc}</span>`;
     } else {
       const g = GENERICS[c.id];
       el.innerHTML =

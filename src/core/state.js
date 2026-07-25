@@ -1,6 +1,6 @@
 // Run-state math: creation, XP/leveling, level-up choices, payout.
 // The shell mutates entity arrays inside S during play; the *rules* stay here.
-import { TOWERS, WEAPONS, GENERICS, ACHIEVEMENTS, SLOT_BUDGET } from './config.js';
+import { TOWERS, WEAPONS, GENERICS, FORMS, ACHIEVEMENTS, SLOT_BUDGET } from './config.js';
 import { effectsOf } from './tech.js';
 import { xpForLevel, shardPayout } from './balance.js';
 
@@ -47,6 +47,8 @@ export function newRun(meta, towerId) {
     critChance: fx.critChance, critMult: fx.critMult,
     dmgTakenMult: fx.dmgTakenMult,
     weapons, pool, generics,
+    // forms (core.md "Forms"): what the account unlocked, and what is active
+    formPool: new Set(fx.forms), forms: {},
     lvl: 1, xp: 0, xpNext: xpForLevel(1), pendingLevels: 0,
     wave: 0, kills: 0, bossKills: 0, time: 0,
     // run-scoped introduction record — banners repeat each run (core.md Introductions)
@@ -109,6 +111,15 @@ export function levelChoices(S, rng) {
     }
     opts.push({ type: 'weapon', id, lvl: l });
   }
+  // form cards (core.md "Forms"): base at max, form unlocked, not already worn.
+  // They cost no slot, so the budget above does not gate them.
+  for (const id of S.formPool) {
+    const f = FORMS[id];
+    if (!f) continue;
+    if (S.weapons[f.of] < WEAPONS[f.of].max) continue;
+    if (S.forms[f.of] === id) continue;
+    opts.push({ type: 'form', id, of: f.of });
+  }
   for (const id of S.generics) {
     if (id === 'repair' && S.hp >= 0.7 * S.maxHp) continue;
     opts.push({ type: 'generic', id });
@@ -121,6 +132,10 @@ export function levelChoices(S, rng) {
 }
 
 export function applyChoice(S, c) {
+  if (c.type === 'form') {
+    S.forms[c.of] = c.id;
+    return;
+  }
   if (c.type === 'weapon') {
     S.weapons[c.id] = Math.min(WEAPONS[c.id].max, S.weapons[c.id] + 1);
     return;

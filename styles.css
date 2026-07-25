@@ -167,6 +167,9 @@ button:active { transform: translateY(1px); }
 .chip.AIM, .chip.TAP, .chip.SWIPE, .chip.HOLD { color: var(--accent); }
 .chip.AUTO { color: #59ff9c; }
 .chip.PASSIVE { color: var(--dim); }
+/* forms are neither weapon nor passive — magenta, the boss/regime hue, because a
+   form card is a rare beat (core.md "Forms") */
+.chip.FORM { color: #ff5c9d; }
 .card .newmark { color: var(--accent-warm); letter-spacing: 0.1em; }
 @media (max-width: 620px) {
   #cardRow { flex-direction: column; align-items: stretch; }

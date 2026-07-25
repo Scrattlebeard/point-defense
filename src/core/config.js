@@ -154,11 +154,6 @@ export const WEAPONS = {
     descs: ['A slow volley of overlapping pellets toward your aim', '+1 pellet & damage', '+1 pellet, faster volleys', '+1 pellet & damage', 'MAX: an 11-pellet wall'],
     stats: l => ({ pellets: 6 + l, dmg: 6 + 2 * l, spread: 0.26, speed: 470, jitter: 70, cd: 1.7 - 0.1 * l }),
   },
-  burst: {
-    name: 'Repeater', input: 'aim', category: 'auto', formOf: 'bolt', max: 5, techLock: true,
-    descs: ['Quick salvos of bolts toward your aim, with pauses', '+damage', '+1 bolt per salvo', '+1 bolt, faster salvos', 'MAX: 6-bolt salvos'],
-    stats: l => ({ n: [0, 3, 3, 4, 5, 6][l], dmg: 8 + 3 * l, gap: 0.085, speed: 560, cd: 1.6 - 0.12 * l }),
-  },
   heavy: {
     name: 'Howitzer', input: 'aim', category: 'gun', max: 5, techLock: true,
     descs: ['Three quick rounds, a beat, one heavy piercing shell', '+damage', '+damage, faster cycle', '+damage', 'MAX: the shell hits like a noble'],
@@ -193,6 +188,20 @@ export const WEAPONS = {
     name: 'Force Blades', input: 'swipe', category: 'swipe', max: 5, techLock: true,
     descs: ['Swipe to hurl piercing crescents outward', '+1 blade', '+damage', '+1 blade', 'MAX: 5 blades'],
     stats: l => ({ n: [0, 2, 3, 3, 4, 5][l], dmg: 15 + 7 * l, speed: 400, r: 12, len: 200, cd: 0.45 }),
+  },
+};
+
+// Weapon FORMS (core.md "Forms", ADR-0006 Decisions 6-8). A form regroups a
+// weapon's output in TIME and never changes the output — power-neutral by
+// construction, which is what stops a "form" from being a stat wearing a name.
+// `req` is the lattice node that unlocks it; mastery trees take that job in
+// ADR-0003 stage 2. Forms cost no weapon slot.
+export const FORMS = {
+  burst: {
+    of: 'bolt', name: 'Burst', req: 'burst',
+    desc: 'Bolt fires in fast salvos with a beat between — ratatatata, not bang-pause-bang',
+    salvo: 4,      // volleys per salvo
+    gapFrac: 0.4,  // gap between them, as a fraction of bolt's own cadence
   },
 };
 
@@ -327,7 +336,7 @@ export const LATTICE = [
   { id: 'arsmaster',  sector: 'Arsenal', ring: 5, name: 'Arsenal Master', desc: '+10% damage & −4% cooldowns', cost: 600, req: ['turret', 'mun2'], effect: { dmgAdd: 0.10, cdAdd: -0.04 } },
   // ---- Armory (manual/aim weapon unlocks — ADR-0004) ----
   { id: 'scatter',    sector: 'Armory', ring: 1, name: 'Scattergun', desc: 'Adds the Scattergun to the level-up pool', cost: 30,  req: [],          effect: { unlockWeapon: 'scatter' } },
-  { id: 'burst',      sector: 'Armory', ring: 2, name: 'Repeater',   desc: 'Adds the Repeater to the level-up pool',   cost: 55,  req: ['scatter'], effect: { unlockWeapon: 'burst' } },
+  { id: 'burst',      sector: 'Armory', ring: 2, name: 'Burst Form',  desc: 'Unlocks the Burst form for a maxed Bolt',  cost: 55,  req: ['scatter'], effect: { unlockForm: 'burst' } },
   { id: 'heavy',      sector: 'Armory', ring: 3, name: 'Howitzer',   desc: 'Adds the Howitzer to the level-up pool',   cost: 110, req: ['burst'],   effect: { unlockWeapon: 'heavy' } },
   { id: 'boomer',     sector: 'Armory', ring: 2, name: 'Boomerang',  desc: 'Adds the Boomerang to the level-up pool',  cost: 60,  req: ['scatter'], effect: { unlockWeapon: 'boomer' } },
   { id: 'ballistics', sector: 'Armory', ring: 3, name: 'Ballistics', desc: '+6% damage', cost: 100, req: ['burst', 'mun1'], reqMode: 'any', effect: { dmgAdd: 0.06 } },

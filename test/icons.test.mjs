@@ -4,11 +4,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
-import { WEAPONS } from '../src/core/config.js';
+import { WEAPONS, FORMS } from '../src/core/config.js';
 import { WEAPON_ICONS } from '../src/app/icons.js';
 
-test('every weapon has an inline icon, and no icon is orphaned', () => {
-  const want = Object.keys(WEAPONS).sort();
+test('every weapon AND form has an inline icon, and no icon is orphaned', () => {
+  // WIDENED 2026-07-25: forms are drawable cards too, so they need icons on the
+  // same contract. `burst` keeps the salvo glyph it already had — it stopped
+  // being a weapon and became bolt's Burst form, so the icon changed owner, not
+  // meaning. Still exact-match in both directions: no missing, no orphans.
+  const want = [...Object.keys(WEAPONS), ...Object.keys(FORMS)].sort();
   const have = Object.keys(WEAPON_ICONS).sort();
   assert.deepEqual(have, want);
 });

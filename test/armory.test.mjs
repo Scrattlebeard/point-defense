@@ -40,9 +40,11 @@ function anvil(G, x, y) {
 
 test('wave A config contract: tech-locked aim-input ordnance (ADR-0006 categories)', () => {
   // ADR-0004's "aim is not a slot" is superseded: scatter/heavy are GUNS now
-  // (attention-scaling test), boomer an auto that reads the aim, burst the
-  // demoted form-of-bolt (taxonomy.test.mjs carries the budget rules).
-  const cats = { scatter: 'gun', burst: 'auto', heavy: 'gun', boomer: 'auto' };
+  // (attention-scaling test), boomer an auto that reads the aim.
+  // CHANGED 2026-07-25: `burst` is no longer a weapon at all — it became a true
+  // FORM of bolt (core.md "Forms", test/forms.test.mjs), so it neither appears
+  // here nor costs a slot. Not a loosening: the contract moved, it did not relax.
+  const cats = { scatter: 'gun', heavy: 'gun', boomer: 'auto' };
   for (const [id, cat] of Object.entries(cats)) {
     const w = WEAPONS[id];
     assert.ok(w, `${id} missing`);
@@ -53,16 +55,19 @@ test('wave A config contract: tech-locked aim-input ordnance (ADR-0006 categorie
     assert.equal(w.category, cat, `${id} category (ADR-0006 Decision 7)`);
     assert.equal(w.descs.length, 5);
   }
-  assert.equal(WEAPONS.burst.formOf, 'bolt', 'burst is the form pilot');
 });
 
 test('armory lattice nodes exist, tech-locked ids match, sector is Armory', () => {
-  for (const id of ['scatter', 'burst', 'heavy', 'boomer']) {
+  for (const id of ['scatter', 'heavy', 'boomer']) {
     const n = LATTICE.find(n => n.id === id);
     assert.ok(n, `lattice node ${id} missing`);
     assert.equal(n.sector, 'Armory');
     assert.deepEqual(n.effect, { unlockWeapon: id });
   }
+  // the Repeater node survives, but it now buys a FORM rather than a weapon
+  const burstNode = LATTICE.find(n => n.id === 'burst');
+  assert.equal(burstNode.sector, 'Armory');
+  assert.deepEqual(burstNode.effect, { unlockForm: 'burst' });
 });
 
 test('scattergun: a volley is many overlapping pellets on spread bearings', () => {
@@ -83,17 +88,9 @@ test('scattergun holds fire with no live shape (bolt rule)', () => {
   assert.equal(G.S.bullets.length, 0, 'fired at an empty field');
 });
 
-test('repeater: fires its whole salvo, then pauses', () => {
-  const G = makeG('burst', 1);
-  anvil(G, 700, 550); // far corner: pellets stay in flight during the count
-  const st = WEAPONS.burst.stats(1);
-  simulate(G, st.gap * st.n + 0.05); // salvo window
-  assert.ok(G.S.bullets.length >= st.n - 1,
-    `salvo should put ~${st.n} bolts in the air, got ${G.S.bullets.length}`);
-  const inAir = G.S.bullets.length;
-  simulate(G, 0.3); // well inside the pause — no new shots
-  assert.ok(G.S.bullets.length <= inAir, 'kept firing through the pause');
-});
+// ('repeater: fires its whole salvo, then pauses' MOVED, 2026-07-25 — the salvo
+// is now bolt's Burst form, and test/forms.test.mjs pins it harder: not just that
+// it bursts, but that it stays power-neutral against the base weapon.)
 
 test('howitzer: light rounds, a beat, then one heavy piercing shell', () => {
   const G = makeG('heavy', 1);

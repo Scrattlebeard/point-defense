@@ -15,7 +15,7 @@ export function resetWeapons(G) {
     boltT: 0.3, wallCd: 0,
     orbA: 0, novaT: 2.5, teslaT: 1.2, teslaReady: false, teslaCharge: 0, seekT: 1.6, turretT: 0.8,
     mineT: 1.0, mortT: 1.5,
-    scatT: 0.15, burstT: 0.1, burstLeft: 0, burstGapT: 0,
+    scatT: 0.15, boltLeft: 1, // boltLeft: shots remaining in a form's salvo
     heavyPhase: 0, heavyPhaseT: 0.1, boomT: 1.4,
     bladeCd: 0, flamePatchT: 0, metCharge: 0, metCd: 0,
     cataT: 2.0, calT: 1.0, cascT: 2.5,
@@ -33,6 +33,6 @@ export function updateWeapons(G, dt) {
   updateHold(G, dt);        // beam | flame | meteor (the one hold slot)
   updateAuto(G, dt);        // aura first (enemies.js reads it), then the autos
   updateField(G, dt);       // mines, mortar+shells (meteor impacts), exotics
-  updateAimOrdnance(G, dt); // scatter, burst, heavy, boomer
+  updateAimOrdnance(G, dt); // scatter, heavy, boomer
   updateBullets(G, dt);     // the pool LAST: every gun's shot moves this frame
 }

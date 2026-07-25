@@ -191,22 +191,34 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
 breadcrumbs for GDD §11's Route; the phase tags say where each one belongs in the order.
 Numbers are measured (headless spikes over the real sim), not estimated.*
 
-## [phase 4] Burst rides as an interim auto — make it a true form of bolt
-- **What:** ADR-0006 demoted `burst` (Repeater) from base to a form of bolt. Interim
-  state (2026-07-25, taxonomy landing): `category: 'auto'`, `formOf: 'bolt'` — offered
-  in the draft only once bolt is maxed (the "card you draw at max level", ADR-0006
-  Alt-4), but it still **costs one of the six slots** and fires *alongside* bolt rather
-  than replacing bolt's rhythm. A true form costs no slot and swaps the base's cadence.
-- **Why:** Category `gun` was impossible interim (bolt holds the ≤1-gun ceiling, so a
-  gun-burst could never be offered); `auto` is the honest approximation and is recorded
-  as such in core.md "Aim-input ordnance". The gate already pilots the mastery flavor.
-- **Where:** `config.js` burst entry (`formOf`), `state.js` levelChoices form gate,
-  `core.md` Aim-input ordnance, `test/taxonomy.test.mjs` burst-gate test; the real form
-  system is ADR-0003 stage 2 + ADR-0006 Decision 6/8.
-- **Context:** When forms land, burst stops being a separate weapon: it becomes bolt's
-  alternate rhythm, the slot cost disappears, and the levelChoices `formOf` gate + this
-  interim classification are deleted.
-
+## [phase 4] Forms: the mechanism landed, twelve forms and mastery did not
+- **What (landed 2026-07-25):** forms are real. `FORMS` in config.js, `S.forms` (active) and
+  `S.formPool` (unlocked) in run state, form cards in `levelChoices`, and bolt wears its form
+  in the executor. **Burst is the pilot** and is no longer a weapon at all — it stopped
+  costing a slot, which is what revived it: measured, the Repeater was offered in **0%** of
+  60 mature-account runs as a slot-costing weapon and **45%** as a form.
+- **The rule that makes forms enforceable:** *a form regroups a weapon's output in time; it
+  does not change the output.* Burst fires the same volleys as a salvo-then-beat, with the
+  pause sized so the cycle is exactly `salvo` x the base cadence — power-neutral **by
+  construction**, so it cannot drift when bolt is rebalanced later. Pinned by
+  `test/forms.test.mjs` (neutrality within a few percent, AND that the rhythm actually
+  changed, so a "form" cannot be a no-op).
+- **What remains:**
+  1. **Twelve more forms** (ADR-0006 Decision 7 names them all: Fan, Double, Autoloader,
+     Dragonsbreath, Fork, Pulse, Lance, Backdraft, Cluster, Spikewall, Repulsor, Cyclone).
+     Each needs a *re-timing or re-shaping* that passes the neutrality test — that constraint
+     is the interesting design work, not a formality.
+  2. **Mastery XP as the unlock** (ADR-0003 stage 2). Forms currently come off lattice nodes,
+     which is the honest interim; the ADR wants use-earned per-weapon progression.
+  3. **Bolt's ladder re-cut** (ADR-0006 Decision 8): fan volleys move OUT of the level ladder
+     and become the **Fan** form, with the ladder gaining **ricochet** in their place. This
+     was blocked on forms existing. It no longer is — and it is the natural next one, because
+     it is the case that proves forms can carry content the ladder used to hold.
+- **Where:** `config.js` FORMS, `state.js` (formPool/forms/levelChoices/applyChoice),
+  `tech.js` unlockForm, `weapons/aim.js` updateBolt, `ui.js` form card, `core.md` "Forms".
+- **Context:** the form card's *rendering* is unverified by eye — there is no dev hatch that
+  opens a level-up screen, so the card markup has only been exercised by the render smoke and
+  by mirroring the weapon card. Worth a look on the first playtest that maxes bolt.
 ## [phase 3] The rim dead zone — re-measured 2026-07-25, and the pin was partly wrong
 - **What:** Orbit, mines and caltrops deal **literally zero** damage to a shape holding the
   rim, at every level. Re-measured 2026-07-25 against a grunt parked at the rim for 12s:
@@ -300,8 +312,10 @@ Numbers are measured (headless spikes over the real sim), not estimated.*
 - **What:** measured 2026-07-25 over 60 mature-account runs (every lattice node owned,
   robot picks). The pin below used to say "watch for this in playtest" — it does not need
   watching, it needs a decision. Numbers:
-  - **Guns are offered 0% of the time.** `scatter` 0%, `heavy` 0%, `burst` 0%. Not rare —
-    *never*.
+  - **Guns are offered 0% of the time.** `scatter` 0%, `heavy` 0%. Not rare — *never*.
+    (`burst` was also 0%; it has since been fixed by a different route — it became a real
+    FORM, which costs no slot, and now appears in 45% of runs. That fix does **not**
+    generalise: Scattergun and Howitzer are gun *bases*, not forms, so they stay locked out.)
   - **All six slots fill by level ~8.6, in 60 runs out of 60**, while runs reach level ~37.
     So the build is decided in roughly the first 90 seconds and the remaining ~28 level-ups
     can only upgrade what luck already handed you.
