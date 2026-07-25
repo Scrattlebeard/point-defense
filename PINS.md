@@ -584,3 +584,33 @@ Not fixed — this is a pacing decision (Daniel's). Routes, uncosted: fire on fi
 appearance from a wave threshold (restores the wave-10 intent the log thought it had);
 shorten the roster; or give the three plain names moves so recirculation matters less.
 Do NOT quietly land wave-40 stacking + first-move on the same beat either way.
+
+## [perf] Frame rate degrades from ~wave 17 on device — FOUND BY THUMB, 2026-07-25
+
+Daniel, fresh account on /dev, phone (installed PWA): *"Game noticeably starts
+struggling/slowing down at wave 17 - seems like we need an optimisation pass."*
+
+**The gap, stated plainly: this project has zero performance instrumentation.** 219 tests,
+two balance gates, a render crash-net, a conductor, a calibrator — and nothing anywhere
+measures a frame. The sim runs headless in node with no clock; the render smoke test proves
+the draw path doesn't throw, never that it draws in time. We shipped a PWA for phones the
+same night, and the one property a phone game must hold has never been observed.
+
+**Prime suspect, and it is mine — hypothesis, NOT diagnosis:** the Jul-24/25 cost-weighted
+composition change (ADR-0008) deliberately made waves chaff-heavy. Measured that night at
+~49 spawns per wave against ~39 before. ~25% more bodies, each carrying variant checks,
+targeting, and per-shape highlight draws. Wave 17 is also regen's debut (`minWave: 17`) —
+cheap per-entity, but it lands exactly there, so it must be ruled out rather than assumed
+innocent. Do not start optimising before measuring which.
+
+**First moves, in order — measure before touching anything:**
+1. Instrument: frame-time budget in a dev hatch (`?perf`), reported at wave milestones, on
+   device. Entity count, draw calls, and ms/frame separately — the fix differs per cause.
+2. Bisect against the pre-ADR-0008 commit at matched wave, same seed. Answers "did I cause
+   this" in one measurement instead of an argument.
+3. Only then optimise. Candidates unranked until there are numbers: per-entity highlight
+   draw path, targeting loops (O(n²) suspects), spawn pooling.
+
+**Standing lesson to carry past this bug:** every gate built this week measures whether the
+game is *correct*. None measures whether it is *playable*. Both are laws; only one had an
+instrument.
