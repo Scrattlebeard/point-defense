@@ -1,6 +1,7 @@
 // Pointer events → traces → core gesture classification → weapon triggers.
 // Multi-touch: one hold-slot channel at a time; other pointers still tap/swipe.
 import { newTrace, addPoint, shouldEngageHold, classifyRelease } from '../core/gestures.js';
+import { WEAPONS } from '../core/config.js';
 import { fireWall, fireBlades, releaseHold } from './weapons/index.js';
 import { initAudio } from './audio.js';
 
@@ -68,9 +69,14 @@ export function initInput(G, canvas) {
 /** Poll per frame while playing: engage/aim the hold-slot channel. */
 export function updateInput(G) {
   const S = G.S;
-  const ownsHold = S.weapons.beam >= 1 || S.weapons.flame >= 1 || S.weapons.meteor >= 1;
+  // Read from the taxonomy (ADR-0006), not a hardcoded id list — a new hold or
+  // swipe weapon must not silently miss this. Which slots are filled decides the
+  // engage regime (core.md Gestures).
+  const owned = c => Object.entries(S.weapons)
+    .some(([id, l]) => l >= 1 && WEAPONS[id] && WEAPONS[id].category === c);
+  const owns = { ownsHold: owned('hold'), ownsSwipe: owned('swipe') };
   for (const [id, tr] of G.traces) {
-    if (!tr.holdEngaged && G.wt.holdOwner === null && shouldEngageHold(tr, S.time, ownsHold)) {
+    if (!tr.holdEngaged && G.wt.holdOwner === null && shouldEngageHold(tr, S.time, owns)) {
       tr.holdEngaged = true;
       G.wt.holdOwner = id;
     }

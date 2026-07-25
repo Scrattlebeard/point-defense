@@ -665,19 +665,34 @@ haptics is a real way to play a phone game in company.
 
 A trace is `{t0, points: [{x, y, t}], holdEngaged}`. Classification:
 
-- **hold** — engages *during* the gesture once the pointer has been **still for
-  0.28s**, where still = within 14px of a sliding anchor that resets every time the
-  pointer strays past it. Stillness is judged over the *recent* window, never since
-  the press: a press that starts in motion (finger already aim-tracking) simply
-  engages 0.28s after the finger settles. *(2026-07-24, second-playtester bug: the
-  old rule — max displacement from the press origin < 14px — permanently
-  disqualified any press that moved early; stillness afterward couldn't
-  rehabilitate it. "The beam won't trigger" was the classifier judging the
-  gesture's past instead of its present.)* Deliberate consequence: freezing
-  mid-swipe for 0.28s converts the gesture to a hold — stopping and holding *is*
-  holding, and the abandoned wall would have anchored at a start point the finger
-  left long ago. Only engages if the run owns a hold-slot weapon (at most one —
-  gesture slots, ADR-0004). Once engaged, moving the finger aims the channel
+- **hold** — engages *during* the gesture, under **two regimes, because the rule only
+  needs to be strict when there is something to be strict about** *(2026-07-25)*:
+  - **The run owns no swipe weapon** — nothing to disambiguate against, so a press
+    engages after **0.15s regardless of motion**. This is the common case (the swipe
+    slot is frequently empty under ADR-0006's budget, and no tower starts with one),
+    and it is the case Daniel's first playtest broke on: *"noticeable delay before
+    lance starts after I start holding."* **Tracking a moving shape with the beam is
+    the beam's core interaction, and under the stillness rule it reads as wandering** —
+    the anchor resets every frame the finger follows a target, so the channel starts
+    late or never. 0.15s still clears a deliberate tap (typically 60–120ms) so taps
+    keep aiming rather than channeling; it is a feel constant and Daniel's to tune.
+  - **The run owns a swipe weapon** — the **0.28s sliding-stillness** rule stands:
+    still = within 14px of an anchor that resets every time the pointer strays past
+    it, judged over the *recent* window rather than since the press. A stroke and a
+    track are genuinely indistinguishable mid-gesture, so the swipe has to be
+    protected, and the cost is the delay above. *(2026-07-24, second-playtester bug:
+    the older rule — max displacement from the press origin < 14px — permanently
+    disqualified any press that moved early; stillness afterward couldn't
+    rehabilitate it. "The beam won't trigger" was the classifier judging the gesture's
+    past instead of its present.)* Deliberate consequence, unchanged: freezing
+    mid-swipe for 0.28s converts the gesture to a hold — stopping and holding *is*
+    holding, and the abandoned wall would have anchored at a start point the finger
+    left long ago.
+
+  The two regimes are **why the fast path is safe**: it is unreachable in exactly the
+  runs where a swipe could be stolen. Both require the run to own a hold-slot weapon
+  (at most one — gesture slots, ADR-0004); ownership of both slots is read from
+  `WEAPONS[id].category` (ADR-0006), not a hardcoded id list. Once engaged, moving the finger aims the channel
   (movement no longer reclassifies). Ends on release; for the meteor, **release
   IS the trigger** (`releaseHold` seam) — beam and flame simply stop channeling.
 - **swipe** — on release, if not hold-engaged and total path length ≥ 30px. Payload:
