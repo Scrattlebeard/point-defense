@@ -186,6 +186,8 @@ if (location.search.includes('bestiary')) {
 if (location.search.includes('over')) {
   startRun();
   Object.assign(G.S, { wave: 23, kills: 1147, bossKills: 4 });
+  // a plausible ledger so the breakdown is photographable
+  G.S.dmgBy = { bolt: 41200, nova: 18400, frost: 900, tesla: 12100, orbit: 7300, other: 2600 };
   const { earned } = payout(G.S, G.meta);
   G.meta = { ...G.meta, shards: G.meta.shards + earned, best: Math.max(G.meta.best, 23) };
   ui.renderGameOver(G, earned, 2);

@@ -361,3 +361,11 @@ button:active { transform: translateY(1px); }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
+
+/* death-screen damage breakdown (core.md Run state: damage attribution) */
+.dmgBreak { display: grid; gap: 4px; margin-top: 14px; }
+.dmgRow { display: grid; grid-template-columns: 84px 1fr 34px; align-items: center; gap: 8px; font-size: 12px; }
+.dmgName { text-align: right; color: var(--dim); }
+.dmgBar { height: 7px; background: rgba(255,255,255,.07); border-radius: 4px; overflow: hidden; }
+.dmgBar i { display: block; height: 100%; background: var(--accent); }
+.dmgPct { text-align: left; color: var(--dim); }

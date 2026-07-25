@@ -353,6 +353,23 @@ export function renderLevelUp(G, choices) {
   }
 }
 
+/** "What was actually carrying this run" — the ledger, biggest share first
+ *  (core.md Run state). Only the top few: a full list is a spreadsheet, and the
+ *  question the screen answers is which two or three mattered. */
+function breakdownHTML(S) {
+  const rows = Object.entries(S.dmgBy || {}).sort((a, b) => b[1] - a[1]);
+  const total = rows.reduce((sum, [, v]) => sum + v, 0);
+  if (!total) return '';
+  const top = rows.filter(([, v]) => v / total >= 0.03).slice(0, 5);
+  return '<div class="dmgBreak">' + top.map(([id, v]) => {
+    const pct = Math.round((100 * v) / total);
+    const name = WEAPONS[id]?.name || (id === 'other' ? 'Other' : id);
+    return `<span class="dmgRow"><span class="dmgName">${name}</span>` +
+      `<span class="dmgBar"><i style="width:${pct}%"></i></span>` +
+      `<span class="dmgPct">${pct}%</span></span>`;
+  }).join('') + '</div>';
+}
+
 export function renderGameOver(G, earned, rank = 0) {
   G.lastEarned = earned;
   const S = G.S;
@@ -360,7 +377,8 @@ export function renderGameOver(G, earned, rank = 0) {
     (rank > 0 ? `<b style="color:#ffd24d">HIGH SCORE #${rank}</b><br>` : '') +
     `Wave <b>${S.wave}</b> · ${S.kills} shapes disassembled<br>` +
     `<span class="earned">+◆ ${earned} shards</span><br>` +
-    `<span class="dim">◆ ${G.meta.shards} total · best wave ${G.meta.best}</span>`;
+    `<span class="dim">◆ ${G.meta.shards} total · best wave ${G.meta.best}</span>` +
+    breakdownHTML(S);
 }
 
 export function updateHUD(G) {

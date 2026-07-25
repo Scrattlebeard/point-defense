@@ -51,6 +51,8 @@ export function newRun(meta, towerId) {
     formPool: new Set(fx.forms), forms: {},
     lvl: 1, xp: 0, xpNext: xpForLevel(1), pendingLevels: 0,
     wave: 0, kills: 0, bossKills: 0, time: 0,
+    // damage attributed to its source (core.md Run state); 'other' is explicit
+    dmgBy: {},
     // run-scoped introduction record — banners repeat each run (core.md Introductions)
     // run-scoped introduction record; `stacked` is the wave-40 regime beat
     introduced: { enemies: new Set(), variants: new Set(), stacked: false },

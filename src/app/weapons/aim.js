@@ -25,7 +25,8 @@ function fireFan(G, tx, ty, st, form) {
   const dmg = st.dmg / (form && form.spread ? form.spread : 1);
   for (const off of FAN_OFFSETS[n - 1]) {
     fireBullet(G.S, G.cx, G.cy, base + off, 540, dmg,
-      { pierce: st.pierce, r: 3.5, ric: st.ricochet || 0 });
+      // a form is the weapon's rhythm, so a fanned bolt credits bolt (core.md)
+      { pierce: st.pierce, r: 3.5, ric: st.ricochet || 0, src: 'bolt' });
   }
 }
 
@@ -80,7 +81,7 @@ export function updateAimOrdnance(G, dt) {
           fireBullet(S, G.cx, G.cy,
             base + (Math.random() * 2 - 1) * st.spread,
             st.speed + (Math.random() * 2 - 1) * st.jitter,
-            st.dmg, { color: '#bfe9ff' });
+            st.dmg, { color: '#bfe9ff', src: 'scatter' });
         }
         sfx('shoot');
         wt.scatT = st.cd * S.cdMult;
@@ -95,13 +96,13 @@ export function updateAimOrdnance(G, dt) {
     if (wt.heavyPhaseT <= 0) {
       if (!aimReady(G)) wt.heavyPhaseT = 0.1;
       else if (wt.heavyPhase < 3) {
-        fireBullet(S, G.cx, G.cy, aimAngle(G), st.lightSpeed, st.lightDmg, { r: 2.5 });
+        fireBullet(S, G.cx, G.cy, aimAngle(G), st.lightSpeed, st.lightDmg, { r: 2.5, src: 'heavy' });
         sfx('shoot');
         wt.heavyPhase++;
         wt.heavyPhaseT = wt.heavyPhase === 3 ? st.pause : st.lightGap;
       } else {
         fireBullet(S, G.cx, G.cy, aimAngle(G), st.heavySpeed, st.heavyDmg,
-          { pierce: st.pierce, r: 7, color: '#dff6ff' });
+          { pierce: st.pierce, r: 7, color: '#dff6ff', src: 'heavy' });
         shake(G.fx, 1.5);
         sfx('shoot');
         wt.heavyPhase = 0;
@@ -157,7 +158,7 @@ export function updateAimOrdnance(G, dt) {
         if (e.dead || b.hit.has(e)) continue;
         if (dist(b.x, b.y, e.x, e.y) < e.r + b.r) {
           b.hit.add(e);
-          damageEnemy(G, e, b.dmg);
+          damageEnemy(G, e, b.dmg, { src: b.src });
         }
       }
     }
@@ -199,7 +200,7 @@ export function updateBullets(G, dt) {
       if (e.dead || b.hit.has(e)) continue;
       if (dist(b.x, b.y, e.x, e.y) < e.r + b.r) {
         b.hit.add(e);
-        damageEnemy(G, e, b.dmg);
+        damageEnemy(G, e, b.dmg, { src: b.src });
         // Ricochet BEFORE pierce: ADR-0006 says a bolt "kicks to a second
         // shape", so the kick must be the second contact, not the third. Spent
         // kicks fall through to pierce, so a max bolt still passes through at

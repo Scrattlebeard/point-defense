@@ -704,6 +704,24 @@ only 6s was the actual drowning** — 85% invoicing, with individual runs at 292
 with the xp curve rather than the wave clock, which is deliberate: GDD §7's doom clock
 wants heals to *rarify* as levels stretch and pressure peaks.
 
+**Damage is attributed to its source** (`S.dmgBy`, a `weaponId → total` map). Every
+`damageEnemy` call names what dealt it, and damage that genuinely has no weapon
+behind it — a volatile's medic-bomb, a shape walking into another shape's blast —
+lands in an explicit **`other`** bucket rather than vanishing. A breakdown that
+silently drops damage is worse than none, because it reads as complete.
+
+Attribution follows the **weapon**, not the form: a bolt wearing Fan is still bolt,
+since a form is that weapon's rhythm rather than a separate thing (core.md Forms).
+Entities that outlive the moment they were fired — bullets, shells, burning ground —
+carry their source with them, because by the time they deal damage the weapon that
+made them has long since moved on.
+
+*Why it exists:* GDD section 6 wants mastery XP "shown post-game", and use-earned
+mastery (ADR-0003 stage 2) needs a per-weapon signal to earn against — this is that
+substrate. It is also immediately useful on its own: the death screen can finally
+answer *what was actually carrying this run*, which is the question every balance
+decision this week was made without being able to ask.
+
 Wave-clear heals 4% max hp. `payout(state, meta)` computes shards (with salvage) and
 returns the new meta (shards added, best wave maxed, no other mutation).
 

@@ -63,7 +63,7 @@ function updateBeam(G, dt) {
       e.beamHeat = Math.min(1, e.beamHeat + dt / st.rampUp);
       e.beamTick -= dt;
       if (e.beamTick <= 0) {
-        damageEnemy(G, e, st.dps * st.tick * (1 + (st.rampMax - 1) * e.beamHeat));
+        damageEnemy(G, e, st.dps * st.tick * (1 + (st.rampMax - 1) * e.beamHeat), { src: 'beam' });
         e.beamTick += st.tick;
       }
     } else if (e.beamHeat > 0) {
@@ -102,7 +102,7 @@ function updateFlame(G, dt) {
           e.beamTick -= dt;
           if (e.beamTick <= 0) {
             e.beamTick += st.tick;
-            damageEnemy(G, e, st.direct, { silent: true });
+            damageEnemy(G, e, st.direct, { silent: true, src: 'flame' });
             e.burnStacks = Math.min(st.maxStacks, e.burnStacks + 1);
             e.burnLeft = st.burnDur;
           }
@@ -115,6 +115,7 @@ function updateFlame(G, dt) {
         const fa = base + (Math.random() * 2 - 1) * st.arc * 0.8;
         const fr = st.range * (0.35 + Math.random() * 0.6);
         S.fires.push({
+          src: 'flame',
           x: G.cx + Math.cos(fa) * fr, y: G.cy + Math.sin(fa) * fr,
           r: st.patchR, dps: st.patchDps, life: st.patchLife, max: st.patchLife, tickT: 0.2,
         });
@@ -132,7 +133,7 @@ function updateFlame(G, dt) {
       e.burnTick -= dt;
       if (e.burnTick <= 0) {
         e.burnTick += 0.5;
-        damageEnemy(G, e, st.burnDps * e.burnStacks * 0.5, { silent: true });
+        damageEnemy(G, e, st.burnDps * e.burnStacks * 0.5, { silent: true, src: 'flame' });
       }
       if (e.burnLeft <= 0) { e.burnStacks = 0; e.burnTick = 0; }
     }

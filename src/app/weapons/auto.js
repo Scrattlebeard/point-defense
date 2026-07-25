@@ -25,7 +25,7 @@ export function updateAuto(G, dt) {
       for (const e of S.enemies) {
         if (e.dead || S.time < e.orbHit) continue;
         if (dist(bx, by, e.x, e.y) < 13 + e.r) {
-          damageEnemy(G, e, st.dmg);
+          damageEnemy(G, e, st.dmg, { src: 'orbit' });
           e.orbHit = S.time + 0.35;
           const d = dist(G.cx, G.cy, e.x, e.y) || 1;
           // shove restored 35→45 after the age-accrual fix: fresh shapes fling
@@ -52,7 +52,7 @@ export function updateAuto(G, dt) {
       if (e.dead || ring.hit.has(e)) continue;
       if (Math.abs(dist(e.x, e.y, G.cx, G.cy) - ring.r) < 20 + e.r) {
         ring.hit.add(e);
-        damageEnemy(G, e, ring.dmg);
+        damageEnemy(G, e, ring.dmg, { src: 'nova' });
       }
     }
   }
@@ -81,7 +81,7 @@ export function updateAuto(G, dt) {
           if (!next) break;
           targets.push(next);
         }
-        targets.forEach((e, i) => damageEnemy(G, e, st.dmg * Math.pow(0.8, i)));
+        targets.forEach((e, i) => damageEnemy(G, e, st.dmg * Math.pow(0.8, i), { src: 'tesla' }));
         S.zaps.push({ pts: [{ x: G.cx, y: G.cy }, ...targets.map(e => ({ x: e.x, y: e.y }))], t: 0 });
         // discharge oomph: the built-up charge visibly lets go (app.md)
         burst(G.fx, G.cx, G.cy, '#bee6ff', 9, 170, 0.3, 2);
@@ -138,7 +138,7 @@ export function updateAuto(G, dt) {
     if (hit || m.life <= 0) {
       m.dead = true;
       burst(G.fx, m.x, m.y, '#ffd24d', 10, 150, 0.35, 2.5);
-      aoe(G, m.x, m.y, m.blast, m.dmg);
+      aoe(G, m.x, m.y, m.blast, m.dmg, null, 'seek');
     }
   }
   S.missiles = S.missiles.filter(m => !m.dead);
@@ -156,7 +156,7 @@ export function updateAuto(G, dt) {
         const e = nearestEnemy(S, tx, ty, st.range);
         if (!e) continue;
         fireBullet(S, tx, ty, Math.atan2(e.y - ty, e.x - tx), 460, st.dmg,
-          { r: 2.5, color: '#ffd24d' });
+          { r: 2.5, color: '#ffd24d', src: 'turret' });
         fired = true;
       }
       if (fired) sfx('shoot');

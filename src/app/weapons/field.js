@@ -18,7 +18,7 @@ export function updateFires(G, dt) {
       f.tickT += 0.4;
       for (const e of S.enemies) {
         if (!e.dead && dist(f.x, f.y, e.x, e.y) <= f.r + e.r) {
-          damageEnemy(G, e, f.dps * 0.4, { silent: true });
+          damageEnemy(G, e, f.dps * 0.4, { silent: true, src: f.src || 'flame' });
         }
       }
     }
@@ -55,7 +55,7 @@ export function updateField(G, dt) {
           burst(G.fx, m.x, m.y, '#9ff3ff', 16, 230, 0.4, 2.5);
           burst(G.fx, m.x, m.y, '#e8fbff', 8, 90, 0.25, 1.5);
           shake(G.fx, 2);
-          aoe(G, m.x, m.y, m.blast, m.dmg);
+          aoe(G, m.x, m.y, m.blast, m.dmg, null, 'mine');
           sfx('nova');
           break;
         }
@@ -99,9 +99,10 @@ export function updateField(G, dt) {
       aoe(G, sh.tx, sh.ty, sh.blast, sh.dmg, sh.knock ? e => {
         const d = dist(sh.tx, sh.ty, e.x, e.y) || 1;
         applyKnock(e, ((e.x - sh.tx) / d) * sh.knock, ((e.y - sh.ty) / d) * sh.knock);
-      } : null);
+      } : null, sh.kind === 'meteor' ? 'meteor' : 'mortar');
       if (sh.scorch && S.fires.length < 40) {
         S.fires.push({
+          src: sh.kind === 'meteor' ? 'meteor' : 'mortar',
           x: sh.tx, y: sh.ty, r: sh.blast * 0.5, dps: sh.scorch.dps,
           life: sh.scorch.life, max: sh.scorch.life, tickT: 0.2,
         });
@@ -145,7 +146,7 @@ export function updateField(G, dt) {
         if (dist(b.x, b.y, e.x, e.y) >= e.r + b.r) continue;
         if (S.time < (b.hits.get(e) || 0)) continue;
         b.hits.set(e, S.time + b.tick);
-        damageEnemy(G, e, b.dmg);
+        damageEnemy(G, e, b.dmg, { src: 'catapult' });
         if (!e.dead) {
           // shove: part forward along the roll, part aside from the bulk
           const sp = Math.hypot(b.vx, b.vy) || 1;
@@ -185,7 +186,7 @@ export function updateField(G, dt) {
         if (e.dead) continue;
         if (dist(c.x, c.y, e.x, e.y) <= 6 + e.r) {
           c.dead = true; // spent on the prick
-          damageEnemy(G, e, c.dmg);
+          damageEnemy(G, e, c.dmg, { src: 'caltrop' });
           if (!e.dead) { e.calSlow = c.slow; e.calSlowT = c.slowDur; }
           burst(G.fx, c.x, c.y, '#9ff3ff', 3, 60, 0.2, 1.5);
           break;

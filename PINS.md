@@ -79,6 +79,33 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
 - **Context:** GitHub Pages hosting stays static throughout — no server of ours at
   any step. Discussed 2026-07-24 (chat); Daniel: "put a pin in it."
 
+## MEASURED: bolt does 72% of a maxed build's damage, and orbit does 0%
+- **What:** the first per-weapon damage measurement this project has ever had (the ledger
+  landed 2026-07-25). Five 15-minute robot runs, maxed budget-legal build
+  (bolt/orbit/nova/frost/tesla/turret): **Bolt 72% · Nova 15% · Turrets 7% · Tesla 7% ·
+  Orbitals 0%** (frost 0% is correct — it is a slow, not a damage source).
+- **Why it matters — two separate problems:**
+  1. **One weapon does nearly three quarters of the work.** ADR-0006's slot budget exists to
+     force identity through scarcity, but if five of six slots contribute 28% between them,
+     the choice of what fills them barely matters. That is the focus law's *build* half
+     failing quietly while its *attention* half (the conductor gate) passes.
+  2. **Orbitals contribute literally nothing.** This corroborates the rim dead-zone pin from
+     a completely independent direction, and goes further than that pin claimed: it said
+     orbit deals zero to shapes *holding the rim*; this says orbit deals zero **overall** in
+     a real run. Shapes die before they cross the 96–128px ring, or cross it too fast to be
+     ground. Orbit is one of the three starting-pool autos and is, in practice, dead weight.
+- **Caveat, stated because it bounds the number:** the robot retargets every 0.2s, so bolt —
+  the always-on aimed weapon — is at its theoretical best. **72% is an upper bound**; a human
+  aiming worse would shift some share to the autos. It does not rescue orbit's zero.
+- **Where:** `S.dmgBy` (core.md Run state) is the instrument; re-run the sweep after any
+  weapon change. `src/core/config.js` orbit ring radius, `src/app/weapons/auto.js` orbit hit
+  test.
+- **Context / not decided:** whether the fix for bolt is nerfing it, buffing autos, or
+  accepting that the default gun carries and the autos are utility. That is a design call
+  about what the six slots are *for*, and ADR-0006 deliberately deferred weapon purposes
+  ("taxonomy now, purposes after a playtest under the cap") — this is the measurement that
+  playtest was supposed to inform.
+
 ## The achievement set predates a week of new systems
 - **What:** 14 achievements, and **none** of them reference anything built this week —
   no form worn, no stacked modifier survived, no epithet boss felled, nothing about the

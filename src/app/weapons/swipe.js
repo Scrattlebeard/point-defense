@@ -59,7 +59,7 @@ function updateWalls(G, dt) {
         const m = enemyMass(e.age);
         e.x += (w.nx * st.push * dt) / m;
         e.y += (w.ny * st.push * dt) / m;
-        if (doTick) damageEnemy(G, e, st.dmg);
+        if (doTick) damageEnemy(G, e, st.dmg, { src: 'wall' });
         if (S.time >= e.wallAtk) { // the siege: shapes fight the wall (core.md)
           w.hp -= e.dmg;
           e.wallAtk = S.time + 0.9;
@@ -92,7 +92,7 @@ export function updateSwipe(G, dt) {
         if (e.dead || bl.hit.has(e)) continue;
         if (dist(bl.x, bl.y, e.x, e.y) < e.r + bl.r) {
           bl.hit.add(e);
-          damageEnemy(G, e, bl.dmg);
+          damageEnemy(G, e, bl.dmg, { src: 'blades' });
         }
       }
     }

@@ -165,14 +165,14 @@ export function detonatePrimed(G, e) {
   for (const o of S.enemies) {
     if (o.dead || o === e) continue;
     if (dist(e.x, e.y, o.x, o.y) > p.blast + o.r) continue;
-    damageEnemy(G, o, p.dmg);
+    damageEnemy(G, o, p.dmg, { src: 'cascade' });
     // survivors inherit a weaker prime — the chain reaction (spec: ×decay)
     if (spreads && !o.dead && (!o.primed || o.primed.dmg < p.dmg * p.decay)) {
       o.primed = { ...p, t: p.fuse, dmg: p.dmg * p.decay, gen: p.gen + 1 };
     }
   }
   // the carrier takes the blast too (fuse-out case; a dead carrier is past caring)
-  if (!e.dead) damageEnemy(G, e, p.dmg);
+  if (!e.dead) damageEnemy(G, e, p.dmg, { src: 'cascade' });
 }
 
 /** Death by player: full side-effects (xp, splits, explosions). */
@@ -212,7 +212,7 @@ function killEnemy(G, e) {
  * opts.noMult for environmental damage, opts.silent to skip floating numbers.
  * Returns the damage actually dealt (0 if absorbed by a shield).
  */
-export function damageEnemy(G, e, raw, { noMult = false, silent = false } = {}) {
+export function damageEnemy(G, e, raw, { noMult = false, silent = false, src = null } = {}) {
   const S = G.S;
   if (e.dead) return 0;
   if (e.shield > 0) {
@@ -227,6 +227,11 @@ export function damageEnemy(G, e, raw, { noMult = false, silent = false } = {}) 
   if (!noMult && S.critChance > 0 && Math.random() < S.critChance) {
     dmg *= S.critMult; crit = true;
   }
+  // attribute before anything can kill the shape (core.md Run state). Damage with
+  // no weapon behind it lands in 'other' rather than vanishing — a breakdown that
+  // silently drops damage reads as complete and is not.
+  const bucket = src || 'other';
+  S.dmgBy[bucket] = (S.dmgBy[bucket] || 0) + Math.min(dmg, Math.max(0, e.hp));
   e.hp -= dmg;
   e.flash = 0.08;
   if (!silent || crit) dmgText(G.fx, e.x, e.y - e.r - 4, dmg, { crit });
