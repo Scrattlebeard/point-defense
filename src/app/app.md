@@ -277,11 +277,28 @@ simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not un
   small shake.
 - **Failure honesty:** if localStorage is unavailable, the game plays with in-memory
   meta and the menu shows "progress won't persist" — never a silent wipe.
-- **Rehearsal panel** (ADR-0018): two tap-to-cycle buttons on the menu — start wave and
+- **Rehearsal panel** (ADR-0018): two buttons on the menu — start wave and
   starting weapon — because playtesting happens on a phone, where a query string is
   miserable to type and worse to retype after every death. Both persist in the meta so a
   rehearsal survives a reload, and both show **DEFAULT** in their off state so the panel
-  reads as inert until deliberately armed. When either is armed the DEFEND button is
+  reads as inert until deliberately armed.
+  - **Wave cycles in place; weapon opens a picker** *(2026-07-26)*. The control follows the
+    size and shape of the set, not a house style. Start wave is eight ordered values
+    (1, 5, 10 … 40), so tap-to-cycle is a stepper and reaching wave 30 costs six taps.
+    Starting weapon is **21 unordered options** (`DEFAULT` + every weapon), where the same
+    idiom means up to twenty taps to reach the one you want and no way to see what is
+    available — the affordance shipped in ADR-0018 and was wrong the moment the arsenal
+    was the thing being rehearsed. The weapon button now opens the **`rehPick` overlay**:
+    a grid of cards with icon, control-scheme chip and the level-1 effect line, the current
+    choice ringed, tap to select and return. The chip matters more than it looks — a
+    playtester picking a weapon to feel needs to know it is a *hold* before starting a run
+    they cannot re-aim.
+  - Deliberately **one tap, no confirm**, which is the opposite of the Lattice's
+    tap-to-inspect-then-buy rule. That rule exists because ring-4 nodes cost hundreds of
+    shards and thumbs slip; arming a rehearsal is free and reversible from the same screen,
+    and a confirm step on a free reversible choice is friction dressed as safety.
+  - The grid is built from `WEAPONS` at render time, never a hand-kept list — a weapon
+    added to the config appears in the picker without anyone remembering to add it. When either is armed the DEFEND button is
   relabelled **REHEARSE** and the menu carries a plain warning that the run will not count —
   a surface that silently voids your progress is a trap, so it says so before the run, not
   after.

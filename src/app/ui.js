@@ -8,17 +8,19 @@ import { renderLattice } from './lattice.js';
 import { WEAPON_ICONS } from './icons.js';
 
 const $ = id => document.getElementById(id);
-const OVERLAYS = ['menu', 'tech', 'bestiary', 'records', 'levelup', 'pause', 'over'];
+const OVERLAYS = ['menu', 'tech', 'bestiary', 'records', 'levelup', 'pause', 'over', 'rehPick'];
 
 let H = null; // hooks
 
 export function initUI(G, hooks) {
   H = hooks;
   $('startBtn').addEventListener('click', () => H.onStart());
-  // Rehearsal (ADR-0018): tap to cycle. A stepper beats a slider on a phone, and
-  // cycling beats typing a query string you would have to retype after every death.
+  // Rehearsal (ADR-0018). The wave is eight ordered values, so the button IS the
+  // stepper; the weapon is 21 unordered options, so it opens a picker instead
+  // (app.md "Wave cycles in place; weapon opens a picker").
   $('rehWaveBtn').addEventListener('click', () => { H.onRehearsalWave(); renderMenu(G); });
-  $('rehWeaponBtn').addEventListener('click', () => { H.onRehearsalWeapon(); renderMenu(G); });
+  $('rehWeaponBtn').addEventListener('click', () => { renderRehPick(G); showOnly('rehPick'); });
+  $('rehPickBack').addEventListener('click', () => { renderMenu(G); showOnly('menu'); });
   $('techBtn').addEventListener('click', () => { renderTech(G); showOnly('tech'); });
   $('bestBtn').addEventListener('click', () => { renderBestiary(G); showOnly('bestiary'); });
   $('bestBack').addEventListener('click', () => { renderMenu(G); showOnly('menu'); });
@@ -184,6 +186,40 @@ export function renderBestiary(G) {
   $('bestCount').textContent =
     `${seen.enemies.length}/${Object.keys(ENEMIES).length} shapes · ` +
     `${seen.variants.length}/${Object.keys(VARIANTS).length} variants`;
+}
+
+// ---------- rehearsal weapon picker (app.md "Rehearsal panel") ----------
+// Built from WEAPONS at render time, never a hand-kept list: a weapon added to the
+// config shows up here without anyone remembering. One tap selects and returns —
+// no confirm step, unlike the Lattice, because this choice is free and reversible
+// from the screen it returns to.
+export function renderRehPick(G) {
+  const cur = (G.meta.rehearsal || {}).weapon || null;
+  const grid = $('rehGrid');
+  grid.innerHTML = '';
+
+  const choose = id => () => { H.onRehearsalWeapon(id); renderMenu(G); showOnly('menu'); };
+
+  const def = document.createElement('button');
+  def.className = 'pcard' + (cur === null ? ' picked' : '');
+  def.innerHTML = '<span class="phead"><span class="chip AUTO">TOWER</span>'
+    + '<span class="pname">Default</span></span>'
+    + '<span class="pdesc">The tower opens with its own loadout.</span>';
+  def.addEventListener('click', choose(null));
+  grid.appendChild(def);
+
+  for (const [id, w] of Object.entries(WEAPONS)) {
+    const el = document.createElement('button');
+    el.className = 'pcard' + (cur === id ? ' picked' : '');
+    // the control-scheme chip is the load-bearing detail: starting a run on a HOLD
+    // weapon you thought was an auto wastes the rehearsal you opened the panel for
+    el.innerHTML = `<span class="phead"><span class="picon">${WEAPON_ICONS[id]}</span>`
+      + `<span class="chip ${chipOf(w)}">${chipOf(w)}</span>`
+      + `<span class="pname">${w.name}</span></span>`
+      + `<span class="pdesc">${w.descs[0]}</span>`;
+    el.addEventListener('click', choose(id));
+    grid.appendChild(el);
+  }
 }
 
 // ---------- records ----------

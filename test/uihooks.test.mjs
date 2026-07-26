@@ -53,3 +53,20 @@ test('every id ui.js reaches for exists in index.html', () => {
   const missing = [...used].filter(id => !declared.has(id));
   assert.deepEqual(missing, [], `ui.js reaches for ids that do not exist: ${missing.join(', ')}`);
 });
+
+// The OVERLAYS list escapes the check above, because showOnly looks its entries up
+// through a VARIABLE (`$(id)` in a loop) rather than a literal. That makes it the
+// worse failure of the two: a missing element there throws inside showOnly, so it
+// does not break one button — it breaks every overlay transition in the game,
+// including the one back to the menu. Added 2026-07-26 with the rehearsal picker,
+// the first new overlay since the seam test was written.
+test('every overlay in the OVERLAYS list exists in index.html', () => {
+  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const declared = new Set([...html.matchAll(/\bid="([A-Za-z][\w-]*)"/g)].map(m => m[1]));
+  const line = ui.match(/const OVERLAYS = \[([^\]]*)\]/);
+  assert.ok(line, 'could not find the OVERLAYS list — the regex stopped matching');
+  const names = [...line[1].matchAll(/'([\w-]+)'/g)].map(m => m[1]);
+  assert.ok(names.length >= 7, `only parsed ${names.length} overlays`);
+  const missing = names.filter(id => !declared.has(id));
+  assert.deepEqual(missing, [], `showOnly would throw on: ${missing.join(', ')}`);
+});

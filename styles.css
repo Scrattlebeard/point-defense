@@ -310,6 +310,29 @@ button:active { transform: translateY(1px); }
 .bcard.unknown .bq { font-size: 26px; color: var(--dim); }
 .bcard.unknown .blore { font-style: normal; }
 
+/* ---------- Rehearsal weapon picker (app.md "Rehearsal panel") ---------- */
+/* Scrolls from the top like the bestiary: 21 cards never fit a phone, and a
+   vertically-centred grid that overflows hides its first row above the fold. */
+#rehPick { justify-content: flex-start; padding-top: calc(18px + env(safe-area-inset-top)); }
+#rehGrid {
+  display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+  width: 100%; max-width: 860px; margin-top: 10px;
+}
+.pcard {
+  width: 168px; padding: 10px; border-radius: 12px; text-align: left;
+  background: var(--panel); border: 1px solid var(--panel-edge); color: var(--ink);
+  display: flex; flex-direction: column; gap: 6px; align-items: flex-start;
+  font-family: inherit;
+}
+.pcard .phead { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.pcard .picon { display: inline-flex; width: 22px; height: 22px; }
+.pcard .picon svg { width: 100%; height: 100%; }
+.pcard .pname { font-weight: 700; font-size: 13px; letter-spacing: 0.04em; width: 100%; }
+.pcard .pdesc { font-size: 11px; color: var(--dim); line-height: 1.45; }
+/* the current choice is ringed, not merely tinted — on a dark panel a fill change
+   alone is invisible at arm's length, which is where a phone is held */
+.pcard.picked { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 0 14px rgba(77, 232, 255, 0.25); }
+
 /* ---------- Records (high scores + achievements) ---------- */
 #records { justify-content: flex-start; padding-top: calc(18px + env(safe-area-inset-top)); }
 #scoreList {

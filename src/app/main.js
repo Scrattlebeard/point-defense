@@ -56,7 +56,6 @@ resize();
 // Rehearsal cycles (ADR-0018). Waves step in fives after 1 — fine grain is not
 // what a playtester wants; reaching wave 30 in six taps is.
 const REH_WAVES = [1, 5, 10, 15, 20, 25, 30, 40];
-const REH_WEAPONS = [null, ...Object.keys(WEAPONS)];
 
 function startRun() {
   const reh = G.meta.rehearsal || {};
@@ -124,10 +123,12 @@ ui.initUI(G, {
     G.meta = { ...G.meta, rehearsal: { ...r, wave: REH_WAVES[(i + 1) % REH_WAVES.length] } };
     saveMeta(G.meta);
   },
-  onRehearsalWeapon: () => {
+  // a setter, not a cycler: the picker knows which one was tapped. An unknown id
+  // resolves to null (the tower's own loadout) rather than arming a rehearsal on a
+  // weapon that does not exist — same rule newRun applies to ?reh=.
+  onRehearsalWeapon: (id) => {
     const r = G.meta.rehearsal || { wave: 1, weapon: null };
-    const i = REH_WEAPONS.indexOf(r.weapon);
-    G.meta = { ...G.meta, rehearsal: { ...r, weapon: REH_WEAPONS[(i + 1) % REH_WEAPONS.length] } };
+    G.meta = { ...G.meta, rehearsal: { ...r, weapon: WEAPONS[id] ? id : null } };
     saveMeta(G.meta);
   },
   onPause: () => pauseGame(),
@@ -281,6 +282,17 @@ if (location.search.includes('records')) {
   };
   ui.renderRecords(G);
   ui.showOnly('records');
+  G.frozen = true;
+}
+
+// Dev hatch: ?rehpick opens the rehearsal weapon picker. Same reason as ?cards and
+// ?records — it is a tap-gated screen, and a screen no headless shot can reach is a
+// screen that ships unlooked-at. Arms flame first so the ringed "picked" state is
+// in the photograph too, not just the unringed default.
+if (location.search.includes('rehpick')) {
+  G.meta = { ...G.meta, rehearsal: { wave: 1, weapon: 'flame' } };
+  ui.renderRehPick(G);
+  ui.showOnly('rehPick');
   G.frozen = true;
 }
 

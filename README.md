@@ -50,6 +50,9 @@ weapon first; forms are otherwise only reachable by a full run) · `&sparks` ena
 in-battle (menu has them by default — app.md "Grid sparks") · **`?cards`** opens the level-up screen showing one of every card type at once (new
 weapon · upgrade · form · passive) — form cards otherwise need a maxed base weapon and an
 unlocked-but-unworn form, so the markup is hard to reach by playing ·
+**`?rehpick`** opens the **rehearsal weapon picker** (with one armed, so the selected
+state is in shot too) — the panel's weapon button is tap-gated, so this is the only way
+to photograph it ·
 `?pause` opens the pause
 panel on a furnished run · `?over` and `?records` photograph the death payout and the
 high-score/achievement screens (all three are click-gated in play; all are in-memory only and
