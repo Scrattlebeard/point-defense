@@ -63,10 +63,14 @@ test('every node is reachable (any-mode edges honored, no dead branches)', () =>
 // the Salvage income line was RETIRED for breaking Law·No-meta-accel, and its
 // migration story changed from "preserve the purchase" to "refund the shards"
 // (config.js RETIRED_NODES, tech.js refundRetired, pinned by test/economy.test.mjs).
+// NOTE (2026-07-26): 'study1' left the list the same way — the Quick Study xp line
+// was retired by ADR-0015 when in-run XP was removed. Same migration story, same
+// refund path. Calling it out as a LOOSENING: this list is one id shorter, and the
+// refund is what now protects those saves (test/economy.test.mjs).
 test('legacy node ids survive so old saves keep their purchases', () => {
   const ids = new Set(LATTICE.map(n => n.id));
   for (const legacy of ['vit1', 'vit2', 'plate1', 'nano1', 'over1', 'prec', 'haste1',
-    'study1', 'head', 'tesla', 'seek', 'turret',
+    'head', 'tesla', 'seek', 'turret',
     'tower_tempest', 'tower_warden', 'tower_lance']) {
     assert.ok(ids.has(legacy), `legacy id ${legacy} dropped — save migration broken`);
   }

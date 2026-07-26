@@ -5,12 +5,12 @@
 // sides: 0 = circle. Contact with the Point deals dmg and the enemy dies (kamikaze);
 // the boss rams, knocks back, returns.
 export const ENEMIES = {
-  grunt:    { name: 'Circle Grunt',    sides: 0, hp: 16,  spd: 44, r: 12, dmg: 8,  xp: 2,  cost: 1,   minWave: 1,  color: '#ff5c6c', intro: 'slow and direct', lore: 'A circle with commitment issues — it commits to exactly one direction.' },
-  dart:     { name: 'Triangle Dart',     sides: 3, hp: 10,  spd: 96, r: 10, dmg: 6,  xp: 2,  cost: 1.5, minWave: 2,  color: '#ffb84d', intro: 'fast and fragile', lore: 'An acute problem. Arrives fast, leaves faster.' },
-  tank:     { name: 'Square Tank',     sides: 4, hp: 60,  spd: 29, r: 15, dmg: 16, xp: 5,  cost: 3,   minWave: 4,  color: '#c06bff', intro: 'slow, heavily built', lore: 'Four right angles, zero right of way.' },
-  splitter: { name: 'Pentagon Splitter', sides: 5, hp: 43,  spd: 37, r: 14, dmg: 10, xp: 6,  cost: 4,   minWave: 8,  color: '#59ff9c', intro: 'splits when destroyed', lore: 'The whole is worse than the sum of its parts.' },
-  elite:    { name: 'Hexagon Elite',    sides: 6, hp: 138, spd: 33, r: 18, dmg: 20, xp: 12, cost: 8,   minWave: 14, color: '#59d5ff', intro: 'fast, tough, mean', lore: 'Six sides, all of them rude.' },
-  boss:     { name: 'Nonagon Boss',     sides: 9, hp: 500, spd: 24, r: 34, dmg: 26, xp: 80, cost: 0,   minWave: 5,  color: '#ff3df0', intro: '', lore: 'Nonagon nobility. They have names, and they will introduce themselves.' },
+  grunt:    { name: 'Circle Grunt',    sides: 0, hp: 16,  spd: 44, r: 12, dmg: 8,  cost: 1,   minWave: 1,  color: '#ff5c6c', intro: 'slow and direct', lore: 'A circle with commitment issues — it commits to exactly one direction.' },
+  dart:     { name: 'Triangle Dart',     sides: 3, hp: 10,  spd: 96, r: 10, dmg: 6,  cost: 1.5, minWave: 2,  color: '#ffb84d', intro: 'fast and fragile', lore: 'An acute problem. Arrives fast, leaves faster.' },
+  tank:     { name: 'Square Tank',     sides: 4, hp: 60,  spd: 29, r: 15, dmg: 16,  cost: 3,   minWave: 4,  color: '#c06bff', intro: 'slow, heavily built', lore: 'Four right angles, zero right of way.' },
+  splitter: { name: 'Pentagon Splitter', sides: 5, hp: 43,  spd: 37, r: 14, dmg: 10,  cost: 4,   minWave: 8,  color: '#59ff9c', intro: 'splits when destroyed', lore: 'The whole is worse than the sum of its parts.' },
+  elite:    { name: 'Hexagon Elite',    sides: 6, hp: 138, spd: 33, r: 18, dmg: 20, cost: 8,   minWave: 14, color: '#59d5ff', intro: 'fast, tough, mean', lore: 'Six sides, all of them rude.' },
+  boss:     { name: 'Nonagon Boss',     sides: 9, hp: 500, spd: 24, r: 34, dmg: 26, cost: 0,   minWave: 5,  color: '#ff3df0', intro: '', lore: 'Nonagon nobility. They have names, and they will introduce themselves.' },
 };
 
 // Splitter children: 2 darts at 60% hp.
@@ -66,11 +66,11 @@ export const BOSS_MOVES = {
 // percentages compound against a curve they were never sized for — measured, a
 // regen boss on the trash 3%/s was mathematically unkillable.
 export const VARIANTS = {
-  swift:    { name: 'Swift',    highlight: 'glow',    color: '#ffffff', minWave: 7,  spdMult: 1.7, xpMult: 1.3, boss: { spdMult: 1.35 }, desc: '×1.7 speed', lore: 'White-hot and in a hurry.' },
-  armored:  { name: 'Armored',  highlight: 'outline', color: '#b8c4d4', minWave: 11, hpMult: 2.5, xpMult: 1.6, boss: { hpMult: 1.35 }, desc: '×2.5 HP', lore: 'Wears the outline like a promise.' },
-  regen:    { name: 'Regen',    highlight: 'plus',    color: '#4dff88', minWave: 17, xpMult: 1.5, regenPct: 0.03, boss: { regenPct: 0.005 }, desc: 'heals 3% max HP per second', lore: 'Time is on its side.' },
-  shielded: { name: 'Shielded', highlight: 'shield',  color: '#7fd8ff', minWave: 21, xpMult: 1.6, shield: 3, boss: { shield: 12 }, desc: 'blocks the first 3 hits', lore: 'Three polite refusals, then it listens.' },
-  volatile: { name: 'Volatile', highlight: 'core',    color: '#ff8630', minWave: 23, xpMult: 1.4, explode: { r: 70, healPct: 0.3 }, boss: {}, desc: 'bursts on death — heals nearby shapes, harms the Point if close', lore: 'Do not pop it in a crowd. Or near yourself.' },
+  swift:    { name: 'Swift',    highlight: 'glow',    color: '#ffffff', minWave: 7,  spdMult: 1.7, boss: { spdMult: 1.35 }, desc: '×1.7 speed', lore: 'White-hot and in a hurry.' },
+  armored:  { name: 'Armored',  highlight: 'outline', color: '#b8c4d4', minWave: 11, hpMult: 2.5, boss: { hpMult: 1.35 }, desc: '×2.5 HP', lore: 'Wears the outline like a promise.' },
+  regen:    { name: 'Regen',    highlight: 'plus',    color: '#4dff88', minWave: 17, regenPct: 0.03, boss: { regenPct: 0.005 }, desc: 'heals 3% max HP per second', lore: 'Time is on its side.' },
+  shielded: { name: 'Shielded', highlight: 'shield',  color: '#7fd8ff', minWave: 21, shield: 3, boss: { shield: 12 }, desc: 'blocks the first 3 hits', lore: 'Three polite refusals, then it listens.' },
+  volatile: { name: 'Volatile', highlight: 'core',    color: '#ff8630', minWave: 23, explode: { r: 70, healPct: 0.3 }, boss: {}, desc: 'bursts on death — heals nearby shapes, harms the Point if close', lore: 'Do not pop it in a crowd. Or near yourself.' },
 };
 
 // ---------- Weapons ----------
@@ -292,22 +292,22 @@ export const ACHIEVEMENTS = [
 // skip it. Identity = stat profile + starters, within SLOT_BUDGET (test-pinned).
 export const TOWERS = {
   bastion: {
-    name: 'Bastion', color: '#4de8ff', hpMult: 1.0, dmgMult: 1.0, xpMult: 1.0,
+    name: 'Bastion', color: '#4de8ff', hpMult: 1.0, dmgMult: 1.0,
     start: { bolt: 2 },
     blurb: 'The original Point. Sharper bolt, no gimmicks.',
   },
   tempest: {
-    name: 'Tempest', color: '#c06bff', hpMult: 0.8, dmgMult: 1.0, xpMult: 1.1,
+    name: 'Tempest', color: '#c06bff', hpMult: 0.8, dmgMult: 1.0,
     start: { bolt: 1, tesla: 1 },
     blurb: 'Fragile, brilliant. Arrives with a Tesla Coil humming.',
   },
   warden: {
-    name: 'Warden', color: '#ffb84d', hpMult: 1.3, dmgMult: 0.9, xpMult: 1.0,
+    name: 'Warden', color: '#ffb84d', hpMult: 1.3, dmgMult: 0.9,
     start: { bolt: 1, nova: 1 },
     blurb: 'Thick plating and a Nova heartbeat. Let them come.',
   },
   lance: {
-    name: 'Lance', color: '#ff5c6c', hpMult: 0.85, dmgMult: 1.1, xpMult: 1.0,
+    name: 'Lance', color: '#ff5c6c', hpMult: 0.85, dmgMult: 1.1,
     start: { bolt: 1, beam: 1 },
     blurb: 'Glass and fury. Holds the line by holding the screen.',
   },
@@ -334,6 +334,11 @@ export const RETIRED_NODES = {
   // breaking Law·No-meta-accel (nothing purchasable may speed meta-progression) —
   // and Law·Focus, since an income node is an optimiser's no-brainer first buy.
   salv1: 15, salv2: 40, salv3: 100, salv4: 250, goldrush: 600, quartermaster: 250,
+  // The Quick Study xp line: 1105◆ for +70% levelling speed. Retired 2026-07-26
+  // (ADR-0015) with the in-run XP economy itself — measurement showed XP was paying
+  // exactly one level per wave regardless, so these nodes were buying a rate that
+  // could not move. Levels now come from waves.
+  study1: 15, study2: 40, study3: 100, study4: 250, enlighten: 600, scholarsoldier: 100,
 };
 
 export const LATTICE = [
@@ -365,13 +370,8 @@ export const LATTICE = [
   { id: 'annihilator', sector: 'Arms', ring: 5, name: 'Annihilator',   desc: '+15% damage',     cost: 600, req: ['over4'],    effect: { dmgAdd: 0.15 } },
   { id: 'flashstep',  sector: 'Arms', ring: 5, name: 'Flashstep',      desc: '−10% cooldowns',  cost: 600, req: ['haste3'],   effect: { cdAdd: -0.10 } },
   // ---- Mind (experience) ----
-  { id: 'study1',     sector: 'Mind', ring: 1, name: 'Quick Study I',   desc: '+10% XP',        cost: 15,  req: [],           effect: { xpAdd: 0.1 } },
-  { id: 'study2',     sector: 'Mind', ring: 2, name: 'Quick Study II',  desc: '+10% XP',        cost: 40,  req: ['study1'],   effect: { xpAdd: 0.1 } },
-  { id: 'study3',     sector: 'Mind', ring: 3, name: 'Quick Study III', desc: '+10% XP',        cost: 100, req: ['study2'],   effect: { xpAdd: 0.1 } },
-  { id: 'study4',     sector: 'Mind', ring: 4, name: 'Quick Study IV',  desc: '+12% XP',        cost: 250, req: ['study3'],   effect: { xpAdd: 0.12 } },
-  { id: 'head',       sector: 'Mind', ring: 2, name: 'Head Start',      desc: 'Start at level 2 with a free pick', cost: 45,  req: ['study1'], effect: { startLevelAdd: 1 } },
+  { id: 'head',       sector: 'Mind', ring: 2, name: 'Head Start',      desc: 'Start one level higher, with a free pick', cost: 45,  req: [], effect: { startLevelAdd: 1 } },
   { id: 'head2',      sector: 'Mind', ring: 4, name: 'Running Start',   desc: 'Start one level higher again',      cost: 250, req: ['head'],   effect: { startLevelAdd: 1 } },
-  { id: 'enlighten',  sector: 'Mind', ring: 5, name: 'Enlightenment',   desc: '+20% XP',        cost: 600, req: ['study4'],   effect: { xpAdd: 0.2 } },
   // ---- Arsenal (weapon unlocks + munitions) ----
   { id: 'tesla',      sector: 'Arsenal', ring: 1, name: 'Tesla Coil',  desc: 'Adds Tesla Coil to the level-up pool', cost: 25, req: [],        effect: { unlockWeapon: 'tesla' } },
   { id: 'seek',       sector: 'Arsenal', ring: 2, name: 'Seekers',     desc: 'Adds Seekers to the level-up pool',    cost: 45, req: ['tesla'], effect: { unlockWeapon: 'seek' } },
@@ -405,8 +405,7 @@ export const LATTICE = [
   { id: 'towermaster', sector: 'Towers', ring: 5, name: 'Master of Points', desc: '+40 max HP & +5% damage', cost: 600, req: ['tower_lance', 'keel2'], effect: { hpBonus: 40, dmgAdd: 0.05 } },
   // ---- Cross-links (reqMode any — the web strands between sectors) ----
   { id: 'fieldkit',   sector: 'Hull',    ring: 2, name: 'Field Kit',      desc: '+0.3 HP/s regen', cost: 40,  req: ['nano1', 'prec'],           reqMode: 'any', effect: { regen: 0.3 } },
-  { id: 'warchest',   sector: 'Mind',    ring: 3, name: 'War Chest',      desc: '+8% damage',      cost: 100, req: ['mortar', 'study2'],        reqMode: 'any', effect: { dmgAdd: 0.08 } },
-  { id: 'scholarsoldier', sector: 'Mind', ring: 3, name: 'Scholar-Soldier', desc: '+8% XP',        cost: 100, req: ['study2', 'over2'],         reqMode: 'any', effect: { xpAdd: 0.08 } },
+  { id: 'warchest',   sector: 'Mind',    ring: 3, name: 'War Chest',      desc: '+8% damage',      cost: 100, req: ['mortar'],                                  effect: { dmgAdd: 0.08 } },
   { id: 'overseer',   sector: 'Towers',  ring: 3, name: 'Overseer',       desc: '−4% cooldowns',   cost: 100, req: ['ballistics', 'tower_tempest'], reqMode: 'any', effect: { cdAdd: -0.04 } },
   { id: 'reinforcedgrid', sector: 'Hull', ring: 4, name: 'Reinforced Grid', desc: '+25 max HP',    cost: 250, req: ['vit3', 'over3'],           reqMode: 'any', effect: { hpBonus: 25 } },
 ];

@@ -27,12 +27,13 @@ test('spawnInterval bounded and non-increasing', () => {
   }
 });
 
-test('xpForLevel is a positive-integer increasing curve', () => {
-  for (let l = 1; l < 60; l++) {
-    const x = B.xpForLevel(l);
-    assert.ok(Number.isInteger(x) && x > 0);
-    assert.ok(B.xpForLevel(l + 1) > x);
-  }
+// DELETED 2026-07-26 (ADR-0015): 'xpForLevel is a positive-integer increasing
+// curve'. The curve is gone — levels are granted per wave cleared, not bought with
+// XP. Flagged as a LOOSENING (a case removed, not weakened); the replacement
+// guarantee lives in test/state.test.mjs, which pins the exact level at every wave.
+test('the opening draft is a small positive number of levels', () => {
+  assert.ok(Number.isInteger(B.OPENING_LEVELS) && B.OPENING_LEVELS >= 1);
+  assert.ok(B.OPENING_LEVELS <= 5, 'an opening draft bigger than the hand is a menu, not a choice');
 });
 
 test('the hp-bar gate stays meaningful as the HP curve climbs', () => {

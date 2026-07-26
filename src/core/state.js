@@ -1,8 +1,8 @@
-// Run-state math: creation, XP/leveling, level-up choices, payout.
+// Run-state math: creation, level grants (ADR-0015), level-up choices, payout.
 // The shell mutates entity arrays inside S during play; the *rules* stay here.
 import { TOWERS, WEAPONS, GENERICS, FORMS, ACHIEVEMENTS, SLOT_BUDGET } from './config.js';
 import { effectsOf } from './tech.js';
-import { xpForLevel, shardPayout } from './balance.js';
+import { OPENING_LEVELS, LEVELS_PER_WAVE, shardPayout } from './balance.js';
 
 export function defaultMeta() {
   return {
@@ -42,14 +42,13 @@ export function newRun(meta, towerId) {
     towerId, maxHp, hp: maxHp,
     regen: fx.regen,
     dmgMult: fx.dmgMult * tower.dmgMult,
-    xpMult: fx.xpMult * (tower.xpMult || 1),
     cdMult: fx.cdMult,
     critChance: fx.critChance, critMult: fx.critMult,
     dmgTakenMult: fx.dmgTakenMult,
     weapons, pool, generics,
     // forms (core.md "Forms"): what the account unlocked, and what is active
     formPool: new Set(fx.forms), forms: {},
-    lvl: 1, xp: 0, xpNext: xpForLevel(1), pendingLevels: 0,
+    lvl: 1, pendingLevels: 0,
     wave: 0, kills: 0, bossKills: 0, time: 0,
     // damage attributed to its source (core.md Run state); 'other' is explicit
     dmgBy: {},
@@ -64,9 +63,11 @@ export function newRun(meta, towerId) {
     boomers: [], blades: [], fires: [], boulders: [], caltrops: [], sparks: [],
     heat: 0, overheated: false,
   };
-  for (let i = 1; i < fx.startLevel; i++) {
-    S.lvl++; S.pendingLevels++; S.xpNext = xpForLevel(S.lvl);
-  }
+  // The opening draft, plus whatever Head Start stacks on top (ADR-0015). The
+  // first level is free — you ARE level 1 — so the run banks one pick fewer than
+  // the level it starts at.
+  S.lvl = OPENING_LEVELS + (fx.startLevel - 1);
+  S.pendingLevels = S.lvl - 1;
   return S;
 }
 
@@ -75,17 +76,13 @@ export function newRun(meta, towerId) {
  *  signal business rather than the death business. */
 export const LEVELUP_HEAL = 0.10;
 
-/** Applies xp multipliers, consumes thresholds. Returns levels gained (also queued on S.pendingLevels). */
-export function addXp(S, amount) {
-  S.xp += amount * S.xpMult;
-  let n = 0;
-  while (S.xp >= S.xpNext) {
-    S.xp -= S.xpNext;
-    S.lvl++; n++;
-    S.xpNext = xpForLevel(S.lvl);
-  }
+/** Grant n levels: queue their picks and pay their heals. The only way a run gains
+ *  a level (ADR-0015) — nothing the player does in a fight moves this. */
+export function grantLevels(S, n) {
+  if (n <= 0) return 0;
+  S.lvl += n;
   S.pendingLevels += n;
-  if (n > 0) S.hp = Math.min(S.maxHp, S.hp + n * LEVELUP_HEAL * S.maxHp);
+  S.hp = Math.min(S.maxHp, S.hp + n * LEVELUP_HEAL * S.maxHp);
   return n;
 }
 
@@ -171,9 +168,12 @@ export function loadout(S) {
   return rows;
 }
 
-/** Wave-clear breather: heal 4% max hp. */
+/** Wave-clear breather: heal 4% max hp, and pay the wave's level (ADR-0015). This
+ *  is the game's only level source after the opening draft — called once per cleared
+ *  wave, with S.wave still the wave that was just cleared. */
 export function waveCleared(S) {
   S.hp = Math.min(S.maxHp, S.hp + 0.04 * S.maxHp);
+  grantLevels(S, LEVELS_PER_WAVE);
 }
 
 /** Death → shards. Returns {meta, earned}; input meta is not mutated. */

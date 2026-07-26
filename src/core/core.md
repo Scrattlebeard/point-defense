@@ -21,7 +21,7 @@ prereqs enforced), not exact constants, so tuning stays cheap.
 | `waves.js` | `composeWave(waveNum, rng)` → spawn plan |
 | `gestures.js` | Pointer-trace classification → `tap` / `swipe` / `hold` |
 | `tech.js` | Tech tree queries: `canBuy`, `buy`, `effectsOf(owned)` |
-| `state.js` | `newRun(meta, towerId)`, XP/leveling, level-up choice generation, shard payout |
+| `state.js` | `newRun(meta, towerId)`, level grants (run start + per wave cleared), level-up choice generation, shard payout |
 
 ## Balance formulas (`balance.js`)
 
@@ -42,17 +42,20 @@ prereqs enforced), not exact constants, so tuning stays cheap.
   down to 0.004, converging with the original 2026-07-23 curve ≈ wave 45. The notch
   was largely spent *holding the band against nova's second range buff* — nova at
   L1-radius 210 with no enemy change sent the bot median to 17. First attempt put
-  the notch in `waveBudget` and made runs LONGER (median 17) — bodies are XP; the
+  the notch in `waveBudget` and made runs LONGER (median 17) — at the time, bodies were XP; the
   budget-as-difficulty mistake is now twice-confirmed, durability is the only
-  early-difficulty lever that doesn't feed the player. Result: median 10, range
+  early-difficulty lever that doesn't feed the player. *(Since ADR-0015 removed XP,
+  chaff volume feeds the player nothing at all — the finding stands, but it now rests
+  only on its other leg: bigger budgets lengthen waves without deepening them.)* Result: median 10, range
   5–20; no-nova runs eat the full ~+20% early HP. **Round 5 ("MOAR early enemy
   hp!!", same day):** linear 0.34→0.46→**0.58**, quad 0.003 — pure HP notch, no
   offsetting buffs. 16-trial spike: median 9, range 4–20, and the shape shifted —
   ~45% of fresh runs now end at the *first* boss (lvl 6–8, ~3 min), most of the
   rest at the wave-10 noble. The first shop visit is nearly guaranteed inside
   Daniel's 5–10-level onboarding band. Durability was the
-  lever because volume feeds back: more bodies = more XP, and the player scales with
-  the wave; tried first, moved the median barely. Contact damage stays untouched.
+  lever because volume fed back: more bodies = more XP, and the player scaled with
+  the wave (true until ADR-0015; volume now feeds nothing); tried first, moved the
+  median barely. Contact damage stays untouched.
   **Round 7 (2026-07-25, paying for the composition change):** linear 0.58→**0.70**.
   Cost-weighted composition ("Wave composition") deliberately makes early waves
   chaff-heavy — at wave 5 the mix went from 33/34/32 grunt/dart/tank to 50/33/17,
@@ -74,7 +77,10 @@ prereqs enforced), not exact constants, so tuning stays cheap.
 - `mixTilt(w) = clamp(0.55·(w−14)/40, 0, 0.55)` — the composition tilt (Enemies
   → "Wave composition"): 0 until the elite debut at wave 14, reaching 0.55 at wave
   54. Species budget share ∝ `cost^mixTilt`, pick weight ∝ `cost^(mixTilt−1)`.
-- `xpForLevel(l) = round(10 + 8(l−1) + 1.2(l−1)²)` — XP needed to go from level l to l+1.
+- **Levels come from waves, not kills** (ADR-0015): three at run start, then one per
+  wave cleared. There is no XP curve — the old one is gone, and the measurement that
+  killed it showed it had been paying exactly 1.00 levels/wave (min = max, 40 runs) at
+  every depth anyway.
 - `stackChance(w) = w < 40 ? 0 : clamp(0.12 + 0.012(w−40), 0, 0.55)` — the chance a
   variant-bearing spawn gains *another* variant, rolled repeatedly to a cap of 3
   (Variants → "Stacking"). At wave 60 roughly an eighth of all spawns carry two or
@@ -182,7 +188,8 @@ wall ("shapes in contact attack it"). Knockback still applies, so CC can shove a
 besieger off the rim; it walks back in. The boss keeps its own melee identity:
 ram, self-knockback, come again. *(Reworked 2026-07-24 from v1 kamikaze — contact
 killed the attacker, uncelebrated. Consequences of the rework are deliberate:
-every shape now dies by player hand, so every shape pays XP; splitters split and
+every shape now dies by player hand, so nothing leaves the field uncontested;
+splitters split and
 volatiles burst even at the rim — a volatile reaching the Point is a standing
 threat, not a free trade.)*
 
@@ -201,14 +208,14 @@ widescreen top/bottom ambush, reported same day). Split/volatile children (expli
 spawn position) are unscaled — they were born inside, not at the gate. Variant speed
 multipliers (swift ×1.7) stack on top: a swift is still a swift *relative to its lane*.
 
-| id | shape | hp | speed | radius | dmg | xp | cost | from wave | color |
-|----|-------|----|-------|--------|-----|----|------|-----------|-------|
-| grunt | circle | 16 | 44 | 12 | 8 | 2 | 1 | 1 | red |
-| dart | triangle | 10 | 96 | 10 | 6 | 2 | 1.5 | 2 | amber |
-| tank | square | 60 | 29 | 15 | 16 | 5 | 3 | 4 | violet |
-| splitter | pentagon | 43 | 37 | 14 | 10 | 6 | 4 | 8 | green — splits into 2 darts (60% dart hp) on death |
-| elite | hexagon | 138 | 33 | 18 | 20 | 12 | 8 | 14 | blue |
-| boss | nonagon | `bossHp(w)` | 24 | 34 | 26 | 80 | — | every 5th wave | magenta |
+| id | shape | hp | speed | radius | dmg | cost | from wave | color |
+|----|-------|----|-------|--------|-----|------|-----------|-------|
+| grunt | circle | 16 | 44 | 12 | 8 | 1 | 1 | red |
+| dart | triangle | 10 | 96 | 10 | 6 | 1.5 | 2 | amber |
+| tank | square | 60 | 29 | 15 | 16 | 3 | 4 | violet |
+| splitter | pentagon | 43 | 37 | 14 | 10 | 4 | 8 | green — splits into 2 darts (60% dart hp) on death |
+| elite | hexagon | 138 | 33 | 18 | 20 | 8 | 14 | blue |
+| boss | nonagon | `bossHp(w)` | 24 | 34 | 26 | — | every 5th wave | magenta |
 
 *(Balance round 6, 2026-07-24: ~+10% base hp and speed across every species —
 human play after round 5 still outran the pressure; base stats moved rather than
@@ -321,13 +328,13 @@ fill-encodes-allegiance law holds: the volatile core stays the only filled thing
 any enemy.)*
 Shape encodes species; highlight encodes the variation (pillar 3).
 
-| id | visual highlight | effect | xp mult | from wave |
-|----|------------------|--------|---------|-----------|
-| swift | white-hot glow outline | speed ×1.7 | 1.3 | 7 |
-| armored | thick steel outline | hp ×2.5 | 1.6 | 11 |
-| regen | pulsating green plus inside the shape | heals 3% max hp / s | 1.5 | 17 |
-| shielded | rotating ring segments | absorbs first 3 damage instances (ring depletes visibly) | 1.6 | 21 |
-| volatile | pulsing orange core | on death: burst r=70 — **heals nearby shapes 30% of their max hp** and damages the Point if in range (reworked 2026-07-23: friendly fire made popping them a free win; a medic-bomb makes target priority a real decision) | 1.4 | 23 |
+| id | visual highlight | effect | from wave |
+|----|------------------|--------|-----------|
+| swift | white-hot glow outline | speed ×1.7 | 7 |
+| armored | thick steel outline | hp ×2.5 | 11 |
+| regen | pulsating green plus inside the shape | heals 3% max hp / s | 17 |
+| shielded | rotating ring segments | absorbs first 3 damage instances (ring depletes visibly) | 21 |
+| volatile | pulsing orange core | on death: burst r=70 — **heals nearby shapes 30% of their max hp** and damages the Point if in range (reworked 2026-07-23: friendly fire made popping them a free win; a medic-bomb makes target priority a real decision) | 23 |
 
 Roll (`waves.js: rollVariants` → an array, possibly empty): from wave 6, each
 non-boss spawn has `min(0.35, 0.015*(w−5))` chance of a first variant chosen
@@ -342,8 +349,9 @@ more legible than two. The cap is three because GDD §5 pictures exactly that �
 *"three modifiers read as three channels lit on one silhouette"* — and because it
 bounds the legibility problem to something verifiable rather than open-ended.
 
-- **Stats compose multiplicatively** (hp, speed, xp): an armored swift is ×2.5 hp
-  *and* ×1.7 speed and pays ×1.3·×1.6 xp. Compounding is the point — GDD §5's content
+- **Stats compose multiplicatively** (hp, speed): an armored swift is ×2.5 hp
+  *and* ×1.7 speed. *(Variants also carried an xp multiplier until ADR-0015 removed
+  in-run XP; "scarier shapes pay better" is a lever we no longer have.)* Compounding is the point — GDD §5's content
   doctrine is that the game gets crueler by mixing known ingredients, not by adding
   new ones. Flags (shield charges, regen %, the volatile burst) take the strongest
   present rather than summing, since only one variant of each kind can be in a stack.
@@ -716,12 +724,12 @@ tower may open with a different gun, or with no gun at all (ADR-0007; the curren
 four all happen to start bolt). Identity = stat profile + starting loadout, which
 must respect the slot budget (test-pinned).
 
-| id | name | unlock | hp | dmg | xp | starts with |
-|----|------|--------|----|----|----|-------------|
-| bastion | Bastion | free | 100 | ×1.0 | ×1.0 | bolt L2 |
-| tempest | Tempest | tech | 80 | ×1.0 | ×1.1 | bolt L1 + tesla L1 (tesla need not be pool-unlocked — the tower *is* the unlock; it may be upgraded in-run regardless) |
-| warden | Warden | tech | 130 | ×0.9 | ×1.0 | bolt L1 + nova L1 |
-| lance | Lance | tech | 85 | ×1.1 | ×1.0 | bolt L1 + beam L1 |
+| id | name | unlock | hp | dmg | starts with |
+|----|------|--------|----|----|-------------|
+| bastion | Bastion | free | 100 | ×1.0 | bolt L2 |
+| tempest | Tempest | tech | 80 | ×1.0 | bolt L1 + tesla L1 (tesla need not be pool-unlocked — the tower *is* the unlock; it may be upgraded in-run regardless) |
+| warden | Warden | tech | 130 | ×0.9 | bolt L1 + nova L1 |
+| lance | Lance | tech | 85 | ×1.1 | bolt L1 + beam L1 |
 
 ## The Lattice (`config.js: LATTICE`, logic in `tech.js`) — ADR-0003 stage 1
 
@@ -747,9 +755,10 @@ carry a `salvageAdd` effect — nothing purchasable may speed up meta-progressio
 Two laws convicted it: the ratified rule, and the focus law, since an income node is
 an optimiser's no-brainer first buy and therefore never a real choice. Retiring it
 also removed the distortion behind the cost-curve claim: with salvage bought first
-the whole lattice cost ~25 runs; without the line it is ~47. `xpAdd` nodes stay
-legal — in-run levelling speed is game power, not meta speed, which the law's own
-parenthetical allows.)*
+the whole lattice cost ~25 runs; without the line it is ~47. The `xpAdd` nodes were held legal under the same law — in-run
+levelling speed is game power, not meta speed — until **ADR-0015 removed in-run XP
+entirely on 2026-07-26**, retiring `study1..4`, `enlighten` and `scholarsoldier`
+(1105◆, refunded) and striking the law's carve-out with them.)*
 
 **Retired nodes refund on load** (`config.js: RETIRED_NODES`, `tech.js:
 refundRetired`): a save holding a retired id gets its shards back and the id
@@ -774,7 +783,7 @@ Nodes: `{id, sector, ring, name, desc, cost, req: [nodeIds], reqMode?, effect}`.
 makes a node a web cross-link** — satisfied by ANY listed prereq (default: all);
 cross-links sit at sector borders and let hybrid builds route sideways instead of
 grinding a second trunk. Effects aggregate in `effectsOf(owned)`: additive within a
-stat (`hpBonus`, `dmgMult`, `xpMult`, `regen`, `dmgTakenMult`, `cdMult`,
+stat (`hpBonus`, `dmgMult`, `regen`, `dmgTakenMult`, `cdMult`,
 `critChance`, `salvageMult`, `startLevel`), plus set-valued `unlockWeapons` /
 `unlockTowers` — stage 1 adds **no new effect keys**; depth comes from chains and
 costs, which is exactly what keeps the sim untouched by the lattice.
@@ -788,7 +797,7 @@ schema version lands with stage 2's nested fields — recorded in ADR-0003).
 |--------|--------------------|
 | Hull | Vitality I/II/III (+20 hp; 15/30/60, chained) · Plating I/II (−8% dmg taken; 40/80, req Vitality I then chained) · Nanites I/II (+0.5 hp/s; 35/70, req Vitality I then chained) |
 | Arms | Overcharge I/II/III (+8% dmg; 15/30/60, chained) · Precision (10% crit ×2; 50, req Overcharge II) · Haste I/II (−6% cooldowns; 40/80, req Overcharge I then chained) |
-| Mind | Quick Study I/II (+10% xp; 15/35, chained) · Head Start (start at level 2 with a free pick; 45, req Quick Study I) · Salvage I/II (+20% shards; 30/60, req Quick Study I then chained) |
+| Mind | Head Start (one level higher, with a free pick; 45) · Running Start (again; 250) · War Chest (+8% damage; 100) — *thinned twice: the Salvage income line retired 2026-07-25, the Quick Study xp line retired 2026-07-26 (ADR-0015). Mind now has no ring-1 node and is a candidate for a re-theme.* |
 | Arsenal | Unlock Tesla (25) → Unlock Seekers (45) → Unlock Turrets (70) — chained; Mines → Caltrops (r2) → Catapult (r3, any-req with Mortar) → Cascade (r4) — the field-ordnance trunk (ADR-0004 wave C) |
 | Armory | Two entries: Scattergun (r1) → Repeater → Howitzer gun trunk + Boomerang branch; Force Blades (r1) → Flamethrower → Meteor close-quarters trunk → Siegecraft (r4 stats) → Master-at-Arms capstone (r5, any-req from either trunk); Ballistics cross-links to Arsenal (Munitions) |
 | Towers | Tempest (40) → Warden (75) → Lance (120) — chained |
@@ -873,18 +882,25 @@ One hold at a time; concurrent other pointers still resolve as taps/swipes
 
 `newRun(meta, towerId)` folds tech effects + tower profile into starting stats:
 `maxHp = (100 + hpBonus) * tower.hpMult`, `dmgMult = (1 + dmgMults) * tower.dmgMult`,
-etc. XP: `addXp` applies xp multipliers, consumes `xpForLevel` thresholds, and returns
-the number of level-ups gained (the shell opens one choice screen per pending level).
-**Every level-up heals 10% max HP** (`LEVELUP_HEAL`, applied in `addXp` per level
-gained, so banked levels each pay). This is GDD §7's third half of a level-up — three
+etc. **Levels are granted by the wave director, not earned by kills** (ADR-0015):
+`newRun` banks three at run start and `waveCleared` grants one per wave, each queued on
+`S.pendingLevels` so the shell opens one choice screen per pending level.
+**Every level-up heals 10% max HP** (`LEVELUP_HEAL`, applied per level granted,
+so banked levels each pay). This is GDD §7's third half of a level-up — three
 cards *and* a heal — and GDD §2 names it as the mechanism that keeps chip damage "in
 the signal business and out of the death business": a single leaker taking a bite is
 information, not attrition, only if the bite is recoverable. *(Added 2026-07-25; it
 had never existed. Measured before, 12 fresh runs: median **40s of bleeding of which
 only 6s was the actual drowning** — 85% invoicing, with individual runs at 292s bleed
-/ 6s drowning (98%). Law·Death-shape outlaws exactly that shape.)* The heal scales
-with the xp curve rather than the wave clock, which is deliberate: GDD §7's doom clock
-wants heals to *rarify* as levels stretch and pressure peaks.
+/ 6s drowning (98%). Law·Death-shape outlaws exactly that shape.)* GDD §7's doom clock wants heals to
+*rarify* as pressure peaks, and core.md long claimed the xp curve delivered that. **It
+did not** (ADR-0015): the curve stretched, but so did the XP a wave paid, and the two
+cancelled to a flat 1.00 levels per wave at every depth. The rarification that *does*
+happen is carried by the **wave clock** — measured seconds-per-wave rise from ~35s
+around wave 4 to ~41s by wave 15, so heals thin by roughly 17% over eleven waves.
+Granting levels per wave therefore preserves the doom clock exactly as it really
+operates and removes only a false account of why. A doom clock with teeth would have to
+be built deliberately; it is pinned, not assumed.
 
 **Control is measured in seconds, not damage** (`S.slowBy`, a `sourceId → seconds`
 map). GDD section 4 judges the control weapons by *"seconds purchased and setups

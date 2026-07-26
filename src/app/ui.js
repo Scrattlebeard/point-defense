@@ -157,7 +157,7 @@ export function renderBestiary(G) {
   for (const [id, e] of Object.entries(ENEMIES)) {
     const known = seen.enemies.includes(id);
     grid.appendChild(bestiaryCard(known, [e.sides, e.color, null], e.name,
-      `HP ${e.hp} · SPD ${e.spd} · DMG ${e.dmg} · XP ${e.xp}`, e.lore, e.color));
+      `HP ${e.hp} · SPD ${e.spd} · DMG ${e.dmg}`, e.lore, e.color));
   }
   const hv = document.createElement('h3'); hv.textContent = 'VARIANTS'; grid.appendChild(hv);
   for (const [id, v] of Object.entries(VARIANTS)) {
@@ -386,10 +386,17 @@ export function updateHUD(G) {
   if (!S) return;
   if (!G.hudCache) G.hudCache = {};
   const c = G.hudCache;
-  const xpPct = Math.round((S.xp / S.xpNext) * 100);
-  if (c.xp !== xpPct) { $('xpfill').style.width = xpPct + '%'; c.xp = xpPct; }
-  const hot = xpPct >= 85; // near-full glow (app.md "XP bar prominence")
-  if (c.hot !== hot) { $('xpbar').classList.toggle('hot', hot); c.hot = hot; }
+  // Wave progress, which since ADR-0015 is also progress toward the next level:
+  // bodies dealt with, out of the wave's planned total. Splitter children can push
+  // `alive` past the plan, hence the clamp. Between waves the bar reads full.
+  const wd = G.wd;
+  const planned = wd && wd.plan ? wd.plan.spawns.length : 0;
+  const left = planned ? (wd.plan.spawns.length - wd.idx) + S.enemies.length : 0;
+  const pct = !planned || wd.phase === 'inter' ? 100
+    : Math.round(100 * Math.max(0, Math.min(1, 1 - left / planned)));
+  if (c.wavePct !== pct) { $('wavefill').style.width = pct + '%'; c.wavePct = pct; }
+  const hot = pct >= 85; // near-full glow (app.md "Wave bar prominence")
+  if (c.hot !== hot) { $('wavebar').classList.toggle('hot', hot); c.hot = hot; }
   if (c.wave !== S.wave) { $('waveTxt').textContent = 'Wave ' + S.wave; c.wave = S.wave; }
   if (c.lvl !== S.lvl) { $('lvlTxt').textContent = 'Lv ' + S.lvl; c.lvl = S.lvl; }
   // weapons bar: rebuild only on loadout change (app.md "Loadout visibility")

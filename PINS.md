@@ -29,6 +29,51 @@
 
 Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short version: written immediately when they surface, self-contained enough to be picked up cold, candidates not commitments, deleted on resolution (git history is the archive).
 
+## The two-track progression split (Daniel's idea, parked with the passives)
+- **What:** wave completion grants a **weapon upgrade**; a revived experience track grants
+  **passive boosts**. Two currencies buying two different *kinds* of thing.
+- **Why it's the best idea on the table:** it is the only proposal that gives XP a job it
+  can't be replaced at. ADR-0015 removed in-run XP precisely because it was a costume for
+  wave progress — under this split it stops being one, because the two tracks pay out in
+  non-substitutable currencies and can legitimately run at different rates.
+- **Why not now (his own objection, 2026-07-26):** *"probably too clever too, especially
+  since we don't have many interesting passives yet."* The passive pool is a handful of stat
+  bumps, so the XP track would unlock almost nothing — structure without content. Build the
+  passives first; the split is worth nothing until there is something worth drafting.
+- **Where:** `src/core/state.js` `waveCleared` / `grantLevels` (ADR-0015 isolated the grant
+  in one function, so a second track is a small change, not a rewrite), `src/core/config.js`
+  (the passive pool), `adr/0015` Alternatives §1.
+- **Prerequisite, and it is the real work:** enough interesting passives to fill a draft.
+  That is a content problem, not a systems one.
+
+## Tempest lost its edge and got nothing back
+- **What:** Tempest carried `xpMult: 1.1` — 10% faster levelling — as its "fragile,
+  brilliant" differentiator. ADR-0015 removed in-run XP and the multiplier died with it.
+  Tempest is now just 80 HP with a free Tesla.
+- **Why it matters:** it is a *tech-unlocked* tower, so a player spends shards to unlock a
+  tower whose identity is now "the squishy one". That is a downgrade someone paid for.
+- **Options, none costed yet:** a `startLevelAdd` (discrete, reuses Head Start's machinery,
+  but a one-off jump is a poor stand-in for a rate); a faster wave-clear grant on some
+  cadence; or lean the other way and give it something that isn't progression at all —
+  cooldown, crit, or a second free auto.
+- **Deliberately not reinvented inside ADR-0015:** that change was a removal, and bundling
+  an unratified tower buff into it is the "decide it in code" move ADR-0013 exists to reject.
+- **Where:** `src/core/config.js` TOWERS (tempest), `src/core/core.md` tower table,
+  `adr/0015` Consequences.
+
+## Mind has no ring-1 node and may want a re-theme
+- **What:** the Mind sector has now been thinned twice — the Salvage income line retired
+  2026-07-25, the Quick Study xp line 2026-07-26 (ADR-0015). It is down to three nodes
+  (Head Start, Running Start, War Chest) and its ring-1 slot is empty, so its lane in the
+  lattice view starts at ring 2 and reads sparse.
+- **Why it's worth doing:** nothing asserts against an empty ring (checked), so this is
+  cosmetic *today* — but a sector whose theme was "learn faster" has lost the thing it was
+  about. Either give it a new theme with a ring-1 root, or fold its three survivors into
+  Hull/Arms and drop the sector (the Salvage precedent was to delete a sector once it fell
+  to one node; three is above that line, so this is a judgement call, not a rule).
+- **Where:** `src/core/config.js` LATTICE + `SECTORS`, `src/core/core.md` branch table,
+  `src/app/lattice.js` (layout is data-driven — no code change needed), ADR-0005.
+
 ## Bolt capstone — two things to feel for next playtest
 - **What:** ADR-0014 moved the auto stream from L3 to L6. Both open questions are playtest
   questions, not spreadsheet ones — deliberately not tuned further (Daniel, 2026-07-26:

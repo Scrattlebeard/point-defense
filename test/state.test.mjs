@@ -1,18 +1,54 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { defaultMeta, newRun, addXp, levelChoices, applyChoice, payout, addScore, evalAchievements } from '../src/core/state.js';
-import { xpForLevel } from '../src/core/balance.js';
+import { defaultMeta, newRun, grantLevels, waveCleared, levelChoices, applyChoice, payout, addScore, evalAchievements } from '../src/core/state.js';
+import { OPENING_LEVELS } from '../src/core/balance.js';
 import { WEAPONS, LATTICE } from '../src/core/config.js';
 import { mulberry32 } from '../src/core/rng.js';
 
-test('bastion baseline: 100 hp, bolt L2, level 1', () => {
+test('bastion baseline: 100 hp, bolt L2, and the opening draft is banked', () => {
   const S = newRun(defaultMeta(), 'bastion');
   assert.equal(S.maxHp, 100);
   assert.equal(S.hp, 100);
   assert.equal(S.weapons.bolt, 2);
-  assert.equal(S.lvl, 1);
-  assert.equal(S.xpNext, xpForLevel(1));
-  assert.equal(S.pendingLevels, 0);
+  // ADR-0015: levels come from waves, and the run opens with a draft rather than
+  // grinding the first three out of wave 1's grunts.
+  assert.equal(S.lvl, OPENING_LEVELS);
+  assert.equal(S.pendingLevels, OPENING_LEVELS - 1, 'the opening picks are banked');
+});
+
+// The whole point of ADR-0015: the grant schedule is a function of the wave and
+// nothing else. No kill, leak, or build can move it.
+test('levels come from waves: one per clear, and the curve is level = wave + 2', () => {
+  const S = newRun(defaultMeta(), 'bastion');
+  for (let w = 1; w <= 12; w++) {
+    S.wave = w;
+    waveCleared(S);
+    assert.equal(S.lvl, OPENING_LEVELS + w, `after clearing wave ${w}`);
+  }
+});
+
+// The ADR's headline promise, in literals rather than in terms of the constants —
+// otherwise the assertions are tautologies that pass for ANY value (they did: setting
+// OPENING_LEVELS to 1 left the suite green until this test existed). These numbers are
+// the curve the DELETED xp economy was measured to deliver: level at the start of
+// wave N was N+2 across 40 runs, and it still is.
+test('the wave grant reproduces the measured pre-ADR-0015 curve exactly', () => {
+  const S = newRun(defaultMeta(), 'bastion');
+  assert.equal(S.lvl, 3, 'a fresh run opens at level 3 with 2 picks banked');
+  const seen = [];
+  for (let w = 1; w <= 8; w++) { S.wave = w; waveCleared(S); seen.push(S.lvl); }
+  // level at the START of wave N+1 == level after clearing wave N == N + 3... but the
+  // run is level 3 before wave 1 spawns, so at the start of wave N the player is N+2.
+  assert.deepEqual(seen, [4, 5, 6, 7, 8, 9, 10, 11]);
+});
+
+test('a wave pays the same level whether you killed everything or barely survived', () => {
+  const clean = newRun(defaultMeta(), 'bastion');
+  const mauled = newRun(defaultMeta(), 'bastion');
+  mauled.hp = 1; mauled.kills = 0;
+  clean.kills = 500;
+  for (const S of [clean, mauled]) { S.wave = 4; waveCleared(S); }
+  assert.equal(clean.lvl, mauled.lvl, 'the level grant must not depend on performance');
 });
 
 test('tower profiles apply: warden is tanky and starts nova, lance starts beam', () => {
@@ -30,8 +66,8 @@ test('tech effects fold into the run', () => {
   const S = newRun(meta, 'bastion');
   assert.equal(S.maxHp, 120);
   assert.ok(Math.abs(S.dmgMult - 1.08) < 1e-9);
-  assert.equal(S.lvl, 2);
-  assert.equal(S.pendingLevels, 1, 'head start grants a free pick');
+  assert.equal(S.lvl, OPENING_LEVELS + 1, 'head start stacks on the opening draft');
+  assert.equal(S.pendingLevels, OPENING_LEVELS, 'head start grants a free pick');
 });
 
 test('every level-up heals: chip damage is recoverable (GDD §2/§7)', () => {
@@ -41,8 +77,9 @@ test('every level-up heals: chip damage is recoverable (GDD §2/§7)', () => {
   const S = newRun(defaultMeta(), 'bastion');
   S.hp = S.maxHp * 0.5;
   const before = S.hp;
-  addXp(S, xpForLevel(1));
-  assert.equal(S.lvl, 2, 'setup: one level gained');
+  const lvl0 = S.lvl;
+  grantLevels(S, 1);
+  assert.equal(S.lvl, lvl0 + 1, 'setup: one level gained');
   assert.ok(S.hp > before, 'a level-up must heal');
   assert.ok(Math.abs(S.hp - (before + 0.10 * S.maxHp)) < 0.01, '10% of max hp per level');
 });
@@ -51,32 +88,23 @@ test('banked levels each pay their heal, and healing never overshoots max', () =
   const S = newRun(defaultMeta(), 'bastion');
   S.hp = S.maxHp * 0.2;
   const before = S.hp;
-  addXp(S, xpForLevel(1) + xpForLevel(2) + xpForLevel(3)); // three at once
-  assert.ok(S.lvl >= 4, `setup: expected 3+ levels, got ${S.lvl}`);
+  const lvl0 = S.lvl;
+  grantLevels(S, 3); // three at once
+  assert.equal(S.lvl, lvl0 + 3, `setup: expected 3 levels, got ${S.lvl - lvl0}`);
   assert.ok(S.hp > before + 0.25 * S.maxHp, 'three banked levels should pay three heals');
   const S2 = newRun(defaultMeta(), 'bastion');
   S2.hp = S2.maxHp; // already full
-  addXp(S2, xpForLevel(1));
+  grantLevels(S2, 1);
   assert.equal(S2.hp, S2.maxHp, 'heal must not overshoot max hp');
 });
 
-test('addXp levels up across thresholds and reports the count', () => {
-  const S = newRun(defaultMeta(), 'bastion');
-  const need = xpForLevel(1);
-  assert.equal(addXp(S, need - 1), 0);
-  assert.equal(addXp(S, 1), 1);
-  assert.equal(S.lvl, 2);
-  const burst = xpForLevel(2) + xpForLevel(3);
-  assert.equal(addXp(S, burst), 2);
-  assert.equal(S.lvl, 4);
-});
-
-test('xp multiplier from tech applies', () => {
-  const meta = { ...defaultMeta(), tech: ['study1'] };
-  const S = newRun(meta, 'bastion');
-  addXp(S, xpForLevel(1) / 1.1 + 0.01);
-  assert.equal(S.lvl, 2);
-});
+// DELETED 2026-07-26 (ADR-0015), both purely about the removed XP economy:
+//   'addXp levels up across thresholds and reports the count' — addXp is gone.
+//   'xp multiplier from tech applies' — S.xpMult and the study1 node are gone.
+// Called out as a LOOSENING per CLAUDE.md "Review protocol": two cases deleted,
+// not weakened. What they protected (levels arrive, and arrive in the right
+// number) is now pinned harder by the two wave-grant tests above, which assert
+// the exact level at every wave rather than thresholds crossing.
 
 test('levelChoices: three distinct options, tech-locked weapons excluded', () => {
   const S = newRun(defaultMeta(), 'bastion');

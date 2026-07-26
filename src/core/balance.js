@@ -15,7 +15,12 @@ export const spawnInterval = w => clamp(1.1 - 0.05 * w, 0.22, 1.1);
  *  the elite debut, endpoint at wave 54 — the escalation lever that was missing
  *  past wave 29, where every other composition lever is inert. */
 export const mixTilt = w => clamp(0.55 * (w - 14) / 40, 0, 0.55);
-export const xpForLevel = l => Math.round(10 + 8 * (l - 1) + 1.2 * (l - 1) * (l - 1));
+/** Levels come from waves, not kills (ADR-0015). The run opens with a draft so the
+ *  first build choice lands before the first shape, not 35s into wave 1; every wave
+ *  cleared pays one more. Together these reproduce the curve the deleted XP economy
+ *  was measured to deliver anyway: level at the start of wave N is N+2. */
+export const OPENING_LEVELS = 3;
+export const LEVELS_PER_WAVE = 1;
 /** Expected total HP of a wave's non-boss bodies, under the same mix weights
  *  composeWave uses (core.md "Balance formulas" / "Wave composition"). */
 export function waveTrashHp(w) {

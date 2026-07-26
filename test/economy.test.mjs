@@ -16,11 +16,18 @@ test('no node accelerates meta-progression (Law·No-meta-accel)', () => {
     'owning the whole lattice still must not multiply shard income');
 });
 
-test('in-run xp nodes stay legal — levelling speed is game power, not meta speed', () => {
-  // the law's own parenthetical allows this; the test exists so a future cleanup
-  // does not "fix" xp nodes by mistake
-  assert.ok(LATTICE.some(n => n.effect.xpAdd), 'xp nodes were removed with the income line');
-  assert.ok(effectsOf(LATTICE.map(n => n.id)).xpMult > 1);
+// DELETED 2026-07-26 (ADR-0015): 'in-run xp nodes stay legal — levelling speed is
+// game power, not meta speed'. It asserted `LATTICE.some(n => n.effect.xpAdd)` and
+// existed precisely to stop a future cleanup from removing the xp nodes by mistake.
+// This removal is NOT a mistake and NOT a cleanup: in-run XP is gone entirely, the
+// six nodes are retired with refunds, and Law·No-meta-accel's carve-out that blessed
+// them is struck. Flagged as a LOOSENING per CLAUDE.md "Review protocol" — a guard
+// was deleted, deliberately, and this comment is the argument it demanded.
+test('the xp line is fully retired — no node grants levelling speed any more', () => {
+  assert.ok(!LATTICE.some(n => n.effect.xpAdd), 'an xpAdd node survived ADR-0015');
+  for (const id of ['study1', 'study2', 'study3', 'study4', 'enlighten', 'scholarsoldier']) {
+    assert.ok(RETIRED_NODES[id] !== undefined, `${id} was removed without a refund`);
+  }
 });
 
 test('retired nodes refund their shards exactly once', () => {

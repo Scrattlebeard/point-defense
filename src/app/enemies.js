@@ -2,7 +2,6 @@
 // side-effects. Rules and numbers come from core; this file executes them.
 import { ENEMIES, VARIANTS, SPLIT, BOSS_MOVES, WEAPONS } from '../core/config.js';
 import { enemyHpMult, enemySpeedMult, bossHp, enemyMass, BOSS_KNOCK_RESIST } from '../core/balance.js';
-import { addXp } from '../core/state.js';
 import { dist, edgeSpawn } from '../core/geom.js';
 import { burst, dmgText, shake, flash, announce } from './fx.js';
 import { sfx, haptic } from './audio.js';
@@ -45,7 +44,6 @@ export function spawnEnemy(G, kind, variants = null, x = null, y = null) {
     // lane normalisation baked in above (core.md "Spawn geometry")
     baseSpd: def.spd * enemySpeedMult(S.wave) * prod('spdMult') * laneMult,
     dmg: def.dmg,
-    xp: Math.round(def.xp * prod('xpMult')),
     rot: Math.random() * Math.PI * 2,
     rotSpd: (Math.random() < 0.5 ? -1 : 1) * (0.5 + Math.random() * 1.2),
     variants: ids, vdefs,
@@ -180,11 +178,10 @@ export function detonatePrimed(G, e) {
   if (!e.dead) damageEnemy(G, e, p.dmg, { src: 'cascade' });
 }
 
-/** Death by player: full side-effects (xp, splits, explosions). */
+/** Death by player: full side-effects (splits, explosions). */
 function killEnemy(G, e) {
   const S = G.S;
   e.dead = true;
-  addXp(S, e.xp);
   S.kills++;
   if (e.boss) { S.bossKills++; sfx('boom'); shake(G.fx, 10); }
   else sfx('death');
@@ -362,7 +359,7 @@ function runBossMove(G, e, dt) {
       e.guard = Math.max(mv.floor, Math.pow(mv.step, Math.floor(e.studyT)));
     }
   } else if (mv.id === 'devour') {
-    // eats its escort. Not a kill: no xp, no shards, no split — the shape is
+    // eats its escort. Not a kill: no shards, no split — the shape is
     // consumed, which is the whole point of ignoring it being a mistake.
     e.moveT -= dt;
     if (e.moveT <= 0) {
