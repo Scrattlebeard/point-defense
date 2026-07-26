@@ -336,3 +336,99 @@ test('a guarded boss takes reduced damage, and the ledger records what landed', 
   assert.equal(Math.round(G.S.dmgBy.bolt), Math.round(dealt),
     'attribution records the damage actually dealt, not the damage attempted');
 });
+
+// ---- the charge is interruptible (core.md, Daniel's design, 2026-07-26) ----
+// "Level 10 was brutal on a fresh account. I think we need some counterplay on the
+// boss-charge-rush-thing. A charge up where it can be delayed by damage, like a
+// timer that ticks up but gets reduced by damage taken, brief stun if you get it
+// to zero."
+
+const CH = BOSS_MOVES['LORD RHOMBUS'];
+
+/** Run until the boss starts winding up, then return the rig mid-wind. */
+function windingRhombus(wave = 10) {
+  const { G, b } = spawnBossWithMove(wave, 'LORD RHOMBUS');
+  b.spd = 0;
+  for (let i = 0; i < 60 * (CH.every + CH.tell + 2) && !b.winding; i++) updateGame(G, 1 / 60);
+  assert.ok(b.winding, 'setup: the boss never entered its wind-up');
+  return { G, b };
+}
+
+test('damage pushes the wind-up back — shooting it is doing something', () => {
+  const { G, b } = windingRhombus();
+  const before = b.moveT;   // seconds remaining until the charge fires
+  damageEnemy(G, b, b.maxHp * CH.interruptFrac * 0.4, { noMult: true, src: 'bolt' });
+  assert.ok(b.moveT > before + 0.1,
+    `charge is still ${b.moveT.toFixed(2)}s away vs ${before.toFixed(2)}s before a 40% ` +
+    'interrupt hit — damage must visibly push the charge back, or there is nothing to see');
+  assert.ok(b.winding, 'a partial interrupt must not cancel the charge');
+});
+
+test('emptying the timer staggers the boss instead of charging it', () => {
+  const { G, b } = windingRhombus();
+  damageEnemy(G, b, b.maxHp * CH.interruptFrac * 1.2, { noMult: true, src: 'bolt' });
+  assert.ok(!b.winding, 'the wind-up survived a full interrupt');
+  assert.ok(!b.charging, 'the boss charged anyway — the interrupt bought nothing');
+  assert.ok(b.stun > 0, 'no stagger');
+
+  // and the stagger is real: it does not advance while stunned
+  b.spd = 100;
+  const d0 = dist(b.x, b.y, G.cx, G.cy);
+  step(G, CH.stun * 0.5);
+  assert.ok(Math.abs(dist(b.x, b.y, G.cx, G.cy) - d0) < 1, 'a staggered boss kept walking');
+});
+
+test('the stagger ends, and the boss goes back to work', () => {
+  const { G, b } = windingRhombus();
+  damageEnemy(G, b, b.maxHp * CH.interruptFrac * 1.2, { noMult: true, src: 'bolt' });
+  step(G, CH.stun + 0.5);
+  assert.equal(b.stun, 0, 'the stagger never ended — that is a permanent lock, not counterplay');
+  assert.ok(b.spd > 0, 'the boss never resumed moving');
+  // and it must not chain straight back into a wind-up: the full cycle restarts,
+  // or an interrupt just buys the stagger and hands the charge straight back
+  assert.ok(!b.winding, 'the boss re-entered its wind-up the moment the stagger ended');
+  assert.ok(b.moveT > CH.tell, `next charge is only ${b.moveT.toFixed(2)}s away`);
+});
+
+// The threshold must SCALE. An absolute damage number beside a growing HP curve is
+// this codebase's most repeated defect (bossHp linear vs quartic; boss variants vs
+// a wave-share pool; the hp-bar gate at maxHp > 40).
+test('the interrupt costs the same SHARE of the boss at every depth', () => {
+  const share = wave => {
+    const { G, b } = windingRhombus(wave);
+    let dealt = 0;
+    while (b.winding && dealt < b.maxHp) {
+      damageEnemy(G, b, b.maxHp * 0.01, { noMult: true, src: 'bolt' });
+      dealt += b.maxHp * 0.01;
+    }
+    return dealt / b.maxHp;
+  };
+  const early = share(10), late = share(40);
+  assert.ok(Math.abs(early - late) < 0.02,
+    `interrupt costs ${(early * 100).toFixed(0)}% of the boss at wave 10 but ` +
+    `${(late * 100).toFixed(0)}% at wave 40 — it must be a share, not a number`);
+});
+
+test('autos interrupt too, but pay double for it', () => {
+  // Deliberately NOT the `study` rule (hands-only). A hands-only interrupt would
+  // make the move HARDER, which is the opposite of the reported problem. The focus
+  // bias is emergent instead, and it comes from a rule that already exists:
+  // BOSS_AUTO_RESIST halves delegated damage, so an auto needs twice the raw
+  // damage inside the same ~1.1s window. Concentrating that is what aiming does.
+  const need = b => b.maxHp * CH.interruptFrac;
+
+  const a = windingRhombus();
+  damageEnemy(a.G, a.b, need(a.b) * 1.2, { noMult: true, src: 'turret' });
+  assert.ok(a.b.winding, 'setup: half of 1.2x should not yet reach the threshold');
+
+  const c = windingRhombus();
+  damageEnemy(c.G, c.b, need(c.b) * 2.2, { noMult: true, src: 'turret' });
+  assert.ok(!c.b.winding && c.b.stun > 0,
+    'delegated damage must be ABLE to interrupt — it just costs twice as much');
+});
+
+test('an uninterrupted charge still fires — the move was not defanged', () => {
+  const { G, b } = windingRhombus();
+  step(G, CH.tell + 0.2);
+  assert.ok(b.charging, 'nobody shot it and it still failed to charge');
+});

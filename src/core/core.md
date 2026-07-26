@@ -361,7 +361,7 @@ recirculated noble brings its signature back with it. Decisions live in the tabl
 | The Obtuse One | **surge** — +60% speed below 35% hp | finish it or buy time; a wounded boss is a *faster* boss, so chip damage without commitment is the worst option |
 | Marquis de Sides | **sunder** — at 55% hp, once, sheds 4 shards and is **guarded (×0.25 damage) while any shard lives** | *stop hitting the boss.* Your DPS is now being wasted; the fight demands a target switch and a return |
 | The Final Vertex | **bulwark** — every ~9s, plants itself for 3s: **guarded (×0.25 damage) and completely stationary** | *stop hitting the boss, for a while.* It is not threatening you during the window either — the seconds are a gift you waste by dumping damage into armour instead of clearing trash or placing setups |
-| Lord Rhombus | **charge** — winds up in place for ~1.1s, then crosses at ×4 speed until it reaches the rim | *distance is not safety.* The margin you were relying on is spent in a second; the answer is a wall, a slow, or having committed damage earlier. The wind-up is the whole move — a charge you cannot see coming is a dice roll |
+| Lord Rhombus | **charge** — winds up in place for ~1.1s, then crosses at ×4 speed until it reaches the rim. **The wind-up is interruptible: damage pushes the timer back, and emptying it staggers the boss** | *distance is not safety* — but it is now a question you get to answer. The wind-up is a window with a meter in it: burn it down and the charge never happens and the boss is briefly stunned; ignore it and the margin you were banking is spent in a second |
 | Grandmaster Hexley | **study** — every consecutive second of ***hand*** damage hardens it one step (×0.85 each, floor ×0.4); two seconds untouched by a hand and it forgets. **Auto weapons do not feed the clock** | *sustained focus is punished.* The exact inverse of surge: here chip-and-rotate beats commitment, so the two nobles ask opposite questions and a player who learned one must unlearn it |
 | Polygothra | **devour** — every ~5s, eats the nearest trash shape within 150px, healing 4% max HP | *the escort is the boss's food.* Inverts the standing target priority: ignore the chaff here and the fight lengthens under you |
 
@@ -374,6 +374,30 @@ met were the ram-only ones. `sunder` displaces attention in **space** (there is 
 target you must deal with); `bulwark` displaces it in **time** (there is a window in which
 this target is the wrong one). Neither adds damage to the player — Law·Bosses asks for a
 focus-forcer, and *"deal more"* is the move a boss makes when nobody could think of one.
+
+**The charge is interruptible, and that is counterplay rather than a difficulty number
+(2026-07-26).** Daniel, fresh account: *"Level 10 was brutal… I think we need some counterplay
+on the boss-charge-rush-thing."* His design, built as specified: the wind-up carries a timer
+that ticks toward the charge and is **pushed back by damage**; empty it and the boss is
+**staggered** instead of charging.
+
+- **The interrupt threshold is a fraction of the boss's own max HP** (`interruptFrac`), never
+  an absolute damage number. An absolute threshold beside a scaling curve is this codebase's
+  most repeated defect — `bossHp` linear vs quartic, boss variants vs a wave-share pool, the
+  hp-bar gate at `maxHp > 40`. Expressed as a share, one constant works at every wave.
+- **All damage counts, including autos — and the bias toward hands is emergent, not
+  legislated.** The tempting rule is "only player-driven weapons interrupt", mirroring
+  `study`. It is the wrong call here for a reason that is worth writing down: this mechanic
+  exists to make wave 10 *survivable on a fresh account*, and a hands-only rule makes it
+  harder, not easier. It gets its focus dilemma for free instead — autos spread their damage
+  across whatever is on the field, so **concentrating enough damage inside a ~1.1s window is
+  something aiming does naturally and delegation does not.** The pressure comes from the
+  window, not from a rule about weapon classes.
+- **A meter you cannot see is not counterplay.** The wind-up draws a depleting arc, so
+  "shooting it is doing something" is visible while it is happening. Without that the move is
+  indistinguishable from the old uninterruptible one, and the player learns nothing.
+- The stagger is deliberately **short and damage-free**: it buys tempo, not a damage window.
+  A boss that becomes a free hit is a boss you *farm*, which is a different game.
 
 **Every noble now carries a move (2026-07-25, second playtest), and the pin that prompted
 it was wrong about why.** Daniel, fresh account, wave 10: *"Lord Rhombus went down easy

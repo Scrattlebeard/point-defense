@@ -3,7 +3,7 @@
 // happen here — no other module changes G.mode.
 import { newRun, levelChoices, applyChoice, payout, defaultMeta, addScore, evalAchievements } from '../core/state.js';
 import { buy } from '../core/tech.js';
-import { WEAPONS, FORMS } from '../core/config.js';
+import { BOSS_MOVES, WEAPONS, FORMS } from '../core/config.js';
 import { loadMeta, saveMeta } from './meta.js';
 import { makeFx, updateFx, settleFx, announce } from './fx.js';
 import { setMuted, setHaptics, sfx, haptic } from './audio.js';
@@ -355,6 +355,31 @@ if (specimenMatch) {
       e.sieging = true;
       e.contactCd = cd;
       if (cd === 0) e.strike = 1;
+    });
+    G.frozen = true;
+  } else if (arg === 'charge') {
+    // ?specimen=charge — the interruptible wind-up staged across its whole range,
+    // plus a staggered boss. The meter is the counterplay (core.md): if it is not
+    // readable the move is indistinguishable from the old uninterruptible one, and
+    // a live screenshot lands inside a 1.1s window once every seven seconds.
+    const mv = BOSS_MOVES['LORD RHOMBUS'];
+    // charge progress across the whole wind-up, plus one staggered boss. Since
+    // the meter collapsed to a single arc there is no second axis to stage.
+    const stages = [0.12, 0.32, 0.52, 0.72, 0.92, null]; // null = staggered
+    stages.forEach((fill, i) => {
+      const a = -Math.PI / 2 + (i / stages.length) * Math.PI * 2;
+      const e = spawnEnemy(G, 'boss', null, G.cx + Math.cos(a) * 190, G.cy + Math.sin(a) * 190);
+      e.spd = 0;
+      e.moveId = mv.id;
+      if (fill === null) {
+        e.stun = mv.stun;           // the last one is staggered, not winding
+      } else {
+        e.winding = true;
+        e.windTell = mv.tell;
+        e.moveT = mv.tell * (1 - fill);
+        e.windNeed = e.maxHp * mv.interruptFrac;
+        e.windDmg = 0;
+      }
     });
     G.frozen = true;
   } else {

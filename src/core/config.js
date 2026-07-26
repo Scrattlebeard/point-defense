@@ -42,7 +42,11 @@ export const BOSS_MOVES = {
   // Attention displaced in DISTANCE: the margin you were banking is spent in a
   // second. The wind-up IS the move — it costs the boss tempo and hands the
   // player the decision, which is why `tell` is long and legible.
-  'LORD RHOMBUS': { id: 'charge', every: 7, tell: 1.1, dur: 1.6, spdMult: 4 },
+  // `interruptFrac` is a share of the boss's OWN max hp, never an absolute number:
+  // an absolute threshold beside a scaling curve is this repo's most repeated
+  // defect. `stun` buys tempo, not a damage window — a boss that becomes a free
+  // hit is a boss you farm (core.md "Boss signature moves").
+  'LORD RHOMBUS': { id: 'charge', every: 7, tell: 1.1, dur: 1.6, spdMult: 4, interruptFrac: 0.035, stun: 1.4 },
   // Attention displaced in RHYTHM, and the deliberate mirror of `surge`: this one
   // punishes commitment where the Obtuse One punishes chip. `floor` keeps it a
   // tax rather than a wall — sustained fire must always still work, just worse.

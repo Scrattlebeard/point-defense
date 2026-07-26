@@ -59,6 +59,8 @@ export function spawnEnemy(G, kind, variants = null, x = null, y = null) {
     // since the last landed hit (study reads it); starts high so a freshly
     // spawned noble is never mid-`study` before anyone has shot at it.
     moveId: null, moveT: 0, hurtT: 9, studyT: 0, guard: 1,
+    // interruptible charge (core.md): stagger timer + wind-up resistance
+    stun: 0, windNeed: 0, windDmg: 0, windTell: 0, windStun: 0, windEvery: 0,
     beamHeat: 0, beamTick: 0,
     burnStacks: 0, burnLeft: 0, burnTick: 0, // flamethrower DoT (core.md flame row)
     calSlowT: 0, calSlow: 0, // caltrop prick (core.md caltrop row)
@@ -238,6 +240,25 @@ export function damageEnemy(G, e, raw, { noMult = false, silent = false, src = n
   // encode fight LENGTH while Law·Delegation is encoded separately, instead of
   // both being smuggled into one number that cannot serve them at once.
   if (e.boss && src && WEAPONS[src] && WEAPONS[src].input === 'none') dmg *= BOSS_AUTO_RESIST;
+  // An interruptible charge (core.md "Boss signature moves"): damage pushes the
+  // wind-up back, and emptying its resistance staggers the boss instead. ALL
+  // damage counts — the bias toward hands is emergent, since concentrating enough
+  // damage inside a ~1.1s window is what aiming does and delegation does not.
+  if (e.winding && e.windNeed > 0) {
+    e.windDmg += dmg;
+    e.moveT += (dmg / e.windNeed) * e.windTell; // visibly delays it
+    if (e.windDmg >= e.windNeed) {
+      e.winding = false;
+      e.stun = e.windStun;
+      // the FULL cycle restarts: without this the boss re-enters its wind-up on
+      // the frame the stagger ends, which is a chain-charge, not counterplay
+      e.moveT = e.windEvery;
+      e.spd = 0;
+      burst(G.fx, e.x, e.y, '#ffd24d', 18, 200, 0.5, 3);
+      shake(G.fx, 4);
+      sfx('shield');
+    }
+  }
   // `study` reads ATTENTION, not damage: only weapons the player drives reset the
   // clock, or a single auto would pin the boss at its floor forever and the
   // "let it forget" half of the dilemma could never fire (core.md).
@@ -323,7 +344,15 @@ function runBossMove(G, e, dt) {
         sfx('boss');
       }
     } else if (e.moveT <= 0) {
+      // The wind-up is a window with a meter in it (core.md): the thresholds are
+      // copied onto the entity so damageEnemy can resolve an interrupt without
+      // knowing the move table — the table still owns every number.
       e.winding = true; e.moveT = mv.tell; e.spd = 0;
+      e.windNeed = e.maxHp * mv.interruptFrac;
+      e.windDmg = 0;
+      e.windTell = mv.tell;
+      e.windStun = mv.stun;
+      e.windEvery = mv.every;
       sfx('shield');
     }
   } else if (mv.id === 'study') {
@@ -378,7 +407,13 @@ export function updateEnemies(G, dt) {
     }
     // boss signature move (core.md "Boss signature moves"): the table decides,
     // this only executes. Movement multipliers apply before the aura slow.
-    if (e.moveId) runBossMove(G, e, dt);
+    if (e.stun > 0) {
+      // staggered: it does not advance and its move clock does not run. Tempo,
+      // not a damage window — the guard is deliberately untouched (core.md).
+      e.stun = Math.max(0, e.stun - dt);
+      e.spd = 0;
+      if (e.stun === 0 && e.moveId) e.spd = e.baseSpd;
+    } else if (e.moveId) runBossMove(G, e, dt);
     // frost aura slow, resisted by age-mass (core.md enemyMass)
     let slow = 1;
     let frostCut = 0, calCut = 0;

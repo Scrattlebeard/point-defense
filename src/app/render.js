@@ -688,6 +688,42 @@ function drawEnemies(G) {
       ctx.lineWidth = 1.4;
       ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 14, 0, TAU); ctx.stroke();
     }
+    // An interruptible charge needs a VISIBLE meter, or "shooting it is doing
+    // something" is invisible and the move is indistinguishable from the old
+    // uninterruptible one (core.md). Two arcs on one ring: how full the charge is
+    // (magenta, filling clockwise from the top) and how much resistance is left
+    // (white, draining). Channel is free — nothing else draws a partial arc on an
+    // enemy; the tower's hp arc is the only other one and it is at the centre.
+    if (e.winding && e.windNeed > 0) {
+      // ONE arc, not two. The first attempt drew charge progress in magenta and
+      // resistance in white — and magenta IS the boss's own outline colour, so the
+      // meter that mattered was invisible against the shape carrying it. Caught on
+      // the ?specimen=charge plate, which is the same lesson as armored's weak
+      // contrast: build the instrument, then look.
+      //
+      // The single arc is charge progress, and damage pushes it BACK, so it reads
+      // exactly as Daniel specified it — "a timer that ticks up but gets reduced by
+      // damage taken". The interrupt accumulator is the same damage, so the arc is
+      // an honest signal of progress toward the stagger without a second channel.
+      // Form is the channel here: nothing else on an enemy draws a partial arc.
+      const fill = clamp(1 - e.moveT / Math.max(0.001, e.windTell), 0, 1);
+      ctx.lineWidth = 3.5;
+      ctx.strokeStyle = `rgba(255, 255, 255, ${0.55 + 0.4 * fill})`;
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, e.r + 7, -Math.PI / 2, -Math.PI / 2 + TAU * fill);
+      ctx.stroke();
+    }
+    // Staggered: the charge was broken. A brief gold flicker-ring, distinct from
+    // guard's steady breathing double-ring because this one is spinning and short.
+    if (e.stun > 0) {
+      const sp = S.time * 9;
+      ctx.strokeStyle = 'rgba(255, 209, 102, 0.9)';
+      ctx.lineWidth = 2.5;
+      for (let i = 0; i < 3; i++) {
+        const a0 = sp + (i / 3) * TAU;
+        ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 8, a0, a0 + 0.5); ctx.stroke();
+      }
+    }
     if (e.sieging || e.strike > 0) {
       // A ring that COLLAPSES onto the attacker as its strike nears, then pops.
       // Drawn around the shape, never toward the Point: an inward spur lands in

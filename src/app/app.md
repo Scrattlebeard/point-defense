@@ -258,3 +258,26 @@ rAF callbacks. Three decisions worth keeping at this tier:
 
 Costs nothing when off: `G.perf` is null unless `?perf` is in the query string, and
 every call site is behind that check.
+
+
+## The charge meter, and why it is one arc
+
+Lord Rhombus's wind-up is interruptible (core.md "Boss signature moves"), so it must be
+*visible* — counterplay you cannot see is indistinguishable from a difficulty number. A
+white partial arc rides just outside the shape and fills toward the charge; damage pushes
+it back, which is the whole mechanic rendered directly.
+
+**The first version drew two arcs — charge progress in magenta, remaining resistance in
+white — and magenta is the boss's own outline colour**, so the meter that mattered was
+invisible against the shape carrying it. Found on the `?specimen=charge` plate, not in a
+fight, which is the third time a staged plate has caught a channel collision that a live
+screenshot would have missed (armored's weak ring, the siege spur, this).
+
+The channel here is **form, not hue**: nothing else on an enemy draws a partial arc. The
+stagger that follows a successful interrupt uses three short *spinning* gold arcs, against
+`guard`'s steady breathing gold double-ring — a deliberate reuse of hue with different
+motion, and the one collision on this plate that still wants a human eye.
+
+Staged by `?specimen=charge`: five wind-ups across the fill range plus one staggered boss.
+The live window is ~1.1s once every 7s, so a screenshot of a real fight essentially never
+lands inside it.
