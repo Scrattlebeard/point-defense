@@ -5,6 +5,7 @@ import { TOWERS, WEAPONS, VARIANTS } from '../core/config.js';
 import { TAU, clamp } from '../core/geom.js';
 import { hpBarThreshold } from '../core/balance.js';
 import { BEAM_REARM } from './weapons/index.js';
+import { tube, litDisc, litBar, rimLight, shade, alpha, LIGHT_A } from './neon.js';
 
 const TOWER_R = 24;
 
@@ -75,7 +76,16 @@ function glow(ctx, color, amount) {
 
 function drawGrid(G) {
   const { ctx, W, H } = G;
-  ctx.strokeStyle = 'rgba(110, 150, 230, 0.055)';
+  // The floor lights under the Point (app.md "Light has a grammar"): one radial
+  // gradient as the stroke style, bright at the tower and guttering out toward the
+  // corners. A flat alpha made the arena read as graph paper — this gives it a
+  // centre and a horizon for one gradient and no extra draws.
+  const gx = G.cx || W / 2, gy = G.cy || H / 2;
+  const floor = ctx.createRadialGradient(gx, gy, 0, gx, gy, Math.max(W, H) * 0.62);
+  floor.addColorStop(0, 'rgba(130, 180, 255, 0.135)');
+  floor.addColorStop(0.45, 'rgba(110, 150, 230, 0.055)');
+  floor.addColorStop(1, 'rgba(90, 120, 200, 0.022)');
+  ctx.strokeStyle = floor;
   ctx.lineWidth = 1;
   ctx.beginPath();
   for (let x = 0; x <= W; x += 44) { ctx.moveTo(x, 0); ctx.lineTo(x, H); }
@@ -166,6 +176,11 @@ function drawField(G) {
   // once armed (app.md "Mines & mortar")
   for (const m of S.mines) {
     const armed = m.arm <= 0;
+    if (armed) { // a live mine sits in its own pool of light; a dormant one does not
+      ctx.fillStyle = 'rgba(159, 243, 255, 0.12)';
+      diamond(ctx, m.x, m.y, 8, 10.5);
+      ctx.fill();
+    }
     ctx.fillStyle = armed ? 'rgba(159, 243, 255, 0.85)' : 'rgba(159, 243, 255, 0.35)';
     diamond(ctx, m.x, m.y, 4.5, 6);
     ctx.fill();
@@ -215,13 +230,11 @@ function drawField(G) {
       ctx.strokeStyle = 'rgba(255, 150, 60, 0.5)';
       ctx.lineWidth = 3;
       ctx.beginPath(); ctx.moveTo(px, py - h - 26); ctx.lineTo(px, py - h); ctx.stroke();
-      ctx.fillStyle = '#ffb84d';
-      ctx.beginPath(); ctx.arc(px, py - h, 7 + 3 * p, 0, TAU); ctx.fill();
+      litDisc(ctx, px, py - h, 7 + 3 * p, '#ffb84d', { lift: 0.5, sink: 0.5 });
       ctx.fillStyle = '#fff3d0';
       ctx.beginPath(); ctx.arc(px, py - h, 3, 0, TAU); ctx.fill();
     } else {
-      ctx.fillStyle = '#ffd24d';
-      ctx.beginPath(); ctx.arc(px, py - h, 3 + 1.5 * Math.sin(Math.PI * p), 0, TAU); ctx.fill();
+      litDisc(ctx, px, py - h, 3 + 1.5 * Math.sin(Math.PI * p), '#ffd24d', { lift: 0.6, sink: 0.4 });
     }
   }
 
@@ -278,11 +291,10 @@ function drawField(G) {
     ctx.strokeStyle = 'rgba(159, 243, 255, 0.25)';
     ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(-16, 0); ctx.lineTo(-4, 0); ctx.stroke();
-    // crescent: arc stroked thick with butt ends, player cyan
-    ctx.strokeStyle = '#9ff3ff';
-    ctx.lineWidth = 4.5;
+    // crescent: an emissive tube — cyan bloom, white-hot edge
     ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.arc(-6, 0, bl.r, -1.15, 1.15); ctx.stroke();
+    tube(ctx, () => { ctx.beginPath(); ctx.arc(-6, 0, bl.r, -1.15, 1.15); },
+      '#9ff3ff', 4.5, { halo: 8, haloA: 0.22, core: 0.55 });
     ctx.lineCap = 'butt';
     ctx.restore();
   }
@@ -290,9 +302,8 @@ function drawField(G) {
   // nova rings — bright and SOLID; frost stays dim and dashed (app.md legibility note)
   for (const ring of S.rings) {
     const a = clamp(1 - ring.r / ring.max, 0, 1);
-    ctx.strokeStyle = `rgba(159, 243, 255, ${0.65 * a + 0.2})`;
-    ctx.lineWidth = 4;
-    ctx.beginPath(); ctx.arc(G.cx, G.cy, ring.r, 0, TAU); ctx.stroke();
+    tube(ctx, () => { ctx.beginPath(); ctx.arc(G.cx, G.cy, ring.r, 0, TAU); },
+      '#9ff3ff', 4, { halo: 10, haloA: 0.22 * a, core: 0.5, coreA: 0.65 * a + 0.2 });
   }
 
   drawAim(G);
@@ -413,10 +424,15 @@ function drawField(G) {
     }
   }
 
-  // bullets & missiles
+  // bullets & missiles — emissive: coloured body, white-hot centre. Deliberately
+  // NOT a halo pass: bullets are the most numerous player entity on the field and
+  // a two-stroke tube on each is the one place this grammar could actually cost
+  // something. A hot core alone reads as "lit" at these radii.
   for (const b of S.bullets) {
     ctx.fillStyle = b.color;
     ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, TAU); ctx.fill();
+    ctx.fillStyle = alpha(shade(b.color, 0.85), 0.85);
+    ctx.beginPath(); ctx.arc(b.x, b.y, Math.max(0.8, b.r * 0.42), 0, TAU); ctx.fill();
   }
   for (const m of S.missiles) {
     ctx.save();
@@ -424,6 +440,8 @@ function drawField(G) {
     ctx.rotate(Math.atan2(m.vy, m.vx));
     ctx.fillStyle = '#ffd24d';
     ctx.beginPath(); ctx.moveTo(6, 0); ctx.lineTo(-4, 3.4); ctx.lineTo(-4, -3.4); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(255, 246, 214, 0.9)';   // hot nose
+    ctx.beginPath(); ctx.moveTo(6, 0); ctx.lineTo(0, 1.5); ctx.lineTo(0, -1.5); ctx.closePath(); ctx.fill();
     ctx.restore();
   }
 
@@ -448,7 +466,14 @@ function drawField(G) {
     ctx.save();
     ctx.translate(b.x, b.y);
     ctx.rotate(b.rot);
-    ctx.fillStyle = '#a9ccd6';
+    // a lit rock: the gradient is built in the boulder's OWN rotating frame on
+    // purpose — the highlight rides the surface as it rolls, which is what makes
+    // the rotation legible at all (a fixed highlight reads as a spinning decal)
+    const bg = ctx.createRadialGradient(-b.r * 0.35, -b.r * 0.4, b.r * 0.1, 0, 0, b.r);
+    bg.addColorStop(0, shade('#a9ccd6', 0.5));
+    bg.addColorStop(0.55, '#a9ccd6');
+    bg.addColorStop(1, shade('#a9ccd6', -0.45));
+    ctx.fillStyle = bg;
     ctx.beginPath();
     for (let k = 0; k < 7; k++) {
       const a = (k * TAU) / 7;
@@ -496,15 +521,19 @@ function drawField(G) {
     ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(0, 0, b.r + 3, va + Math.PI * 0.6, va + Math.PI * 1.4); ctx.stroke();
     ctx.rotate(b.spin);
-    ctx.fillStyle = '#9ff3ff';
+    ctx.fillStyle = 'rgba(159, 243, 255, 0.18)';   // the blade's own bloom
+    ctx.beginPath(); ctx.arc(0, 0, b.r * 1.05, 0, TAU); ctx.fill();
     for (let k = 0; k < 2; k++) {
       ctx.rotate(k * Math.PI / 2);
+      const g = ctx.createLinearGradient(-b.r * 0.3, 0, b.r * 0.3, 0);
+      g.addColorStop(0, '#e8fbff'); g.addColorStop(0.55, '#9ff3ff'); g.addColorStop(1, '#4aa8bd');
+      ctx.fillStyle = g;
       ctx.beginPath();
       ctx.ellipse(0, -b.r * 0.55, b.r * 0.28, b.r * 0.8, 0, 0, TAU);
       ctx.ellipse(0, b.r * 0.55, b.r * 0.28, b.r * 0.8, 0, 0, TAU);
       ctx.fill();
     }
-    ctx.fillStyle = '#e8fbff';
+    ctx.fillStyle = '#ffffff';
     ctx.beginPath(); ctx.arc(0, 0, 2.4, 0, TAU); ctx.fill();
     ctx.restore();
   }
@@ -519,8 +548,13 @@ function drawField(G) {
       ctx.save();
       ctx.translate(bx, by);
       ctx.rotate(a + Math.PI / 2);
-      ctx.fillStyle = '#9ff3ff';
+      const g = ctx.createLinearGradient(-5, 0, 5, 0);   // lit edge / shadow edge
+      g.addColorStop(0, '#e8fbff'); g.addColorStop(0.5, '#9ff3ff'); g.addColorStop(1, '#4d8fa3');
+      ctx.fillStyle = g;
       ctx.beginPath(); ctx.moveTo(0, -9); ctx.lineTo(5, 5); ctx.lineTo(-5, 5); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';      // the leading edge catches it
+      ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(0, -9); ctx.lineTo(-5, 5); ctx.stroke();
       ctx.restore();
     }
   }
@@ -532,8 +566,15 @@ function drawField(G) {
       const a = S.time * 0.5 + (i * TAU) / st.n;
       const tx = G.cx + Math.cos(a) * 46;
       const ty = G.cy + Math.sin(a) * 46;
-      ctx.fillStyle = '#ffd24d';
+      // a lit box: top-left face bright, bottom-right in shadow (LIGHT_A)
+      const g = ctx.createLinearGradient(tx - 4, ty - 4, tx + 4, ty + 4);
+      g.addColorStop(0, shade('#ffd24d', 0.55));
+      g.addColorStop(0.55, '#ffd24d');
+      g.addColorStop(1, shade('#ffd24d', -0.45));
+      ctx.fillStyle = g;
       ctx.fillRect(tx - 4, ty - 4, 8, 8);
+      ctx.fillStyle = 'rgba(255, 250, 224, 0.75)';
+      ctx.fillRect(tx - 4, ty - 4, 8, 1.4);   // the lit top edge
     }
   }
 
@@ -608,20 +649,34 @@ function drawEnemies(G) {
   for (const e of S.enemies) {
     const pulse = Math.sin(S.time * 8 + e.rot * 3);
 
-    // variant under-glow
     const has = id => e.variants.includes(id);
-    if (has('swift')) glow(ctx, '#ffffff', 14);
 
-    // wireframe: enemies are outlines, never fills (app.md "fill encodes allegiance").
-    // The hit pop is a thickened white stroke + glow — never a fill, or the law is
-    // false on nearly every shape in a busy wave (app.md "hit pop is a stroke").
+    // Wireframe: enemies are outlines, never fills (app.md "fill encodes allegiance"),
+    // and now they are NEON outlines — a saturated halo under a whitened core
+    // (app.md "Light has a grammar"). The hue stays in the halo, so species colour
+    // reads at least as strongly as it did from the old flat stroke.
+    //
+    // The hit pop and the swift under-glow are the two channels that used to call
+    // ctx.shadowBlur PER ENEMY — the standing suspect for the wave-20 p95 step
+    // (PINS [perf]), and a cost that scaled with how busy the fight was. Both are now
+    // widenings of the halo this shape already draws: same read, no offscreen pass.
+    // Pinned by test/render.test.mjs ("blur is a per-frame constant").
     const hit = e.flash > 0;
-    if (hit) glow(ctx, '#ffffff', 12);
-    ctx.lineWidth = (2 + e.r * 0.05) * (hit ? 2.1 : 1);
-    ctx.strokeStyle = hit ? '#ffffff' : e.color;
-    poly(ctx, e.x, e.y, e.r, e.sides, e.rot);
-    ctx.stroke();
-    ctx.shadowBlur = 0;
+    const w = (2 + e.r * 0.05) * (hit ? 2.1 : 1);
+    const path = () => poly(ctx, e.x, e.y, e.r, e.sides, e.rot);
+    // swift stays WHITE-hot (VARIANTS.swift.color) — its channel is whiteness, not
+    // width, so it gets its own pale halo under the species tube rather than a
+    // fatter hue halo, which would have read as "big" instead of "fast".
+    if (has('swift')) {
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+      ctx.lineWidth = w + 12;
+      path(); ctx.stroke();
+    }
+    tube(ctx, path, hit ? '#ffffff' : e.color, w, {
+      halo: hit ? 13 : 5,
+      haloA: hit ? 0.34 : 0.17,
+      core: hit ? 0 : 0.34,
+    });
 
     // Outer channels claim successive annulus slots so a stack reads as distinct
     // concentric rings instead of one smudge (app.md "Stacked highlights").
@@ -803,8 +858,7 @@ function drawEnemies(G) {
       const w = e.r * 2;
       ctx.fillStyle = 'rgba(10, 13, 21, 0.7)';
       ctx.fillRect(e.x - e.r, e.y - e.r - 8, w, 3);
-      ctx.fillStyle = e.color;
-      ctx.fillRect(e.x - e.r, e.y - e.r - 8, w * clamp(e.hp / e.maxHp, 0, 1), 3);
+      litBar(ctx, e.x - e.r, e.y - e.r - 8, w * clamp(e.hp / e.maxHp, 0, 1), 3, e.color);
     }
   }
 }
@@ -813,23 +867,43 @@ function drawTower(G) {
   const { ctx, S } = G;
   const color = TOWERS[S.towerId]?.color || '#4de8ff';
   const frac = clamp(S.hp / S.maxHp, 0, 1);
-  // hp arc
+  // hp arc — the track recessed, the fill lit along its length
   ctx.lineWidth = 5;
   ctx.strokeStyle = 'rgba(255,255,255,0.08)';
   ctx.beginPath(); ctx.arc(G.cx, G.cy, TOWER_R + 8, 0, TAU); ctx.stroke();
-  ctx.strokeStyle = frac > 0.5 ? color : frac > 0.25 ? '#ffb84d' : '#ff5c6c';
+  const hpc = frac > 0.5 ? color : frac > 0.25 ? '#ffb84d' : '#ff5c6c';
+  ctx.strokeStyle = hpc;
   ctx.beginPath(); ctx.arc(G.cx, G.cy, TOWER_R + 8, -Math.PI / 2, -Math.PI / 2 + TAU * frac); ctx.stroke();
-  // body
+  ctx.strokeStyle = alpha(shade(hpc, 0.8), 0.6);   // the shine along the ring
+  ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.arc(G.cx, G.cy, TOWER_R + 6.6, -Math.PI / 2, -Math.PI / 2 + TAU * frac); ctx.stroke();
+
+  // The Point is a LIT object, not an emissive one (app.md "Light has a grammar"):
+  // it is the one solid thing you stare at for a whole run, and a flat disc was
+  // reading as a sticker. Gradient body lit from LIGHT_A, rim crescent where the
+  // hull turns into the light, and the core well cut into it with a dark inner
+  // wall plus a bounce highlight on the FAR side — which is how a recess catches
+  // light, and is what sells it as a hole rather than a dark dot.
   const pulse = 1 + 0.04 * Math.sin(S.time * 3);
-  glow(ctx, color, 22); // the tower's own glow — routed through the hatch so
-                        // ?noblur removes ALL blur and the A/B isolates cleanly
-  ctx.fillStyle = color;
-  ctx.beginPath(); ctx.arc(G.cx, G.cy, (TOWER_R - 4) * pulse, 0, TAU); ctx.fill();
+  const r = (TOWER_R - 4) * pulse;
+  glow(ctx, color, 22); // the tower's own glow — the ONLY shadowBlur left in the
+                        // renderer, and still routed through the ?noblur hatch so
+                        // the A/B isolates cleanly (PINS [perf])
+  litDisc(ctx, G.cx, G.cy, r, color, { lift: 0.6, sink: 0.5 });
   ctx.shadowBlur = 0;
+  rimLight(ctx, G.cx, G.cy, r - 1, color, 0.75, 2.2);
+
+  const ir = (TOWER_R - 11) * pulse;
   ctx.fillStyle = '#0a0d15';
-  ctx.beginPath(); ctx.arc(G.cx, G.cy, (TOWER_R - 11) * pulse, 0, TAU); ctx.fill();
-  ctx.fillStyle = color;
-  ctx.beginPath(); ctx.arc(G.cx, G.cy, 3.5, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc(G.cx, G.cy, ir, 0, TAU); ctx.fill();
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.55)';   // the near wall of the well, in shadow
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(G.cx, G.cy, ir, LIGHT_A - 1.4, LIGHT_A + 1.4); ctx.stroke();
+  ctx.strokeStyle = alpha(color, 0.5);       // light bouncing off the far wall
+  ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.arc(G.cx, G.cy, ir - 0.8, LIGHT_A + Math.PI - 1.1, LIGHT_A + Math.PI + 1.1); ctx.stroke();
+
+  litDisc(ctx, G.cx, G.cy, 3.5, shade(color, 0.4), { lift: 0.7, sink: 0.2 });
 }
 
 function drawSwipeTrails(G) {
@@ -858,8 +932,7 @@ function drawBossBar(G) {
   const x = (W - bw) / 2, y = 54;
   ctx.fillStyle = 'rgba(10, 13, 21, 0.75)';
   ctx.fillRect(x - 2, y - 2, bw + 4, 10);
-  ctx.fillStyle = '#ff3df0';
-  ctx.fillRect(x, y, bw * clamp(boss.hp / boss.maxHp, 0, 1), 6);
+  litBar(ctx, x, y, bw * clamp(boss.hp / boss.maxHp, 0, 1), 6, '#ff3df0');
 }
 
 // Beam heat gauge (app.md): the overheat lockout must be legible — bar with a
@@ -876,8 +949,7 @@ function drawHeat(G) {
   ctx.fillRect(x, y, bw, bh);
   const flash = S.overheated ? 0.55 + 0.45 * Math.sin(performance.now() / 90) : 1;
   ctx.globalAlpha = flash;
-  ctx.fillStyle = S.overheated ? '#ff5c6c' : '#ffb84d';
-  ctx.fillRect(x, y, bw * S.heat, bh);
+  litBar(ctx, x, y, bw * S.heat, bh, S.overheated ? '#ff5c6c' : '#ffb84d');
   ctx.globalAlpha = 1;
   // re-arm notch: the beam comes back when the fill drains past this line
   ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
@@ -896,12 +968,14 @@ function drawMiniSpecimen(ctx, x, y, icon) {
   const r = 9;
   const ids = icon.variants || (icon.variant ? [icon.variant] : []);
   const has = id => ids.includes(id);
-  if (has('swift')) glow(ctx, '#ffffff', 8);
-  ctx.lineWidth = 1.8;
-  ctx.strokeStyle = icon.color;
-  poly(ctx, x, y, r, icon.sides, -Math.PI / 2);
-  ctx.stroke();
-  ctx.shadowBlur = 0;
+  // same emissive grammar as the field, or the banner teaches the wrong shape
+  const path = () => poly(ctx, x, y, r, icon.sides, -Math.PI / 2);
+  if (has('swift')) {
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+    ctx.lineWidth = 9;
+    path(); ctx.stroke();
+  }
+  tube(ctx, path, icon.color, 1.8, { halo: 4, haloA: 0.2, core: 0.34 });
   let slot = r + 3;
   if (has('armored')) {
     ctx.strokeStyle = 'rgba(6, 9, 16, 0.9)'; ctx.lineWidth = 3.6;

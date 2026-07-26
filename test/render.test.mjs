@@ -171,3 +171,19 @@ test('?noblur actually removes every blurred draw, and the default keeps them', 
   assert.ok(on > 0, 'the default must still glow — this is the control arm');
   assert.equal(off, 0, `?noblur left ${off} blurred draws — the A/B would measure nothing`);
 });
+
+// Blur is the standing suspect for the wave-20 p95 step (PINS [perf]) precisely
+// because it used to be a PER-ENEMY cost: a blur site on the hit pop and another on
+// swift meant the price scaled with how busy the fight was, which is the shape of
+// the step. The emissive grammar (app.md "Light has a grammar") buys the same read
+// with halo strokes, so the count is now bounded by the frame, not by the field.
+// This test is the guard on that: re-introducing a per-enemy glow turns it red.
+test('blur is a per-frame constant, not a per-enemy cost', () => {
+  const G = deepField(45, 12);
+  const n = G.S.enemies.length;
+  assert.ok(n >= 8, `setup: wanted a crowded field, got ${n} shapes`);
+  const hit = G.S.enemies.filter(e => e.flash > 0 || e.variants.includes('swift')).length;
+  const blurred = blurredDraws(G);
+  assert.ok(blurred <= 2,
+    `${blurred} blurred draws with ${n} shapes (${hit} flashing/swift) — blur is scaling with the field again`);
+});

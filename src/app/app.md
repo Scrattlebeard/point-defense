@@ -18,6 +18,7 @@ simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not un
 | `enemies.js` | Enemy entity update: movement (slow/knockback), contact resolution, damage/death side-effects (splits, volatile explosions, shields) |
 | `weapons/` | Weapon executors, one module per family (aim / hold / swipe / auto / field + shared plumbing); `index.js` is the seam and owns the order-of-execution invariant — see `weapons/weapons.md` |
 | `input.js` | Pointer events → traces → `core/gestures` classification → weapon triggers; swipe-trail capture; hold ownership. **All pointer coords map through the canvas bounding rect** (origin + scale corrected), never raw `clientX` — embedding pages (the Claude Artifact viewer) may offset or scale the canvas, which desynced the reticle from the host cursor (2026-07-23). The OS cursor is hidden over the field: the reticle is the cursor |
+| `neon.js` | **The emissive drawing grammar** (see "Light has a grammar" below): `tube` (halo + whitened core = a neon line), `litDisc`/`rimLight` (a solid object catching light from `LIGHT_A`), `litBar`, and the memoized colour helpers `rgb`/`shade`/`alpha`. Pure and DOM-free apart from the context it is handed; the colour math is unit-tested, the looks are not |
 | `render.js` | Canvas drawing: field grid, entities (shape + variant highlight grammar), tower, beams/lightning/rings, HUD elements drawn on canvas (hp arc, boss bar). **Covered headlessly** by `test/render.test.mjs`: the module is DOM-free apart from a 2D context, so a stub context runs the whole draw path over a deep, fully-populated field. It is a **crash net, not a pixel net** — it catches "the renderer throws on a stacked boss at wave 45", which is exactly the class of bug that only appears where several systems meet. What a shape *looks* like stays an eye question, answered with the `?specimen` plates; a test cannot hold that opinion. *(Added 2026-07-25 after four renderer changes in one night landed with zero automated cover.)* |
 | `fx.js` | Particles, floating damage numbers, announcements, screen shake, hit flashes — capped pools, purely cosmetic. Announcements (wave / debut / boss name) anchor **top-left under the HUD**, linger **15s**, and debut/boss banners carry a **mini specimen icon** (the wireframe shape with its variant highlight) so the banner teaches what to look for (2026-07-23 playtest). **Camera juice settles through pauses (2026-07-24):** shake + vignette flash decay via `settleFx`, which the frame loop calls *every* frame — including when an overlay (pause / level-up / game-over) has the sim frozen. The world freezes; the camera does not keep jittering behind the overlay. Particles/texts/flares are world-state and stay frozen with the sim |
 | `audio.js` | WebAudio synth one-shots (fire, death, nova, levelup, hurt, gameover); lazy AudioContext on first gesture; mute persisted via meta |
@@ -83,6 +84,42 @@ simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not un
     dead code and every damaged shape carried a bar. Same bug class as the pre-0008
     `bossHp` and the pre-0009 boss variants — **a constant compared against a growing
     curve** — and worth watching for elsewhere.
+- **Light has a grammar** *(2026-07-26)*. The theme was "dark neon arcade" but almost
+  everything on the field was a **single flat stroke or a single flat fill** — one colour,
+  one width, no depth. Neon art gets its look from a specific trick, and the trick is now a
+  module (`neon.js`) rather than a habit repeated by hand. Every shiny thing is exactly one
+  of two kinds, and **never both** — self-lit objects have no shadow side, lit objects do
+  not bloom; mixing the two is what makes neon art look muddy.
+  - **Emissive** — it makes its own light: a wide, saturated, low-alpha **halo** under a
+    thin, **whitened core** (`tube`). Enemy wireframes, force blades, boomerangs, orbit
+    blades, mines, bullets. **The hue lives in the halo, not the core**, which is what keeps
+    "enemy species = hue" true while the core runs bright: a neon tube is white in the
+    middle and coloured in its bloom, and the bloom is the larger patch of screen. A shape's
+    silhouette is unchanged — the halo is drawn on the *same* path, so nothing grows.
+  - **Lit** — it is a solid object catching light from `LIGHT_A` (up and to the left,
+    **one constant for the whole game**): a radial gradient offset toward the light, a
+    bright `rimLight` crescent where the surface turns into it, and the far edge falling
+    into shadow. The tower hull, turrets, boulders, the mortar shell. A scene lit from two
+    directions reads flat, which is the thing being fixed — so the direction is a shared
+    constant, not a per-call-site opinion.
+  - **Bars get a lit top edge** (`litBar`) — hp slivers, the boss bar, the heat gauge. One
+    lighter strip along the top third is the entire trick and it costs one `fillRect`.
+  - **This is implemented with halos, not `ctx.shadowBlur`, and that is a cost decision**
+    (PINS [perf]). Blur forces an offscreen pass per draw and is the standing suspect for
+    the wave-20 p95 step; a wide low-alpha stroke of the same path buys the same read for
+    plain fill rate. The shine-up therefore *removed* the two per-enemy blur sites (the
+    swift under-glow and the hit pop, both now halo widenings) and **`shadowBlur` is now
+    set at most once per frame — for the tower alone.** `test/render.test.mjs` pins that
+    bound: it counts blur assignments over a deep field and fails if the count scales with
+    enemies again. The `?noblur` hatch survives and still isolates the tower's glow.
+  - **The floor lights under the Point** — the background grid strokes with a *radial
+    gradient* (bright near the tower, falling to near-black at the edges) instead of one
+    flat alpha. One gradient, one stroke pass, no extra draws; it gives the arena a centre
+    and a horizon, and it is what makes the field read as a *place* rather than graph paper.
+  - **Deliberately excluded: everything held dim by decree.** Caltrops, frost crystals and
+    grid sparks keep their flat treatment. Their dimness was bought with playtests and
+    outranks the shine — "make it all shiny" would have quietly repealed three legibility
+    rulings. The shine raises the ceiling, never the floor.
 - **Performance guards:** particle and damage-number pools are capped; enemy count is
   soft-capped (~240) by pausing the spawn queue, never by dropping queued spawns.
 - **Aim feedback:** a single faint dashed aim line from the Point toward the aim
