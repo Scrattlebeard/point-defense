@@ -174,14 +174,18 @@ not regress. The playability question is answered by `?perf` on a real device.
 
 **`?noblur` — the A/B switch for the current suspect.** Suppresses every
 `shadowBlur` in the renderer. Canvas shadow blur is the most expensive 2D
-operation on a mobile GPU (each forces an offscreen blur pass), and this renderer
-applies it *per enemy*: every shape flashing from a hit, plus every swift one.
-Measured **2.5 blurred draws per frame at wave 14 rising to 7.3 by wave 29** — the
-right shape to explain the observed p95 step, and unmeasurable here because
-nothing in this repo can time a GPU. Run the same waves with and without it and
-compare the `drop` column. Pinned by a test asserting the hatch removes *all*
-blurred draws and the default keeps them: a hatch that quietly does nothing would
-send back a null result and retire a live suspect for the wrong reason.
+operation on a mobile GPU (each forces an offscreen blur pass), and the renderer
+used to apply it *per enemy*: every shape flashing from a hit, plus every swift
+one — measured **2.5 blurred draws per frame at wave 14 rising to 7.3 by wave 29**,
+the right shape to explain the observed p95 step, and unmeasurable here because
+nothing in this repo can time a GPU. **Since ADR-0019 both per-enemy sites are halo
+strokes and blur is set at most once per frame, for the tower** (pinned by
+`test/render.test.mjs`), so the hatch now isolates that one glow. Run the same waves
+with and without it and compare the `drop` column. Pinned by a test asserting the
+hatch removes *all* blurred draws and the default keeps them: a hatch that quietly
+does nothing would send back a null result and retire a live suspect for the wrong
+reason. **The suspect is not thereby cleared** — see PINS [perf]: the removal was
+never measured on a device, and it shipped alongside more fill-rate.
 
 **`?perf` — the on-device instrument.** A canvas-drawn overlay (canvas, not DOM, so
 it survives a fullscreen PWA *and* lands in a headless screenshot) showing live

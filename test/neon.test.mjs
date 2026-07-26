@@ -88,6 +88,40 @@ test('every lit object is lit from the one shared direction', () => {
   assert.equal(ops.filter(o => o.op === 'fill').length, 1, 'the disc is a single gradient fill');
 });
 
+// SHADE, DON'T DIM. A radial gradient's outer stops cover most of the area (weight
+// ∝ r²), so a lift/sink pair that looks balanced on paper is a net darkening in
+// pixels. The first cut of litDisc ran 0.55/0.45 at mid 0.5 and rendered every lit
+// object at 83% of the flat fill it replaced — including the Point, which is the one
+// thing on the field that must never get harder to see. Caught in a magnified
+// before/after, which is not a thing CI can do; this is the part CI can hold.
+test('a lit disc is never darker than the flat fill it replaces', () => {
+  // area-weighted mean luminance of the gradient, as a fraction of the base colour
+  const brightness = (color, opts) => {
+    const { ctx, grads } = recorder();
+    litDisc(ctx, 0, 0, 20, color, opts);
+    const stops = grads[0].stops.map(([p, c]) => [p, lum(c)]);
+    const base = lum(color);
+    let num = 0, den = 0;
+    for (let i = 0; i <= 500; i++) {
+      const p = i / 500, w = 2 * p;                 // dA ∝ 2r dr
+      let j = 1;
+      while (j < stops.length - 1 && stops[j][0] < p) j++;
+      const [p0, v0] = stops[j - 1], [p1, v1] = stops[j];
+      num += (v0 + (v1 - v0) * ((p - p0) / (p1 - p0 || 1))) * w;
+      den += w;
+    }
+    return num / den / base;
+  };
+
+  for (const c of ['#4de8ff', '#ffb84d', '#ff5c6c', '#c06bff']) {
+    const got = brightness(c);
+    assert.ok(got >= 0.95, `${c} lights to ${(got * 100).toFixed(0)}% of flat — the shading is dimming it`);
+  }
+  // the rig itself must be able to fail, or the assertion above proves nothing
+  assert.ok(brightness('#4de8ff', { lift: 0.55, sink: 0.45, mid: 0.5 }) < 0.9,
+    'the original dimming defaults must still measure as dimming');
+});
+
 test('a lit bar puts its highlight on top and vanishes when empty', () => {
   const { ctx, ops } = recorder();
   litBar(ctx, 10, 50, 80, 6, '#4de8ff');

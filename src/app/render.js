@@ -230,11 +230,11 @@ function drawField(G) {
       ctx.strokeStyle = 'rgba(255, 150, 60, 0.5)';
       ctx.lineWidth = 3;
       ctx.beginPath(); ctx.moveTo(px, py - h - 26); ctx.lineTo(px, py - h); ctx.stroke();
-      litDisc(ctx, px, py - h, 7 + 3 * p, '#ffb84d', { lift: 0.5, sink: 0.5 });
+      litDisc(ctx, px, py - h, 7 + 3 * p, '#ffb84d');
       ctx.fillStyle = '#fff3d0';
       ctx.beginPath(); ctx.arc(px, py - h, 3, 0, TAU); ctx.fill();
     } else {
-      litDisc(ctx, px, py - h, 3 + 1.5 * Math.sin(Math.PI * p), '#ffd24d', { lift: 0.6, sink: 0.4 });
+      litDisc(ctx, px, py - h, 3 + 1.5 * Math.sin(Math.PI * p), '#ffd24d');
     }
   }
 
@@ -889,15 +889,21 @@ function drawTower(G) {
   glow(ctx, color, 22); // the tower's own glow — the ONLY shadowBlur left in the
                         // renderer, and still routed through the ?noblur hatch so
                         // the A/B isolates cleanly (PINS [perf])
-  litDisc(ctx, G.cx, G.cy, r, color, { lift: 0.6, sink: 0.5 });
+  // Shading modulates the hull; it must never DIM it. The first cut ran the
+  // gradient's base stop at the halfway mark with a 50% sink, which made the outer
+  // half of the disc mostly shadow — measured against the old flat fill in a
+  // magnified A/B, the Point came out visibly darker than before. Shading a thing
+  // you are defending must not make it harder to see: the base colour now holds out
+  // to 0.72 and the far edge only falls ~22%.
+  litDisc(ctx, G.cx, G.cy, r, color);
   ctx.shadowBlur = 0;
-  rimLight(ctx, G.cx, G.cy, r - 1, color, 0.75, 2.2);
+  rimLight(ctx, G.cx, G.cy, r - 1.2, color, 0.9, 2.6);
 
   const ir = (TOWER_R - 11) * pulse;
   ctx.fillStyle = '#0a0d15';
   ctx.beginPath(); ctx.arc(G.cx, G.cy, ir, 0, TAU); ctx.fill();
-  ctx.strokeStyle = 'rgba(0, 0, 0, 0.55)';   // the near wall of the well, in shadow
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';    // the near wall of the well, in shadow
+  ctx.lineWidth = 1.6;
   ctx.beginPath(); ctx.arc(G.cx, G.cy, ir, LIGHT_A - 1.4, LIGHT_A + 1.4); ctx.stroke();
   ctx.strokeStyle = alpha(color, 0.5);       // light bouncing off the far wall
   ctx.lineWidth = 1.4;

@@ -786,7 +786,7 @@ wave 36      33.3      49.9       24  <- a whole wave at 30fps
   *(The 2199ms figure has since been explained and is NOT a stall: `last` was stamped at
   module load, so the first sampled gap contained all of page setup. No longer sampled.)*
 
-**The suspect, and it is a hypothesis, not a diagnosis.** `render.js` sets `shadowBlur`
+**The suspect, and it is a hypothesis, not a diagnosis.** `render.js` set `shadowBlur`
 **per enemy**: 12 for every shape currently flashing from a hit, 14 for every swift one, 22
 for the tower. Canvas shadow blur is the most expensive 2D operation on a mobile GPU — each
 forces an offscreen blur pass. Measured in the headless harness: **2.5 blurred draws per
@@ -794,6 +794,21 @@ frame at wave 14, rising to 7.3 by wave 29.** At a plausible 1–3ms per blurred
 silicon that alone spans the budget, and it scales with *how many shapes are being hit*
 rather than how many exist — which is exactly the shape of the wave-20 step. **Nothing in
 this repo can time a GPU, so this cannot be confirmed here.**
+
+> **⚠ The suspect has since been removed — but NOT as a fix, and this pin stays open.**
+> ADR-0019 (the emissive grammar, 2026-07-26) rebuilt the hit pop and the swift under-glow
+> as halo strokes because that grammar wanted them that way. Consequence: **blur is now set
+> at most once per frame, for the tower alone**, pinned by `test/render.test.mjs`.
+>
+> Read carefully, this makes the pin *harder* to close, not easier. The change was never
+> measured against the p95 tail on a device — it is an argument from mechanism — and it
+> arrived bundled with ~39% more context calls and more fill-rate, so a device capture now
+> measures a *different renderer*, not a clean A/B on blur. **The next `?perf` run on
+> Daniel's phone is the experiment**: if the wave-20 step is gone, blur was the cause and
+> this closes; if it survives, the suspect was wrong all along and the real cause is still
+> at large — which is the more valuable outcome, because it was about to be retired for the
+> wrong reason. Compare against the 2026-07-25 table above, and note the field itself has
+> moved since (ADR-0014/15/16), so per-wave entity counts are not like-for-like.
 
 **The experiment is built and takes one run:** `?noblur` suppresses every blur in the
 renderer. Play the same waves with and without and compare the `drop` column. A test pins

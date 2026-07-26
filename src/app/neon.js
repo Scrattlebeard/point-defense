@@ -96,13 +96,21 @@ export function tube(ctx, path, color, width, { halo = 5, haloA = 0.17, core = 0
 
 /**
  * Fill a circle as a lit sphere: highlight toward LIGHT_A, base in the middle, the
- * far edge falling into shadow. `lift` controls how hot the highlight runs.
+ * far edge falling into shadow.
+ *
+ * **Shade, don't dim** — the contract, and it is tested. A radial gradient's outer
+ * stops cover most of the *area* (weight ∝ r²), so a symmetric lift/sink around the
+ * midpoint is not neutral: it is a net darkening. The first cut of this function ran
+ * 0.55/0.45 at mid 0.5 and made every lit object **83% as bright as the flat fill it
+ * replaced** — including the tower, which is the one thing on the field that must
+ * never get harder to see. Defaults are area-weighted to break even; a caller
+ * passing its own options owes the same check (`test/neon.test.mjs`).
  */
-export function litDisc(ctx, x, y, r, color, { lift = 0.55, sink = 0.45 } = {}) {
+export function litDisc(ctx, x, y, r, color, { lift = 0.62, sink = 0.22, mid = 0.72 } = {}) {
   const g = ctx.createRadialGradient(
     x + LIGHT_X * r * 0.42, y + LIGHT_Y * r * 0.42, r * 0.06, x, y, r);
   g.addColorStop(0, shade(color, lift));
-  g.addColorStop(0.5, color);
+  g.addColorStop(mid, color);
   g.addColorStop(1, shade(color, -sink));
   ctx.fillStyle = g;
   ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
