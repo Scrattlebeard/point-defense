@@ -128,7 +128,7 @@ export const WEAPONS = {
     // one shape is ground.
     stats: l => ({
       n: [0, 2, 3, 4, 5, 6][l], dmg: 10 + 4 * l,
-      inner: 96, outer: [0, 136, 150, 163, 175, 186][l], reach: 9, sweep: 0.22,
+      inner: 22, outer: [0, 136, 150, 163, 175, 186][l], reach: 9, sweep: 0.32,
       speed: 2.3 + 0.18 * l, bite: [0, 0.8, 0.66, 0.52, 0.40, 0.31][l],
     }),
   },

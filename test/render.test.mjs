@@ -10,6 +10,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { defaultMeta, newRun, levelChoices, applyChoice } from '../src/core/state.js';
 import { makeFx, updateFx } from '../src/app/fx.js';
+import { TOWER_R } from '../src/app/render.js';
+import { WEAPONS } from '../src/core/config.js';
 import { resetWeapons, fireWall } from '../src/app/weapons/index.js';
 import { resetWaveDirector, updateGame } from '../src/app/game.js';
 import { spawnEnemy } from '../src/app/enemies.js';
@@ -186,4 +188,16 @@ test('blur is a per-frame constant, not a per-enemy cost', () => {
   const blurred = blurredDraws(G);
   assert.ok(blurred <= 2,
     `${blurred} blurred draws with ${n} shapes (${hit} flashing/swift) — blur is scaling with the field again`);
+});
+
+test('the orbit blades are mounted on the Point, not floating near it', () => {
+  // Daniel, 2026-07-26: "let's try attaching them to the point physically."
+  // A root outside the hull leaves a visible gap and the blades read as orbiting
+  // debris rather than as a rotor the tower is driving. The tower is drawn AFTER
+  // the blades, so a root tucked inside the hull disappears under it — which is
+  // what sells the mounting. This replaces ADR-0022's deleted hub-gap rule.
+  for (let l = 1; l <= WEAPONS.orbit.max; l++) {
+    const s = WEAPONS.orbit.stats(l);
+    assert.ok(s.inner <= TOWER_R, `orbit L${l} roots at ${s.inner}, outside the hull at ${TOWER_R} — it will float`);
+  }
 });

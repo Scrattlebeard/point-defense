@@ -162,14 +162,19 @@ test('the blades are rooted at a fixed radius and grow outward from it', () => {
   }
 });
 
-test('the blades clear the hub and stay on a phone screen', () => {
-  // Two ways a radial blade fails that a tangential one could not: reaching the
-  // Point turns the weapon into a solid disc and swallows the tower, and reaching
-  // past a 430px screen's half-width puts the tips off-canvas at the sides, paying
-  // fill rate for blade that bites nothing the player can see.
+// LOOSENED 2026-07-26 at Daniel's call: the hub-gap assertion
+// (`inner - reach > 60`) is DELETED, not weakened. ADR-0022 argued a gap kept the
+// weapon from swallowing the tower; Daniel asked for the blades mounted on the
+// Point instead — "attaching them physically" — and a rule cannot outrank the
+// design authority who set it. The replacement guarantee is in render.test.mjs,
+// which now pins the roots INSIDE the hull rather than clear of it. The
+// screen-width half of the old test survives here unchanged.
+test('the blades stay on a phone screen', () => {
+  // Reaching past a 430px screen's half-width puts the tips off-canvas at the
+  // sides, paying fill rate for blade that bites nothing the player can see. The
+  // pre-ADR-0022 218px ring was doing exactly that and nobody had noticed.
   for (let l = 1; l <= WEAPONS.orbit.max; l++) {
     const s = WEAPONS.orbit.stats(l);
-    assert.ok(s.inner - s.reach > 60, `L${l} roots at ${s.inner} — the hub gap is gone`);
     assert.ok(s.outer + s.reach < 215, `L${l} reaches ${s.outer}, past a phone's half-width`);
   }
 });

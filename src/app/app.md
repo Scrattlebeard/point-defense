@@ -118,6 +118,11 @@ simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not un
     outward. A blade circling under a fixed light would flicker light-to-dark twice a
     revolution, which reads as a rendering bug rather than as rotation. One gradient serves
     all six.
+  - **The orbit blades are mounted on the Point, not orbiting near it** — their roots are
+    rooted *inside* the hull (`TOWER_R`, exported for the test that pins this) and the tower
+    is drawn after them, so the roots vanish under it. That overlap is the whole trick: a
+    root that stops short of the hull leaves a gap, and a gap reads as debris in orbit rather
+    than as a rotor the tower is driving.
   - **The blade's silhouette carries the read, not its shading** — the fix for *"feels a bit
     like whacking the enemies with a rod"* was geometry, not paint. Two cues: the spine is
     **swept back** so the blade curves against its own rotation, and the widths are

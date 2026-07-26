@@ -7,7 +7,10 @@ import { hpBarThreshold } from '../core/balance.js';
 import { BEAM_REARM } from './weapons/index.js';
 import { tube, litDisc, litBar, rimLight, shade, alpha, LIGHT_A } from './neon.js';
 
-const TOWER_R = 24;
+/** The Point's drawn hull radius. Exported because the orbit blades are mounted
+ *  ON it (core.md orbit row) and a test holds them to it — a blade rooted past the
+ *  hull floats, and floating is the thing that read as "not attached". */
+export const TOWER_R = 24;
 
 export function poly(ctx, x, y, r, sides, rot) {
   ctx.beginPath();
@@ -546,9 +549,13 @@ function drawField(G) {
     // a thin honed edge on the leading side, the mass of the blade behind it — and
     // both taper to nothing at the tip. Constant width down a straight spoke is
     // what read as a rod; the taper and the sweep are the whole fix.
-    const STEPS = 10, LEAD = 2.4, BACK = 8.2;
-    const lead = t => LEAD * (1 - t * t);
-    const back = t => BACK * Math.pow(1 - t, 0.8);
+    const STEPS = 12, LEAD = 2.6, BACK = 8.6;
+    // one silhouette, scaled twice: thin shaft at the hub (0.30), belly around a
+    // third of the way out, nothing at the tip. Mounting the blades on the hull
+    // made a max-at-root taper untenable — six wide roots at r=22 fuse into a disc.
+    const shape = t => (0.30 + 0.70 * Math.sin(Math.PI * Math.pow(t, 0.62))) * (1 - Math.pow(t, 2.6));
+    const lead = t => LEAD * shape(t);
+    const back = t => BACK * shape(t);
     let bladeGrad = null;
     for (let i = 0; i < st.n; i++) {
       const a = G.wt.orbA + (i * TAU) / st.n;

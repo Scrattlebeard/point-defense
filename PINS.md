@@ -18,6 +18,16 @@
 - **Where:** `src/core/state.js` `waveCleared`/`grantLevels`, `scripts/conductor.mjs`,
   `adr/0015` "What the gate caught", README banner.
 
+- **New mechanism to weigh, 2026-07-26:** the orbit blades are now mounted on the Point's
+  hull and sweep the whole inner field. In a *healthy* run this is nearly free — the region
+  they gained is empty, measured at ~1% more damage in a full maxed build. But in the
+  situation this law is about, a **parked** run with shapes reaching the tower, it is the
+  opposite: the fixed-build harness (immortal tower, shapes piled on the hull) reads orbit
+  L1 at 78% of all damage. A no-input weapon that gets dramatically stronger exactly when
+  the player is losing is a candidate mechanism for "the parked run cannot be killed" — not
+  proven to be *the* cause, and the law was already 0/11 before this landed, but it is the
+  first thing to re-measure when someone instruments the parked run.
+
 ## The older, smaller version of the same gap — the telegraphed guard
 - **State, 2026-07-26 (ADR-0013), corrected same day:** `BOSS_AUTO_RESIST` is gone at
   Daniel's call, and with it the only *mechanic* making a boss undelegatable. The gate
