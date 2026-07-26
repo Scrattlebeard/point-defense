@@ -117,15 +117,16 @@ export const WEAPONS = {
   },
   orbit: {
     name: 'Orbitals', input: 'none', category: 'auto', max: 5,
-    descs: ['Two curved blades circle the Point, grinding shapes they touch', '+1 blade', '+1 blade, longer reach', '+1 blade, +damage', 'MAX: six blades'],
-    // ADR-0020: the ring is a constant, every level adds a blade, and the blades
-    // lengthen along the arc. Radius growth used to be the per-level grant; it was
-    // a coverage nerf in an upgrade's clothes that walked them out of the frost
-    // aura. `bite` is the per-shape cooldown — the ceiling control.
+    descs: ['Two blades sweep out from the Point, grinding shapes they touch', '+1 blade', '+1 blade, longer reach', '+1 blade, +damage', 'MAX: six long blades'],
+    // ADR-0022: the blades are RADIAL spokes rooted at a fixed `inner` and reaching
+    // out to `outer`, which is what levelling buys. `reach` is the tangential
+    // half-width. `bite` is the per-shape cooldown and is the ceiling control — a
+    // radial blade holds a shape inside it for its whole approach, so the cooldown,
+    // not coverage, is what decides how hard any one shape is ground.
     stats: l => ({
-      n: [0, 2, 3, 4, 5, 6][l], dmg: 17 + 9 * l,
-      radius: 138, reach: 13, len: [0, 8, 14, 22, 30, 38][l],
-      speed: 2.3 + 0.18 * l, bite: [0, 0.5, 0.46, 0.42, 0.36, 0.3][l],
+      n: [0, 2, 3, 4, 5, 6][l], dmg: 10 + 4 * l,
+      inner: 96, outer: [0, 140, 156, 170, 184, 196][l], reach: 9,
+      speed: 2.3 + 0.18 * l, bite: [0, 0.8, 0.66, 0.52, 0.40, 0.31][l],
     }),
   },
   nova: {

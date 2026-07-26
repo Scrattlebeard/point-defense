@@ -143,50 +143,46 @@ test('every orbit level grants something a player can name', () => {
   const st = l => WEAPONS.orbit.stats(l);
   for (let l = 2; l <= WEAPONS.orbit.max; l++) {
     const a = st(l - 1), b = st(l);
-    assert.ok(b.n > a.n || b.len > a.len,
-      `L${l} grants no blade and no length — the +damage tick is not an upgrade, it is a rounding error`);
+    assert.ok(b.n > a.n || b.outer > a.outer,
+      `L${l} grants no blade and no reach — the +damage tick is not an upgrade, it is a rounding error`);
     assert.ok(b.dmg > a.dmg, `L${l} does not even tick damage`);
   }
 });
 
-test('the orbit ring is a constant — levelling lengthens the blade, never moves it out', () => {
+test('the blades are rooted at a fixed radius and grow outward from it', () => {
+  // ADR-0022 replaces ADR-0020's constant-ring law with the same idea one level up:
+  // what must not drift is where the blades are ROOTED. Levelling extends the tip.
+  // Daniel's complaint — "I don't like that we keep increasing the radius per
+  // default" — is answered by the root holding still, not the whole weapon.
   const st = l => WEAPONS.orbit.stats(l);
   for (let l = 2; l <= WEAPONS.orbit.max; l++) {
-    assert.equal(st(l).radius, st(1).radius,
-      `L${l} moved the ring — radius growth is a coverage nerf wearing an upgrade's clothes (ADR-0020)`);
-  }
-  // Coverage is the fraction of the ring that is bladed at all: n blades, each
-  // catching `len` of arc plus its own reach on both ends. It must never fall.
-  const cover = l => {
-    const s = st(l);
-    return (s.n * (s.len + 2 * s.reach)) / (2 * Math.PI * s.radius);
-  };
-  for (let l = 2; l <= WEAPONS.orbit.max; l++) {
-    assert.ok(cover(l) > cover(l - 1),
-      `L${l} covers ${(cover(l) * 100).toFixed(1)}% of the ring, down from ${(cover(l - 1) * 100).toFixed(1)}%`);
+    assert.equal(st(l).inner, st(1).inner,
+      `L${l} moved the blade root — that is the ring drifting outward under a new name`);
+    assert.ok(st(l).outer > st(l - 1).outer, `L${l} reaches no further than L${l - 1}`);
   }
 });
 
-test('a maxed orbit is six knives, not a cogwheel', () => {
-  // Daniel, 2026-07-26, on the first ADR-0020 build: "6 blades this long is a bit
-  // much." The airiness bound is a real design property — a ring filled edge to
-  // edge stops reading as separate blades and stops reading as rotation at all.
-  // Drawn arc per blade is `len` plus the tips the renderer adds beyond the chord.
-  const st = WEAPONS.orbit.stats(WEAPONS.orbit.max);
-  const filled = (st.n * (st.len + 20)) / (2 * Math.PI * st.radius);
-  assert.ok(filled < 0.45,
-    `maxed blades fill ${(filled * 100).toFixed(0)}% of the ring — past ~45% it is a cogwheel`);
+test('the blades clear the hub and stay on a phone screen', () => {
+  // Two ways a radial blade fails that a tangential one could not: reaching the
+  // Point turns the weapon into a solid disc and swallows the tower, and reaching
+  // past a 430px screen's half-width puts the tips off-canvas at the sides, paying
+  // fill rate for blade that bites nothing the player can see.
+  for (let l = 1; l <= WEAPONS.orbit.max; l++) {
+    const s = WEAPONS.orbit.stats(l);
+    assert.ok(s.inner - s.reach > 60, `L${l} roots at ${s.inner} — the hub gap is gone`);
+    assert.ok(s.outer + s.reach < 215, `L${l} reaches ${s.outer}, past a phone's half-width`);
+  }
 });
 
 test('the blades stay inside the frost aura at every level of both weapons', () => {
   // Daniel, 2026-07-26: "taking it out of the slow aura is a huge nerf actually."
-  // The weakest aura is frost L1; the blade's innermost reach must still clip it,
-  // or the grind-and-slow pair expires exactly when both are most invested in.
+  // The weakest aura is frost L1; the blade's root must still sit inside it, or the
+  // grind-and-slow pair expires exactly when both are most invested in.
   const aura = WEAPONS.frost.stats(1).radius;
   for (let l = 1; l <= WEAPONS.orbit.max; l++) {
     const s = WEAPONS.orbit.stats(l);
-    assert.ok(s.radius - s.reach <= aura,
-      `orbit L${l} reaches in to ${s.radius - s.reach}, outside the frost L1 aura at ${aura}`);
+    assert.ok(s.inner - s.reach <= aura,
+      `orbit L${l} roots at ${s.inner - s.reach}, outside the frost L1 aura at ${aura}`);
   }
 });
 

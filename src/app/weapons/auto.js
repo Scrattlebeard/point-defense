@@ -20,16 +20,16 @@ export function updateAuto(G, dt) {
     wt.orbA += st.speed * dt;
     for (let i = 0; i < st.n; i++) {
       const a = wt.orbA + (i * TAU) / st.n;
-      // A blade is a chord of the ring, not a point on it (ADR-0020): mounted
-      // tangentially at `radius`, `len` long, swept edge-first. The chord's bulge
-      // away from the true arc is ~4px at the longest blade — inside `reach`.
-      const cx = G.cx + Math.cos(a) * st.radius;
-      const cy = G.cy + Math.sin(a) * st.radius;
-      const hx = -Math.sin(a) * st.len * 0.5;
-      const hy = Math.cos(a) * st.len * 0.5;
+      // A blade is a RADIAL spoke (ADR-0022): rooted at `inner`, reaching to
+      // `outer`, `reach` wide across. A shape approaching the Point is inside the
+      // swept region for its whole approach rather than crossing a thin band, so
+      // `bite` — not coverage — is what limits how hard it is ground.
+      const ux = Math.cos(a), uy = Math.sin(a);
+      const ax = G.cx + ux * st.inner, ay = G.cy + uy * st.inner;
+      const bx = G.cx + ux * st.outer, by = G.cy + uy * st.outer;
       for (const e of S.enemies) {
         if (e.dead || S.time < e.orbHit) continue;
-        if (distToSegment(e.x, e.y, cx - hx, cy - hy, cx + hx, cy + hy) < st.reach + e.r) {
+        if (distToSegment(e.x, e.y, ax, ay, bx, by) < st.reach + e.r) {
           damageEnemy(G, e, st.dmg, { src: 'orbit' });
           e.orbHit = S.time + st.bite;
           const d = dist(G.cx, G.cy, e.x, e.y) || 1;

@@ -584,14 +584,18 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
   band is untouched — every early widening pushed the median to the top edge), then 168 at L4
   and 218 at L5. Orbit went **0% → 19%** of a maxed build's damage, and bolt's dominance fell
   **69% → 55%**. Both gates hold.
-- **Partly undone on purpose, 2026-07-26 (ADR-0020) — read that before re-deriving any of
-  this.** The ring is now a constant 138 at every level. The exposure finding above still
-  stands and is still the best data in this pin; what changed is that the *other* half of the
-  trade got named. A ring far out harvests the zone the rest of the build is already killing
-  in, and it walks the blades out of the frost aura — Daniel called the second half a "huge
-  nerf" from the seat, and chose the pairing over the harvest. Measured cost of that choice:
-  orbit 35.9% → 30.8% of a full maxed build. The 120–240px death distribution is exactly why
-  138 (inner edge 125) is the low end of viable and not lower.
+- **RESOLVED DIFFERENTLY, 2026-07-26 (ADR-0022) — read that before re-deriving any of this.**
+  The exposure finding above still stands and is still the best data in this pin. What
+  changed is that the trade it implied turned out not to exist. ADR-0020 read this data as
+  "the ring must sit far out", which cost the frost pairing; ADR-0022 made the blades
+  **radial spokes** rooted at 96 and reaching to 196, so the root sits inside frost's weakest
+  aura *and* the tip sits in the 120–240px band where shapes die. Both ends at once. The
+  either/or was an artifact of the blade being a point on a circle, not a property of the
+  field. Orbit sits at 30.8% of a full maxed build.
+- **A detail this pin should have caught and did not:** a ring at 218 on a 430px-wide phone
+  is outside the screen's 215px half-width, so its left and right arcs were off-canvas —
+  paying fill rate for blade that could never bite anything visible. There is now a test
+  bounding blade reach against the phone half-width.
 - **What remains here:** besiegers genuinely holding the rim are still unreachable by orbit,
   mines and caltrops — but that is now known to be a **rare** case rather than the main one,
   so it should be priced accordingly before anyone spends a mechanic on it. The

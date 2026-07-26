@@ -106,18 +106,20 @@ simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not un
     tier divergence, corrected here in the `.md` because steel catching light is the right
     reading of a knife and the code was already right.)*
   - **Anything that moves along its own long axis has to be told which end is the front**
-    (ADR-0021). The cues are **rake** — the leading end rides further out along the direction
-    of travel than the trailing one — and **asymmetry**, a point at the front and a heel at
-    the back. Without them the eye reads a shape being *carried sideways*, which is a spike,
-    not a blade. The orbit blades carry both; the boomerang and the force blades are still
-    symmetric and are the next candidates, not changed here.
+    (ADR-0021). Without a cue the eye reads a shape being *carried sideways* — a spike, not a
+    blade. **The best cue is not needing one:** orient the thing so its long edge leads, and
+    the problem never arises. That is what ADR-0022 did to the orbit blades, retiring the
+    rake ADR-0021 had added to fake a leading edge. Where the orientation is fixed by the
+    mechanic and the edge *cannot* lead, fall back to rake plus asymmetry. The boomerang
+    (two symmetric crossed crescents) and the force blades still have neither and are the
+    standing candidates; not changed here.
   - **The orbit blades are the one lit thing whose light does not come from `LIGHT_A`**, and
-    deliberately: they are an arc of a ring centred on the Point, so the gradient runs
-    *radially* — dark at the spine, white at the honed outer edge. A blade sweeping a circle
-    would otherwise flicker light-to-dark twice a revolution, which reads as a rendering bug
-    rather than as rotation. The exception is cheap to justify and cheap to spot: it is the
-    only radial gradient not centred on the object it fills. It also buys one gradient for
-    all six blades, since they share a radius.
+    deliberately: each blade is lit *across its own width* — white on the leading face,
+    falling to shadow on the trailing back. A blade circling under a fixed light would
+    flicker light-to-dark twice a revolution, which reads as a rendering bug rather than as
+    rotation. The gradient is built once in a blade's local frame (`+x` outward, `+y` the
+    direction of travel) and reused under each blade's rotation, so six blades cost one
+    gradient.
   - **Bars get a lit top edge** (`litBar`) — hp slivers, the boss bar, the heat gauge. One
     lighter strip along the top third is the entire trick and it costs one `fillRect`.
   - **This is implemented with halos, not `ctx.shadowBlur`, and that is a cost decision**
