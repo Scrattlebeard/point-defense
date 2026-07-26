@@ -98,22 +98,23 @@ HP — the do-nothing run could not die at all). Deterministic given the code
 (every rng call seeded), so a trip always means the sim changed. Wired into the
 prod gate beside calibrate.
 
-> **The gate went red and came back — read this before trusting an old banner.**
-> Removing `BOSS_AUTO_RESIST` (2026-07-26, ADR-0013) took the conductor to **×1.000**
-> against its ≥1.12 band, because that hidden multiplier had been the only thing
-> enforcing Law·Delegation at the boss. It was removed anyway and on purpose: a hidden
-> multiplier corrupts every measurement taken through it, so no other balance lever
-> could be trusted while it existed.
+> **⚠ THE CONDUCTOR GATE IS KNOWINGLY RED AGAIN (2026-07-26, ADR-0015).** Hands buy
+> **×1.000** against a ≥1.12 band and **parked deaths are 0/11** — a run with the aim
+> parked at t=0 reaches wave 49 at 100% HP. **You did not break this.** Removing the in-run
+> XP economy (ADR-0015) removed the last in-run reward for killing things yourself, and
+> Law·Delegation went with it. It was landed anyway, deliberately and with the numbers on
+> the table, because the change is worth playing and a revert is one commit.
+> **`scripts/promote` refuses prod until this is green; dev carries it.**
 >
-> **Re-measured 2026-07-26 after the boss-HP tuning that followed: ×1.259, parked
-> deaths 6/11 — green, three sets, identical every time (deterministic sim).** The
-> banner claiming otherwise stood for part of a day and was simply stale: nobody
-> re-ran the gate after the tuning commit. *Which* change restored it is not bisected
-> — the plausible cause is fatter bosses killing parked runs, i.e. **the law is
-> currently enforced by a number, not by a mechanic**, and a future HP reduction can
-> silently unenforce it again. So the **episodic telegraphed boss guard** (ADR-0013,
-> PINS) is still the design we want; it is no longer an emergency. `scripts/promote`
-> is unblocked.
+> *Earlier the same day this banner said the opposite.* Removing `BOSS_AUTO_RESIST`
+> (ADR-0013) had taken the gate to ×1.000; the boss-HP tuning that followed quietly
+> restored it to ×1.259 / 6-11 and **nobody re-ran the gate**, so a stale red banner stood
+> for part of a day. Lesson kept here on purpose: **re-run the gate after the change that
+> might have fixed it, not only after the change that broke it.**
+>
+> The standing replacement design is the **episodic, telegraphed boss guard** (ADR-0013,
+> PINS). ADR-0015's break is larger and may want its own answer — see its "What the gate
+> caught" section, which records that the mechanism is *not* established.
 
 The gate scores **survival time, not wave reached** (ADR-0010). Wave-reached is
 rate-sensitive — a Force Wall halves the rate waves arrive at with no survival

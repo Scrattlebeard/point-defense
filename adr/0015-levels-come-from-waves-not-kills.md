@@ -1,11 +1,13 @@
 # ADR-0015 — Levels come from waves, not kills
 
-**Status:** ⚠ **DRAFT — BUILT, NOT LANDED (2026-07-26).** The implementation is complete
-and the suite is green, but the conductor gate breaks catastrophically (see "What the gate
-caught", below) and the central measurement in this ADR has a scope error. Do not land
-without Daniel's call on the fork it exposes.
+**Status:** ACCEPTED (2026-07-26), landed **with Law·Delegation knowingly broken** — see
+"What the gate caught" below, which is written against this ADR's own reasoning and stays
+there. Daniel's call, made with both findings in front of him: *"let's land it, this is git,
+we can always revert."* The gate is red on purpose; `scripts/promote` refuses prod until it
+is green, and dev carries the change so it can be played. Reverting is one `git revert` of
+the landing commit — the whole point of landing it rather than nursing a branch.
 
-**Was:** ACCEPTED (2026-07-26). Removes the in-run XP economy entirely. Amends the
+Scope: Removes the in-run XP economy entirely. Amends the
 causal model in ADR-0008 ("bodies are XP"); retires the `xpAdd` lattice line that
 ADR-0003's stat-node family and GDD §5's Law·No-meta-accel parenthetical existed to bless.
 Does **not** touch ADR-0003 stage 2 *mastery* XP, which is a different, still-unbuilt system.

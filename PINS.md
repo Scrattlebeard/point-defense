@@ -1,4 +1,21 @@
-## Law·Delegation has no mechanic behind it — build the telegraphed guard
+## ⚠ Law·Delegation is BROKEN (0/11) — the biggest open thing in the repo
+- **State, 2026-07-26 after ADR-0015:** removing in-run XP took the gate from ×1.259 /
+  6-11 parked deaths to **×1.000 / 0-11** — the do-nothing run reaches wave 49 at 100% HP
+  and cannot be killed. Landed deliberately (Daniel: *"we can always revert"*); prod is
+  blocked by `scripts/promote` until it is green.
+- **The mechanism is NOT established** and that is the first job. Excluded by probe: the
+  opening draft (`OPENING_LEVELS = 1` leaves it equally broken). The tidy story — power
+  tied to wave number tracks difficulty, so a passive player can never fall behind —
+  contradicts ADR-0015's other finding that geared runs got *weaker*. **Measure before
+  designing:** instrument a parked run's level/HP/wave against a robot run under the old
+  and new grant, and find where they diverge. Do not skip to a fix.
+- **Cheapest candidate fix if the mechanism turns out to be "levels no longer lag bad
+  play":** make the wave grant conditional on participation rather than on the clock — but
+  that is a reward-for-aggression mechanic, which is a design decision, not a patch.
+- **Where:** `src/core/state.js` `waveCleared`/`grantLevels`, `scripts/conductor.mjs`,
+  `adr/0015` "What the gate caught", README banner.
+
+## The older, smaller version of the same gap — the telegraphed guard
 - **State, 2026-07-26 (ADR-0013), corrected same day:** `BOSS_AUTO_RESIST` is gone at
   Daniel's call, and with it the only *mechanic* making a boss undelegatable. The gate
   dipped to ×1.000 and is now back to **×1.259, parked deaths 6/11 — green, prod
