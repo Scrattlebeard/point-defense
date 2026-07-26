@@ -42,7 +42,10 @@ Dev hatches (query params on any build): `?autostart` skips the menu ·
 `&warp=N` pre-simulates exactly N seconds with *no* aimer (enemies survive to be
 photographed — keep N ≲ 15: besiegers grind the undefended tower down, so long
 warps photograph the death screen) · `&gear=frost:4,orbit:2` grants weapon levels after autostart (visual
-dev — capped at each weapon's max) · `&form=bolt:fan` wears a form (maxes its base
+dev — capped at each weapon's max) · `?reh=20:flame` arms the **rehearsal** panel from the URL
+(start wave and starting weapon, ADR-0018 — the menu panel is the real surface; this reaches an
+armed menu headlessly and saves tapping on desktop. A rehearsal run pays no shards and sets no
+records) · `&form=bolt:fan` wears a form (maxes its base
 weapon first; forms are otherwise only reachable by a full run) · `&sparks` enables the ambient grid sparks
 in-battle (menu has them by default — app.md "Grid sparks") · **`?cards`** opens the level-up screen showing one of every card type at once (new
 weapon · upgrade · form · passive) — form cards otherwise need a maxed base weapon and an

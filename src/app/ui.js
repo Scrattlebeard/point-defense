@@ -15,6 +15,10 @@ let H = null; // hooks
 export function initUI(G, hooks) {
   H = hooks;
   $('startBtn').addEventListener('click', () => H.onStart());
+  // Rehearsal (ADR-0018): tap to cycle. A stepper beats a slider on a phone, and
+  // cycling beats typing a query string you would have to retype after every death.
+  $('rehWaveBtn').addEventListener('click', () => { H.onRehearsalWave(); renderMenu(G); });
+  $('rehWeaponBtn').addEventListener('click', () => { H.onRehearsalWeapon(); renderMenu(G); });
   $('techBtn').addEventListener('click', () => { renderTech(G); showOnly('tech'); });
   $('bestBtn').addEventListener('click', () => { renderBestiary(G); showOnly('bestiary'); });
   $('bestBack').addEventListener('click', () => { renderMenu(G); showOnly('menu'); });
@@ -70,6 +74,19 @@ export function renderMenu(G) {
   $('fsBtn').textContent = document.fullscreenElement ? '🗗 EXIT FULLSCREEN' : '🗖 FULLSCREEN';
   $('storageWarn').classList.toggle('hidden', storageOk);
   if (!towerUnlocked(m, m.tower)) m.tower = 'bastion';
+
+  // Rehearsal panel (app.md "Rehearsal panel"): DEFAULT in the off state so the
+  // panel reads inert until deliberately armed, and the primary button changes
+  // word so an armed rehearsal cannot be started by muscle memory.
+  const reh = m.rehearsal || { wave: 1, weapon: null };
+  const armed = reh.wave > 1 || !!reh.weapon;
+  $('rehWaveBtn').textContent = reh.wave > 1 ? `START: WAVE ${reh.wave}` : 'START: WAVE 1';
+  $('rehWeaponBtn').textContent = reh.weapon
+    ? `WEAPON: ${WEAPONS[reh.weapon].name.toUpperCase()}` : 'WEAPON: DEFAULT';
+  $('rehWaveBtn').classList.toggle('danger', reh.wave > 1);
+  $('rehWeaponBtn').classList.toggle('danger', !!reh.weapon);
+  $('rehWarn').classList.toggle('hidden', !armed);
+  $('startBtn').textContent = armed ? 'REHEARSE' : 'DEFEND';
 
   const row = $('towerRow');
   row.innerHTML = '';

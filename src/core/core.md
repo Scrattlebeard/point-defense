@@ -21,7 +21,7 @@ prereqs enforced), not exact constants, so tuning stays cheap.
 | `waves.js` | `composeWave(waveNum, rng)` → spawn plan |
 | `gestures.js` | Pointer-trace classification → `tap` / `swipe` / `hold` |
 | `tech.js` | Tech tree queries: `canBuy`, `buy`, `effectsOf(owned)` |
-| `state.js` | `newRun(meta, towerId)`, level grants (run start + per wave cleared), level-up choice generation, shard payout |
+| `state.js` | `newRun(meta, towerId, rehearsal)`, level grants (run start + per wave cleared), level-up choice generation, shard payout |
 
 ## Balance formulas (`balance.js`)
 
@@ -880,6 +880,23 @@ One hold at a time; concurrent other pointers still resolve as taps/swipes
 (multi-touch: beam with one finger, tap-fire with another).
 
 ## Run state (`state.js`)
+
+**Rehearsal** (ADR-0018) — two run parameters that let a playtester start mid-game, so a
+weapon can be felt without a lucky twenty-wave draft. `newRun`'s optional third argument:
+
+- `startWave: W` — the run opens on wave *W* at **level W** with *W−1* picks banked, so the
+  player drafts the build under test rather than being handed one. The director starts at
+  `W−1` and increments into `W`; no spawn logic knows the difference.
+- `startWeapon: id` — replaces **bolt** in the tower's starting loadout at bolt's level, and
+  joins the level-up pool. The first real exercise of "a loadout may skip bolt" (ADR-0007).
+  **Tech locks are deliberately ignored**: the weapons most needing a pass are the locked ones.
+
+**A rehearsal run is invisible to the meta.** Either parameter sets `S.rehearsal`, and a
+rehearsal run pays **no shards**, sets **no `best`**, writes **no score row** and unlocks **no
+achievements** — otherwise opening at wave 25 and dying instantly is a free payout for a wave
+nobody survived, which Law·No-meta-accel forbids in its purchasable form and which is worse
+when free. The game-over screen says so rather than silently paying zero. These are unbuilt
+lattice nodes being used early; when they graduate, the grant is earned and the flag goes.
 
 `newRun(meta, towerId)` folds tech effects + tower profile into starting stats:
 `maxHp = (100 + hpBonus) * tower.hpMult`, `dmgMult = (1 + dmgMults) * tower.dmgMult`,

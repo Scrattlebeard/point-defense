@@ -7,6 +7,8 @@ import { OPENING_LEVELS, LEVELS_PER_WAVE, shardPayout } from './balance.js';
 export function defaultMeta() {
   return {
     shards: 0, best: 0, tech: [], tower: 'bastion', sound: true, haptics: true,
+    // ADR-0018 rehearsal parameters, persisted so a playtest survives a reload
+    rehearsal: { wave: 1, weapon: null },
     seen: { enemies: [], variants: [] }, // bestiary discovery record (core.md)
     scores: [], ach: [],                 // records (core.md "Records")
     totalKills: 0, totalBossKills: 0, totalShards: 0,
@@ -18,13 +20,25 @@ export function towerUnlocked(meta, towerId) {
   return effectsOf(meta.tech).towers.has(towerId);
 }
 
-export function newRun(meta, towerId) {
+/** @param rehearsal ADR-0018 playtest parameters: {startWave, startWeapon}. Both
+ *  optional; either one makes the run invisible to the meta (no shards, no records). */
+export function newRun(meta, towerId, rehearsal = {}) {
   const tower = TOWERS[towerId] || TOWERS.bastion;
   const fx = effectsOf(meta.tech);
+  const startWave = Math.max(1, Math.round(rehearsal.startWave || 1));
+  const startWeapon = rehearsal.startWeapon && WEAPONS[rehearsal.startWeapon]
+    ? rehearsal.startWeapon : null;
+  const isRehearsal = startWave > 1 || !!startWeapon;
 
   const weapons = {};
   for (const id in WEAPONS) weapons[id] = 0;
   for (const [id, l] of Object.entries(tower.start)) weapons[id] = l;
+  // The chosen weapon takes bolt's place at bolt's level (ADR-0018). Tech locks
+  // are ignored deliberately — the weapons most needing a pass are the locked ones.
+  if (startWeapon && startWeapon !== 'bolt') {
+    weapons[startWeapon] = weapons.bolt || 1;
+    weapons.bolt = 0;
+  }
 
   // Level-up pool: unlocked-by-default + tech unlocks + anything the tower itself
   // grants (the tower IS the unlock — core.md "Towers").
@@ -49,7 +63,8 @@ export function newRun(meta, towerId) {
     // forms (core.md "Forms"): what the account unlocked, and what is active
     formPool: new Set(fx.forms), forms: {},
     lvl: 1, pendingLevels: 0,
-    wave: 0, kills: 0, bossKills: 0, time: 0,
+    rehearsal: isRehearsal,
+    wave: startWave - 1, kills: 0, bossKills: 0, time: 0,
     // damage attributed to its source (core.md Run state); 'other' is explicit
     dmgBy: {},
     // control measured in shape-seconds of progress denied (core.md Run state):
@@ -66,7 +81,7 @@ export function newRun(meta, towerId) {
   // The opening draft, plus whatever Head Start stacks on top (ADR-0015). The
   // first level is free — you ARE level 1 — so the run banks one pick fewer than
   // the level it starts at.
-  S.lvl = OPENING_LEVELS + (fx.startLevel - 1);
+  S.lvl = OPENING_LEVELS + (fx.startLevel - 1) + (startWave - 1);
   S.pendingLevels = S.lvl - 1;
   return S;
 }
@@ -178,6 +193,9 @@ export function waveCleared(S) {
 
 /** Death → shards. Returns {meta, earned}; input meta is not mutated. */
 export function payout(S, meta) {
+  // A rehearsal is invisible to the meta (ADR-0018): opening at wave 25 and dying
+  // would otherwise be a free payout for waves nobody survived.
+  if (S.rehearsal) return { meta, earned: 0 };
   const fx = effectsOf(meta.tech);
   const earned = Math.max(1, Math.round(shardPayout(S.wave, S.kills, S.bossKills) * fx.salvageMult));
   return {
@@ -195,6 +213,7 @@ export function payout(S, meta) {
 
 /** Top-10 high scores, wave then kills. Returns {meta, rank} — rank 0 if it didn't place. */
 export function addScore(meta, entry) {
+  if (entry && entry.rehearsal) return { meta, rank: 0 }; // ADR-0018
   const scores = [...(meta.scores || []), entry]
     .sort((a, b) => b.wave - a.wave || b.kills - a.kills)
     .slice(0, 10);
@@ -204,6 +223,7 @@ export function addScore(meta, entry) {
 
 /** Evaluate achievements over (meta, finalRunState|null). Unlocks are forever. */
 export function evalAchievements(meta, S) {
+  if (S && S.rehearsal) return { meta, unlocked: [] }; // ADR-0018
   const owned = new Set(meta.ach || []);
   const unlocked = ACHIEVEMENTS.filter(a => !owned.has(a.id) && a.test(meta, S));
   if (!unlocked.length) return { meta, unlocked };

@@ -240,6 +240,14 @@ simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not un
   small shake.
 - **Failure honesty:** if localStorage is unavailable, the game plays with in-memory
   meta and the menu shows "progress won't persist" — never a silent wipe.
+- **Rehearsal panel** (ADR-0018): two tap-to-cycle buttons on the menu — start wave and
+  starting weapon — because playtesting happens on a phone, where a query string is
+  miserable to type and worse to retype after every death. Both persist in the meta so a
+  rehearsal survives a reload, and both show **DEFAULT** in their off state so the panel
+  reads as inert until deliberately armed. When either is armed the DEFEND button is
+  relabelled **REHEARSE** and the menu carries a plain warning that the run will not count —
+  a surface that silently voids your progress is a trap, so it says so before the run, not
+  after.
 - **Reset progress:** menu carries a two-tap reset (arm → confirm within 4s) that
   restores `defaultMeta()` and saves. Deliberate wipes only; no accidental ones.
 

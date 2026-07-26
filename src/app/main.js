@@ -53,8 +53,14 @@ window.addEventListener('resize', resize);
 resize();
 
 // ---------- run lifecycle ----------
+// Rehearsal cycles (ADR-0018). Waves step in fives after 1 — fine grain is not
+// what a playtester wants; reaching wave 30 in six taps is.
+const REH_WAVES = [1, 5, 10, 15, 20, 25, 30, 40];
+const REH_WEAPONS = [null, ...Object.keys(WEAPONS)];
+
 function startRun() {
-  G.S = newRun(G.meta, G.meta.tower);
+  const reh = G.meta.rehearsal || {};
+  G.S = newRun(G.meta, G.meta.tower, { startWave: reh.wave, startWeapon: reh.weapon });
   G.fx = makeFx();
   G.hudCache = null;
   resetWeapons(G);
@@ -78,6 +84,7 @@ function finishRun() {
   const { meta: paid, earned } = payout(G.S, G.meta);
   const { meta: scored, rank } = addScore(paid, {
     wave: G.S.wave, kills: G.S.kills, tower: G.S.towerId, ts: Date.now(),
+    rehearsal: G.S.rehearsal, // ADR-0018: never places
   });
   G.meta = scored;
   announceAchievements(G.S);
@@ -111,6 +118,18 @@ function pauseGame() {
 // ---------- ui hooks ----------
 ui.initUI(G, {
   onStart: () => startRun(),
+  onRehearsalWave: () => {
+    const r = G.meta.rehearsal || { wave: 1, weapon: null };
+    const i = REH_WAVES.indexOf(r.wave);
+    G.meta = { ...G.meta, rehearsal: { ...r, wave: REH_WAVES[(i + 1) % REH_WAVES.length] } };
+    saveMeta(G.meta);
+  },
+  onRehearsalWeapon: () => {
+    const r = G.meta.rehearsal || { wave: 1, weapon: null };
+    const i = REH_WEAPONS.indexOf(r.weapon);
+    G.meta = { ...G.meta, rehearsal: { ...r, weapon: REH_WEAPONS[(i + 1) % REH_WEAPONS.length] } };
+    saveMeta(G.meta);
+  },
   onPause: () => pauseGame(),
   onResume: () => { if (G.mode === 'pause') { G.mode = 'play'; ui.showOnly(null); } },
   onAbandon: () => finishRun(),
@@ -399,6 +418,18 @@ if (specimenMatch) {
 // Dev/smoke-test hatches: ?autostart skips the menu; ?turbo pre-simulates ~40s
 // (auto-picking level-ups) so a headless screenshot lands mid-battle; ?warp=N
 // pre-simulates exactly N seconds instead.
+// ?reh=20:flame — arm the rehearsal panel from the URL (ADR-0018). The panel is
+// the surface a human uses; this exists so a headless smoke can reach an armed
+// menu, and so a desktop session can skip the tapping. Same parameters, same
+// meta field, so it is genuinely the same feature and not a second path.
+const rehMatch = location.search.match(/reh=(\d+)?(?::(\w+))?/);
+if (rehMatch) {
+  G.meta = { ...G.meta, rehearsal: {
+    wave: Math.max(1, Number(rehMatch[1]) || 1),
+    weapon: WEAPONS[rehMatch[2]] ? rehMatch[2] : null,
+  } };
+  ui.renderMenu(G);
+}
 const warpMatch = location.search.match(/warp=(\d+)/);
 if (location.search.includes('autostart')) {
   startRun();

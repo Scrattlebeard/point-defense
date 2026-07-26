@@ -38,3 +38,18 @@ test('the two buttons that shipped dead are wired', () => {
     assert.ok(provided.has(hook), `main.js must define ${hook}`);
   }
 });
+
+// The OTHER half of the same seam: ui.js reaches into the DOM by literal id, and
+// a missing id is not an error until a human touches that exact control — the
+// same silent failure the hook check above exists for. A screenshot cannot catch
+// it either: the two dead buttons of 2026-07-25 were each "verified" by an image
+// proving they rendered. Added 2026-07-26 with the rehearsal panel (ADR-0018),
+// which introduced four new ids across two files at once.
+test('every id ui.js reaches for exists in index.html', () => {
+  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const declared = new Set([...html.matchAll(/\bid="([A-Za-z][\w-]*)"/g)].map(m => m[1]));
+  const used = new Set([...ui.matchAll(/\$\('([A-Za-z][\w-]*)'\)/g)].map(m => m[1]));
+  assert.ok(used.size > 20, `only found ${used.size} id lookups — the regex stopped matching`);
+  const missing = [...used].filter(id => !declared.has(id));
+  assert.deepEqual(missing, [], `ui.js reaches for ids that do not exist: ${missing.join(', ')}`);
+});
