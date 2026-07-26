@@ -117,9 +117,16 @@ export const WEAPONS = {
   },
   orbit: {
     name: 'Orbitals', input: 'none', category: 'auto', max: 5,
-    descs: ['Two blades circle the Point, grinding shapes they touch', '+1 blade', '+damage & radius', '+1 blade', 'MAX: 5 blades'],
-    // radius pushed out 2026-07-24 — deliberate slight nerf (core.md orbit row)
-    stats: l => ({ n: [0, 2, 3, 3, 4, 5][l], dmg: 10 + 6 * l, radius: l >= 5 ? 218 : l >= 4 ? 168 : 88 + 8 * l, speed: 2.3 + 0.18 * l }),
+    descs: ['Two long blades circle the Point, grinding shapes they touch', '+1 blade', '+1 blade, longer reach', '+1 blade, +damage', 'MAX: six long blades'],
+    // ADR-0020: the ring is a constant, every level adds a blade, and the blades
+    // lengthen along the arc. Radius growth used to be the per-level grant; it was
+    // a coverage nerf in an upgrade's clothes that walked them out of the frost
+    // aura. `bite` is the per-shape cooldown — the ceiling control.
+    stats: l => ({
+      n: [0, 2, 3, 4, 5, 6][l], dmg: 17 + 9 * l,
+      radius: 138, reach: 13, len: [0, 12, 22, 38, 54, 72][l],
+      speed: 2.3 + 0.18 * l, bite: [0, 0.5, 0.46, 0.42, 0.36, 0.3][l],
+    }),
   },
   nova: {
     name: 'Nova', input: 'none', category: 'auto', max: 5,

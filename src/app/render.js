@@ -541,21 +541,31 @@ function drawField(G) {
   // orbit blades
   if (S.weapons.orbit >= 1) {
     const st = WEAPONS.orbit.stats(S.weapons.orbit);
+    // ADR-0020: a blade is an arc of the ring, honed on its outer edge — the face
+    // inbound shapes meet. Its drawn *length* is the hit segment plus a tip, so what
+    // the eye reads as reach along the ring is the reach; its drawn *thickness* is
+    // deliberately under `reach`, which is the usual forgiving-hitbox trade and the
+    // only place the picture and the physics differ. One gradient serves every
+    // blade: they share a radius, so the light across them is identical.
+    const R = st.radius;
+    const spine = 7;
+    const g = ctx.createRadialGradient(G.cx, G.cy, R - spine, G.cx, G.cy, R);
+    g.addColorStop(0, '#3d7a8c');     // the spine, turned away
+    g.addColorStop(0.55, '#9ff3ff');
+    g.addColorStop(1, '#eafcff');     // the honed edge
     for (let i = 0; i < st.n; i++) {
       const a = G.wt.orbA + (i * TAU) / st.n;
-      const bx = G.cx + Math.cos(a) * st.radius;
-      const by = G.cy + Math.sin(a) * st.radius;
-      ctx.save();
-      ctx.translate(bx, by);
-      ctx.rotate(a + Math.PI / 2);
-      const g = ctx.createLinearGradient(-5, 0, 5, 0);   // lit edge / shadow edge
-      g.addColorStop(0, '#e8fbff'); g.addColorStop(0.5, '#9ff3ff'); g.addColorStop(1, '#4d8fa3');
+      const half = (st.len * 0.5 + 10) / R;   // the +10 is the tip beyond the hit chord
       ctx.fillStyle = g;
-      ctx.beginPath(); ctx.moveTo(0, -9); ctx.lineTo(5, 5); ctx.lineTo(-5, 5); ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';      // the leading edge catches it
+      ctx.beginPath();
+      ctx.arc(G.cx, G.cy, R, a - half, a + half);
+      // the spine runs shorter than the edge, which is what tapers both ends to points
+      ctx.arc(G.cx, G.cy, R - spine, a + half * 0.68, a - half * 0.68, true);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
       ctx.lineWidth = 1.2;
-      ctx.beginPath(); ctx.moveTo(0, -9); ctx.lineTo(-5, 5); ctx.stroke();
-      ctx.restore();
+      ctx.beginPath(); ctx.arc(G.cx, G.cy, R, a - half, a + half); ctx.stroke();
     }
   }
 

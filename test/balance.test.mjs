@@ -136,6 +136,49 @@ test('variantChance: none before wave 6, capped at 0.35, non-decreasing', () => 
 // to be meaningful", wave 10 wanted "10-15% extra"). Raising the ramp's FLOOR is the
 // whole change — the complaint was about the shape of the early curve, not about two
 // waves, and the mid/late curve nobody complained about must stay put.
+// ADR-0020. The three laws the orbit ladder broke, one test each. All three are
+// about the same defect — a fixed blade beside a growing ring — seen from the
+// player's side, the designer's side and the neighbouring weapon's side.
+test('every orbit level grants something a player can name', () => {
+  const st = l => WEAPONS.orbit.stats(l);
+  for (let l = 2; l <= WEAPONS.orbit.max; l++) {
+    const a = st(l - 1), b = st(l);
+    assert.ok(b.n > a.n || b.len > a.len,
+      `L${l} grants no blade and no length — the +damage tick is not an upgrade, it is a rounding error`);
+    assert.ok(b.dmg > a.dmg, `L${l} does not even tick damage`);
+  }
+});
+
+test('the orbit ring is a constant — levelling lengthens the blade, never moves it out', () => {
+  const st = l => WEAPONS.orbit.stats(l);
+  for (let l = 2; l <= WEAPONS.orbit.max; l++) {
+    assert.equal(st(l).radius, st(1).radius,
+      `L${l} moved the ring — radius growth is a coverage nerf wearing an upgrade's clothes (ADR-0020)`);
+  }
+  // Coverage is the fraction of the ring that is bladed at all: n blades, each
+  // catching `len` of arc plus its own reach on both ends. It must never fall.
+  const cover = l => {
+    const s = st(l);
+    return (s.n * (s.len + 2 * s.reach)) / (2 * Math.PI * s.radius);
+  };
+  for (let l = 2; l <= WEAPONS.orbit.max; l++) {
+    assert.ok(cover(l) > cover(l - 1),
+      `L${l} covers ${(cover(l) * 100).toFixed(1)}% of the ring, down from ${(cover(l - 1) * 100).toFixed(1)}%`);
+  }
+});
+
+test('the blades stay inside the frost aura at every level of both weapons', () => {
+  // Daniel, 2026-07-26: "taking it out of the slow aura is a huge nerf actually."
+  // The weakest aura is frost L1; the blade's innermost reach must still clip it,
+  // or the grind-and-slow pair expires exactly when both are most invested in.
+  const aura = WEAPONS.frost.stats(1).radius;
+  for (let l = 1; l <= WEAPONS.orbit.max; l++) {
+    const s = WEAPONS.orbit.stats(l);
+    assert.ok(s.radius - s.reach <= aura,
+      `orbit L${l} reaches in to ${s.radius - s.reach}, outside the frost L1 aura at ${aura}`);
+  }
+});
+
 test('raising the early ramp lifts waves 5 and 10 and leaves the late curve alone', () => {
   const ttk = B.bossTargetTtk;
   assert.ok(ttk(5) >= 20, `the first boss is ${ttk(5)}s — too short to be meaningful`);

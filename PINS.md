@@ -224,33 +224,47 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
 - **Context:** GitHub Pages hosting stays static throughout — no server of ours at
   any step. Discussed 2026-07-24 (chat); Daniel: "put a pin in it."
 
-## MEASURED: bolt does 72% of a maxed build's damage, and orbit does 0%
-- **What:** the first per-weapon damage measurement this project has ever had (the ledger
-  landed 2026-07-25). Five 15-minute robot runs, maxed budget-legal build
-  (bolt/orbit/nova/frost/tesla/turret): **Bolt 72% · Nova 15% · Turrets 7% · Tesla 7% ·
-  Orbitals 0%** (frost 0% is correct — it is a slow, not a damage source).
-- **Why it matters — two separate problems:**
-  1. **One weapon does nearly three quarters of the work.** ADR-0006's slot budget exists to
-     force identity through scarcity, but if five of six slots contribute 28% between them,
-     the choice of what fills them barely matters. That is the focus law's *build* half
-     failing quietly while its *attention* half (the conductor gate) passes.
-  2. **Orbitals contribute literally nothing.** This corroborates the rim dead-zone pin from
-     a completely independent direction, and goes further than that pin claimed: it said
-     orbit deals zero to shapes *holding the rim*; this says orbit deals zero **overall** in
-     a real run. Shapes die before they cross the 96–128px ring, or cross it too fast to be
-     ground. Orbit is one of the three starting-pool autos and is, in practice, dead weight.
+## MEASURED: bolt does half of a maxed build's damage — the concentration problem
+- **What:** per-weapon damage shares in a maxed budget-legal build (bolt/orbit/nova/frost/
+  tesla/turret). Re-measured 2026-07-26 on a **seeded** harness, 4 × 15 min, which is the
+  instrument to reuse — the original 2026-07-25 numbers were unseeded:
+  **bolt 48.7% · orbit 30.8% · nova 13.7% · turret 3.7% · tesla 3.0%** (frost 0% is correct
+  — it is a slow, not a damage source).
+- **The orbit half of this pin is CLOSED.** It read 0% when written; the 2026-07-25 radius
+  push took it to ~36% and ADR-0020 re-shaped it to 30.8%. Orbitals are no longer dead
+  weight, and the story of why is in ADR-0020, not here.
+- **What remains, and it is the bigger half:** *two* weapons do 80% of the work, and the
+  four others split a fifth of it between them. ADR-0006's slot budget exists to force
+  identity through scarcity, but if tesla and the turrets contribute 3% each, the choice of
+  what fills those slots barely matters. That is the focus law's *build* half failing
+  quietly while its *attention* half (the conductor gate) passes.
 - **Caveat, stated because it bounds the number:** the robot retargets every 0.2s, so bolt —
-  the always-on aimed weapon — is at its theoretical best. **72% is an upper bound**; a human
-  aiming worse would shift some share to the autos. It does not rescue orbit's zero.
+  the always-on aimed weapon — is at its theoretical best. **~49% is an upper bound**; a
+  human aiming worse would shift share to the autos.
+- **Second caveat, learned 2026-07-26:** the harness gives the tower 1e9 HP so a run lasts
+  long enough to measure, which lets shapes pile up around the Point and flatters contact
+  and aura weapons. Trustworthy for *before/after on the same build*, not as absolute truth.
 - **Where:** `S.dmgBy` (core.md Run state) is the instrument; re-run the sweep after any
-  weapon change. `src/core/config.js` orbit ring radius, `src/app/weapons/auto.js` orbit hit
-  test.
-- **Context / not decided:** whether the fix for bolt is nerfing it, buffing autos, or
-  accepting that the default gun carries and the autos are utility. That is a design call
+  weapon change. Next suspects: `tesla` and `turret` rows in `src/core/config.js`.
+- **Context / not decided:** whether the fix for bolt is nerfing it, buffing the tail, or
+  accepting that the default gun carries and the rest are utility. That is a design call
   about what the six slots are *for*, and ADR-0006 deliberately deferred weapon purposes
-  ("taxonomy now, purposes after a playtest under the cap") — this is the measurement that
-  playtest was supposed to inform.
+  ("taxonomy now, purposes after a playtest under the cap").
 
+## Frost's slow cap may be re-openable now that the orbital shove is smaller
+- **What:** frost's max slow was cut from 62% to 45% after the 2026-07-23 playtest, for one
+  named reason: *"max slow + orbital knockback held enemies in place indefinitely."* ADR-0020
+  dropped that shove from 45 to 30. The specific interaction that bought the cap is now
+  roughly a third weaker, so the cap may be paying for a problem that no longer exists.
+- **Why it's worth doing:** frost is the only pure-control auto in the starting pool and its
+  identity is being the thing that buys time. 45% is a mild version of that identity, and it
+  was set defensively rather than because 45 was measured to be right.
+- **Why not now:** it is a *different* weapon's balance, changed in the same session as an
+  orbit overhaul would make both unattributable — and the lock-in it guards against is a
+  playtest finding, so re-opening it wants a playtest, not a harness run.
+- **Where:** `WEAPONS.frost.stats` in `src/core/config.js`; the frost row in `core.md`
+  carries the 62%→45% note and the reason. Re-check by playing frost 5 + orbit 5 together
+  and watching whether shapes park.
 ## The conductor's robot only aims — hold and swipe hands are unproven
 - **What:** teach `scripts/conductor.mjs`'s robot to *hold* a channel and *swipe* a gesture,
   so the gate proves Law·Delegation across all three input dimensions instead of one.
@@ -570,6 +584,14 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
   band is untouched — every early widening pushed the median to the top edge), then 168 at L4
   and 218 at L5. Orbit went **0% → 19%** of a maxed build's damage, and bolt's dominance fell
   **69% → 55%**. Both gates hold.
+- **Partly undone on purpose, 2026-07-26 (ADR-0020) — read that before re-deriving any of
+  this.** The ring is now a constant 138 at every level. The exposure finding above still
+  stands and is still the best data in this pin; what changed is that the *other* half of the
+  trade got named. A ring far out harvests the zone the rest of the build is already killing
+  in, and it walks the blades out of the frost aura — Daniel called the second half a "huge
+  nerf" from the seat, and chose the pairing over the harvest. Measured cost of that choice:
+  orbit 35.9% → 30.8% of a full maxed build. The 120–240px death distribution is exactly why
+  138 (inner edge 125) is the low end of viable and not lower.
 - **What remains here:** besiegers genuinely holding the rim are still unreachable by orbit,
   mines and caltrops — but that is now known to be a **rare** case rather than the main one,
   so it should be priced accordingly before anyone spends a mechanic on it. The

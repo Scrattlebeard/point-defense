@@ -1,5 +1,5 @@
 // The classic autos: frost aura, orbitals, nova, tesla, seekers, turrets.
-import { dist, TAU } from '../../core/geom.js';
+import { dist, distToSegment, TAU } from '../../core/geom.js';
 import { damageEnemy, nearestEnemy, applyKnock } from '../enemies.js';
 import { burst, shake } from '../fx.js';
 import { sfx } from '../audio.js';
@@ -20,17 +20,22 @@ export function updateAuto(G, dt) {
     wt.orbA += st.speed * dt;
     for (let i = 0; i < st.n; i++) {
       const a = wt.orbA + (i * TAU) / st.n;
-      const bx = G.cx + Math.cos(a) * st.radius;
-      const by = G.cy + Math.sin(a) * st.radius;
+      // A blade is a chord of the ring, not a point on it (ADR-0020): mounted
+      // tangentially at `radius`, `len` long, swept edge-first. The chord's bulge
+      // away from the true arc is ~4px at the longest blade — inside `reach`.
+      const cx = G.cx + Math.cos(a) * st.radius;
+      const cy = G.cy + Math.sin(a) * st.radius;
+      const hx = -Math.sin(a) * st.len * 0.5;
+      const hy = Math.cos(a) * st.len * 0.5;
       for (const e of S.enemies) {
         if (e.dead || S.time < e.orbHit) continue;
-        if (dist(bx, by, e.x, e.y) < 13 + e.r) {
+        if (distToSegment(e.x, e.y, cx - hx, cy - hy, cx + hx, cy + hy) < st.reach + e.r) {
           damageEnemy(G, e, st.dmg, { src: 'orbit' });
-          e.orbHit = S.time + 0.35;
+          e.orbHit = S.time + st.bite;
           const d = dist(G.cx, G.cy, e.x, e.y) || 1;
-          // shove restored 35→45 after the age-accrual fix: fresh shapes fling
-          // properly again, veterans still resist via mass (core.md enemyMass)
-          applyKnock(e, ((e.x - G.cx) / d) * 45, ((e.y - G.cy) / d) * 45);
+          // shove 45→30 (ADR-0020): the coverage the longer blades buy pays for
+          // the exposure the softer shove gives up. Veterans resist via mass.
+          applyKnock(e, ((e.x - G.cx) / d) * 30, ((e.y - G.cy) / d) * 30);
         }
       }
     }

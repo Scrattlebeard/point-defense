@@ -91,17 +91,27 @@ simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not un
   of two kinds, and **never both** — self-lit objects have no shadow side, lit objects do
   not bloom; mixing the two is what makes neon art look muddy.
   - **Emissive** — it makes its own light: a wide, saturated, low-alpha **halo** under a
-    thin, **whitened core** (`tube`). Enemy wireframes, force blades, boomerangs, orbit
-    blades, mines, bullets. **The hue lives in the halo, not the core**, which is what keeps
+    thin, **whitened core** (`tube`). Enemy wireframes, force blades, boomerangs, mines,
+    bullets. **The hue lives in the halo, not the core**, which is what keeps
     "enemy species = hue" true while the core runs bright: a neon tube is white in the
     middle and coloured in its bloom, and the bloom is the larger patch of screen. A shape's
     silhouette is unchanged — the halo is drawn on the *same* path, so nothing grows.
   - **Lit** — it is a solid object catching light from `LIGHT_A` (up and to the left,
     **one constant for the whole game**): a radial gradient offset toward the light, a
     bright `rimLight` crescent where the surface turns into it, and the far edge falling
-    into shadow. The tower hull, turrets, boulders, the mortar shell. A scene lit from two
-    directions reads flat, which is the thing being fixed — so the direction is a shared
-    constant, not a per-call-site opinion.
+    into shadow. The tower hull, turrets, boulders, the mortar shell, **the orbit blades**.
+    A scene lit from two directions reads flat, which is the thing being fixed — so the
+    direction is a shared constant, not a per-call-site opinion. *(The orbit blades were
+    listed as emissive when ADR-0019 landed and drawn as lit solids in the same commit — a
+    tier divergence, corrected here in the `.md` because steel catching light is the right
+    reading of a knife and the code was already right.)*
+  - **The orbit blades are the one lit thing whose light does not come from `LIGHT_A`**, and
+    deliberately: they are an arc of a ring centred on the Point, so the gradient runs
+    *radially* — dark at the spine, white at the honed outer edge. A blade sweeping a circle
+    would otherwise flicker light-to-dark twice a revolution, which reads as a rendering bug
+    rather than as rotation. The exception is cheap to justify and cheap to spot: it is the
+    only radial gradient not centred on the object it fills. It also buys one gradient for
+    all six blades, since they share a radius.
   - **Bars get a lit top edge** (`litBar`) — hp slivers, the boss bar, the heat gauge. One
     lighter strip along the top third is the entire trick and it costs one `fillRect`.
   - **This is implemented with halos, not `ctx.shadowBlur`, and that is a cost decision**
