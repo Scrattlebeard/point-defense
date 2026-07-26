@@ -117,6 +117,35 @@ test('ricochet needs a second shape: a lone target does not get hit twice by one
     `a lone target took ${hits} hits from ${shots} bolts — a kick must find a DIFFERENT shape`);
 });
 
+// The ORDER was decided in code (aim.js) and ADR-0006, and core.md stated the
+// opposite ("after its pierce is spent") from 2026-07-25 until 2026-07-26. Now
+// that L4 grants exactly pierce 1 + ricochet 1 (ADR-0014), there is a clean rig
+// for it, so the decision gets an enforceable home instead of a comment.
+test('kicks are spent before pierce — the second contact is a steered one', () => {
+  const G = rig(4); // pierce 1, ricochet 1, ONE stream
+  const onLine = spawnEnemy(G, 'tank', null, 700, 300);   // straight down the aim
+  const offLine = spawnEnemy(G, 'tank', null, 690, 240);  // 60px aside, well in range
+  for (const e of [onLine, offLine]) { e.hp = e.maxHp = 1e9; e.spd = 0; }
+  for (let t = 0; t < 3; t += 1 / 60) { updateWeapons(G, 1 / 60); G.S.time += 1 / 60; }
+  assert.ok(onLine.hp < onLine.maxHp, 'setup: the aimed shape should be taking fire');
+  // Under pierce-first the bolt would carry straight on past the aimed shape and
+  // die at the wall having never met the off-line one — ricochet only ever
+  // triggers ON a contact.
+  assert.ok(offLine.hp < offLine.maxHp,
+    'the off-line shape was never reached — pierce was spent before the kick');
+});
+
+test('a kick with nothing in range is banked, not burned', () => {
+  const G = rig(4);
+  const lone = spawnEnemy(G, 'tank', null, 700, 300);
+  lone.hp = lone.maxHp = 1e9; lone.spd = 0;
+  for (let i = 0; i < 40 && !G.S.bullets.length; i++) updateWeapons(G, 1 / 60);
+  const b = G.S.bullets[0];
+  for (let t = 0; t < 0.5 && !b.dead && b.pierce > 0; t += 1 / 60) updateWeapons(G, 1 / 60);
+  assert.equal(b.pierce, 0, 'setup: the bolt should have pierced the lone shape');
+  assert.equal(b.ric, 1, 'the kick was burned on an empty field instead of banked');
+});
+
 test('Fan redistributes in space: emission neutral, spread wider', () => {
   const base = emission(null);
   const fan = emission('fan');
