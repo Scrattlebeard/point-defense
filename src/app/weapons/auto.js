@@ -1,5 +1,5 @@
 // The classic autos: frost aura, orbitals, nova, tesla, seekers, turrets.
-import { dist, distToSegment, TAU } from '../../core/geom.js';
+import { dist, distToSegment, bladeSpine, TAU } from '../../core/geom.js';
 import { damageEnemy, nearestEnemy, applyKnock } from '../enemies.js';
 import { burst, shake } from '../fx.js';
 import { sfx } from '../audio.js';
@@ -20,22 +20,26 @@ export function updateAuto(G, dt) {
     wt.orbA += st.speed * dt;
     for (let i = 0; i < st.n; i++) {
       const a = wt.orbA + (i * TAU) / st.n;
-      // A blade is a RADIAL spoke (ADR-0022): rooted at `inner`, reaching to
-      // `outer`, `reach` wide across. A shape approaching the Point is inside the
-      // swept region for its whole approach rather than crossing a thin band, so
-      // `bite` — not coverage — is what limits how hard it is ground.
-      const ux = Math.cos(a), uy = Math.sin(a);
-      const ax = G.cx + ux * st.inner, ay = G.cy + uy * st.inner;
-      const bx = G.cx + ux * st.outer, by = G.cy + uy * st.outer;
+      // A blade is a RADIAL spoke (ADR-0022), swept back along geom.bladeSpine —
+      // the same spine the renderer draws, so the curve costs no honesty. A shape
+      // approaching the Point is inside the swept region for its whole approach
+      // rather than crossing a thin band, so `bite` — not coverage — is what limits
+      // how hard it is ground. Three segments is plenty: the spine's own bend
+      // between knots is well under `reach`.
+      const sp = bladeSpine(G.cx, G.cy, a, st.inner, st.outer, st.sweep, 3);
       for (const e of S.enemies) {
         if (e.dead || S.time < e.orbHit) continue;
-        if (distToSegment(e.x, e.y, ax, ay, bx, by) < st.reach + e.r) {
+        let d = Infinity;
+        for (let k = 0; k + 3 < sp.length; k += 2) {
+          d = Math.min(d, distToSegment(e.x, e.y, sp[k], sp[k + 1], sp[k + 2], sp[k + 3]));
+        }
+        if (d < st.reach + e.r) {
           damageEnemy(G, e, st.dmg, { src: 'orbit' });
           e.orbHit = S.time + st.bite;
-          const d = dist(G.cx, G.cy, e.x, e.y) || 1;
+          const rd = dist(G.cx, G.cy, e.x, e.y) || 1;
           // shove 45→30 (ADR-0020): the coverage the longer blades buy pays for
           // the exposure the softer shove gives up. Veterans resist via mass.
-          applyKnock(e, ((e.x - G.cx) / d) * 30, ((e.y - G.cy) / d) * 30);
+          applyKnock(e, ((e.x - G.cx) / rd) * 30, ((e.y - G.cy) / rd) * 30);
         }
       }
     }

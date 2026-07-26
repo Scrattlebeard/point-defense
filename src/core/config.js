@@ -119,13 +119,16 @@ export const WEAPONS = {
     name: 'Orbitals', input: 'none', category: 'auto', max: 5,
     descs: ['Two blades sweep out from the Point, grinding shapes they touch', '+1 blade', '+1 blade, longer reach', '+1 blade, +damage', 'MAX: six long blades'],
     // ADR-0022: the blades are RADIAL spokes rooted at a fixed `inner` and reaching
-    // out to `outer`, which is what levelling buys. `reach` is the tangential
-    // half-width. `bite` is the per-shape cooldown and is the ceiling control — a
-    // radial blade holds a shape inside it for its whole approach, so the cooldown,
-    // not coverage, is what decides how hard any one shape is ground.
+    // out to `outer`, which is what levelling buys. `reach` is the half-width across
+    // the blade; `sweep` is how far the tip lags the root in radians, curving the
+    // blade back against its rotation (geom.bladeSpine — the hit test and the
+    // renderer share it, so the curve is not a lie). `bite` is the per-shape
+    // cooldown and is the ceiling control — a radial blade holds a shape inside it
+    // for its whole approach, so the cooldown, not coverage, decides how hard any
+    // one shape is ground.
     stats: l => ({
       n: [0, 2, 3, 4, 5, 6][l], dmg: 10 + 4 * l,
-      inner: 96, outer: [0, 140, 156, 170, 184, 196][l], reach: 9,
+      inner: 96, outer: [0, 136, 150, 163, 175, 186][l], reach: 9, sweep: 0.22,
       speed: 2.3 + 0.18 * l, bite: [0, 0.8, 0.66, 0.52, 0.40, 0.31][l],
     }),
   },

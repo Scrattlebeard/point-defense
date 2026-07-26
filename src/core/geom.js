@@ -30,3 +30,30 @@ export function distToSegment(px, py, ax, ay, bx, by) {
   t = clamp(t, 0, 1);
   return Math.hypot(px - (ax + dx * t), py - (ay + dy * t));
 }
+
+/**
+ * The swept centreline of an orbit blade (core.md orbit row, ADR-0022): a spoke
+ * rooted at `inner` on bearing `a`, reaching `outer`, whose tip **lags** the root
+ * by `sweep` radians so the blade curves back against its own rotation.
+ *
+ * Shared by the hit test and the renderer on purpose. The curve is a look — Daniel,
+ * 2026-07-26: *"feels a bit like whacking the enemies with a rod"* — but a drawn
+ * curve over a straight hit segment would put the tip up to 20px from where it
+ * bites, so the picture and the physics read the same spine. `steps` only controls
+ * smoothness; the shape is identical at any value.
+ *
+ * Returns a flat [x0,y0, x1,y1, …] of `steps+1` points, root first.
+ */
+export function bladeSpine(cx, cy, a, inner, outer, sweep, steps) {
+  const pts = new Array((steps + 1) * 2);
+  for (let s = 0; s <= steps; s++) {
+    const t = s / steps;
+    // t^1.35: the lag accumulates toward the tip, so the root leaves the hub
+    // straight and the curve is felt at the business end rather than everywhere.
+    const ang = a - sweep * Math.pow(t, 1.35);
+    const r = inner + (outer - inner) * t;
+    pts[s * 2] = cx + Math.cos(ang) * r;
+    pts[s * 2 + 1] = cy + Math.sin(ang) * r;
+  }
+  return pts;
+}

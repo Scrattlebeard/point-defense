@@ -2,7 +2,7 @@
 // Visual grammar (app.md): enemy species = hue, variant = highlight; player
 // effects stay cyan/white; single dark neon theme.
 import { TOWERS, WEAPONS, VARIANTS } from '../core/config.js';
-import { TAU, clamp } from '../core/geom.js';
+import { TAU, clamp, bladeSpine } from '../core/geom.js';
 import { hpBarThreshold } from '../core/balance.js';
 import { BEAM_REARM } from './weapons/index.js';
 import { tube, litDisc, litBar, rimLight, shade, alpha, LIGHT_A } from './neon.js';
@@ -541,40 +541,53 @@ function drawField(G) {
   // orbit blades
   if (S.weapons.orbit >= 1) {
     const st = WEAPONS.orbit.stats(S.weapons.orbit);
-    // ADR-0022: a blade is a RADIAL spoke, so its leading face is its whole
-    // tangential side and it cuts edge-first without needing the ADR-0021 rake to
-    // fake it. Local frame per blade: +x = outward, +y = the direction of travel.
-    // The gradient is built once in that local frame and reused under each blade's
-    // rotation — bright on the leading edge, falling into shadow on the trailing.
-    const W0 = 7.2, W1 = 3.4;
+    // ADR-0022 + the curve pass: the blade is drawn along geom.bladeSpine, the
+    // SAME swept centreline the hit test walks. Widths are asymmetric on purpose —
+    // a thin honed edge on the leading side, the mass of the blade behind it — and
+    // both taper to nothing at the tip. Constant width down a straight spoke is
+    // what read as a rod; the taper and the sweep are the whole fix.
+    const STEPS = 10, LEAD = 2.4, BACK = 8.2;
+    const lead = t => LEAD * (1 - t * t);
+    const back = t => BACK * Math.pow(1 - t, 0.8);
     let bladeGrad = null;
     for (let i = 0; i < st.n; i++) {
       const a = G.wt.orbA + (i * TAU) / st.n;
-      ctx.save();
-      ctx.translate(G.cx, G.cy);
-      ctx.rotate(a);
+      const sp = bladeSpine(G.cx, G.cy, a, st.inner, st.outer, st.sweep, STEPS);
+      // offset each knot perpendicular to the spine: +normal leads, −normal trails
+      const side = (k, w) => {
+        const k0 = Math.max(0, k - 1) * 2, k1 = Math.min(STEPS, k + 1) * 2;
+        const tx = sp[k1] - sp[k0], ty = sp[k1 + 1] - sp[k0 + 1];
+        const m = Math.hypot(tx, ty) || 1;
+        return [sp[k * 2] - (ty / m) * w, sp[k * 2 + 1] + (tx / m) * w];
+      };
       if (!bladeGrad) {
-        bladeGrad = ctx.createLinearGradient(0, W0, 0, -W0);
-        bladeGrad.addColorStop(0, '#eafcff');   // the honed leading edge
-        bladeGrad.addColorStop(0.45, '#9ff3ff');
-        bladeGrad.addColorStop(1, '#316c80');   // the trailing back, turned away
+        // built once, in world space at the Point: light across the blade rather
+        // than along it, so the honed edge stays the bright one all the way round
+        bladeGrad = ctx.createRadialGradient(G.cx, G.cy, st.inner * 0.4, G.cx, G.cy, st.outer);
+        bladeGrad.addColorStop(0, '#eafcff');
+        bladeGrad.addColorStop(0.55, '#9ff3ff');
+        bladeGrad.addColorStop(1, '#5fb9d4');
       }
-      const mid = (st.inner + st.outer) * 0.5;
       ctx.fillStyle = bladeGrad;
       ctx.beginPath();
-      ctx.moveTo(st.inner, W0 * 0.7);
-      ctx.quadraticCurveTo(mid, W1 * 1.15, st.outer, W1 * 0.5);   // leading edge → tip
-      ctx.lineTo(st.outer, -W1 * 1.1);                            // squared tip: a blade, not a needle
-      ctx.quadraticCurveTo(mid, -W0 * 1.0, st.inner, -W0 * 0.7);  // trailing sweep-back
+      for (let k = 0; k <= STEPS; k++) {          // honed edge, root → tip
+        const [x, y] = side(k, lead(k / STEPS));
+        if (k === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      for (let k = STEPS; k >= 0; k--) {          // the back, tip → root
+        const [x, y] = side(k, -back(k / STEPS));
+        ctx.lineTo(x, y);
+      }
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.lineWidth = 1.1;
       ctx.beginPath();
-      ctx.moveTo(st.inner, W0 * 0.7);
-      ctx.quadraticCurveTo(mid, W1 * 1.15, st.outer, W1 * 0.5);
+      for (let k = 0; k <= STEPS; k++) {
+        const [x, y] = side(k, lead(k / STEPS));
+        if (k === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
       ctx.stroke();
-      ctx.restore();
     }
   }
 

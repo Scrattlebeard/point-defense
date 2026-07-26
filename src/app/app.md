@@ -114,12 +114,21 @@ simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not un
     (two symmetric crossed crescents) and the force blades still have neither and are the
     standing candidates; not changed here.
   - **The orbit blades are the one lit thing whose light does not come from `LIGHT_A`**, and
-    deliberately: each blade is lit *across its own width* — white on the leading face,
-    falling to shadow on the trailing back. A blade circling under a fixed light would
-    flicker light-to-dark twice a revolution, which reads as a rendering bug rather than as
-    rotation. The gradient is built once in a blade's local frame (`+x` outward, `+y` the
-    direction of travel) and reused under each blade's rotation, so six blades cost one
-    gradient.
+    deliberately: they are lit *radially from the Point*, brightest at the root and cooling
+    outward. A blade circling under a fixed light would flicker light-to-dark twice a
+    revolution, which reads as a rendering bug rather than as rotation. One gradient serves
+    all six.
+  - **The blade's silhouette carries the read, not its shading** — the fix for *"feels a bit
+    like whacking the enemies with a rod"* was geometry, not paint. Two cues: the spine is
+    **swept back** so the blade curves against its own rotation, and the widths are
+    **asymmetric and tapering** — a thin honed edge leading, the mass behind it, both
+    vanishing at the tip. Constant width down a straight spoke is a rod no amount of
+    gradient will rescue.
+  - **The drawn curve is the bitten curve.** Both the renderer and the hit test walk
+    `geom.bladeSpine`; the renderer smooths it to 10 knots and the hit test to 3, and a test
+    pins the two within half a `reach`. A blade drawn along a curve while biting along a
+    straight line is the kind of lie that reads as "hitboxes feel off" and is nearly
+    impossible to diagnose from the seat.
   - **Bars get a lit top edge** (`litBar`) — hp slivers, the boss bar, the heat gauge. One
     lighter strip along the top third is the entire trick and it costs one `fillRect`.
   - **This is implemented with halos, not `ctx.shadowBlur`, and that is a cost decision**
