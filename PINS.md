@@ -91,25 +91,33 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
 - **Where:** `src/core/config.js` LATTICE + `SECTORS`, `src/core/core.md` branch table,
   `src/app/lattice.js` (layout is data-driven — no code change needed), ADR-0005.
 
-## ⚠ The early curve has to pay for 2026-07-26 — one tuning pass, against the whole stack
-- **What:** fresh-run calibrate median is **4**, below the [5, 10] floor, measured twice at
-  200 trials. The gate is red and prod is blocked on it.
-- **Why it is not any single change's fault:** four difficulty increases landed that day and
-  the median walked down with each — **7** (wave-5 boss +47% HP, `BOSS_TTK_FIRST` 15→22),
-  **5** (ADR-0014, bolt's second stream moved to MAX), **5** (ADR-0015, in-run XP removed),
-  **4** (ADR-0016, the run opens at level 1). Each was individually right and individually
-  small; the stack is what broke the band.
-- **What to do:** ONE tuning pass on the early curve — `enemyHpMult`'s linear term is the
-  blunt instrument, `BOSS_TTK_FIRST` the targeted one, since it is the wave-5 boss that most
-  fresh runs die to. Tune it **once, against the finished stack**, not four times against
-  moving parts. Target the middle of the band (~7), not the floor.
-- **Do not:** walk back any of the four. Each has its own ADR and its own reason, and the
-  band is the thing that should move.
-- **Where:** `src/core/balance.js` (`enemyHpMult`, `BOSS_TTK_FIRST`), `scripts/calibrate.mjs`,
-  `src/core/core.md` `enemyHpMult` note (which carries the round-by-round history — add a
-  round), README banner.
-- **Caution:** a fresh *human* has not played any of this. If the human curve and the robot
-  curve disagree, the human wins — the robot has perfect 0.2s retargeting and no fear.
+## ⚠ CALIBRATE IS MEASURING THE ROBOT'S HANDICAP — fix the instrument before the curve
+- **What:** the calibrate robot only sets an aim point. It cannot hold and cannot swipe — so
+  Lance Beam, Force Wall, Flamethrower and Force Blades do nothing in its hands. But
+  `levelChoices` still *offers* them and the robot picks **at random**, so it regularly
+  drafts weapons it can never fire and burns the pick.
+- **Measured 2026-07-26, and it is not small:** filtering hold/swipe weapons out of the
+  robot's choices moves the fresh-run median from **4 to 5** at 200 trials — i.e. **the
+  out-of-band reading was substantially the instrument, not the difficulty.** Daniel the
+  same day, on a fresh no-lattice account, got **past wave 10** and named Lance Beam as
+  *"an early-game lifesaver"* — the single best early tool is one the robot cannot hold.
+- **So: do NOT tune the early curve yet.** The previous version of this pin said to pay for
+  the day's four difficulty changes with an `enemyHpMult` pass. That would have been tuning
+  the game to fit a broken ruler.
+- **The decision to make first, and it wants an ADR because it moves a gate:** should the
+  robot (a) skip weapons it cannot operate, (b) learn to hold and swipe, or (c) stay
+  handicapped on purpose, with the band re-derived to mean "a player who only aims"? (a) is
+  a five-line change and is what was measured above. (b) is most faithful and most work —
+  and note the conductor's robot has the same blind spot, which matters for the delegation
+  break. (c) is defensible but must be *written down*, because right now the handicap is
+  accidental, not chosen.
+- **Whatever wins, past calibrate numbers are not comparable across the change** — the band
+  [5,10] was derived against the handicapped robot. Re-derive it in the same ADR.
+- **Where:** `scripts/calibrate.mjs` (the `levelChoices` pick at ~:39), `scripts/conductor.mjs`
+  (same blind spot, ~:107), `src/core/config.js` WEAPONS `input` field is the filter key,
+  README "Delegation tooling" + the calibrate band note, `adr/0003` guardrail 4.
+- **Working spike exists:** `/tmp/calib_usable.mjs` (disposable) — calibrate with a
+  `w.input === 'hold' || w.input === 'swipe'` filter on the robot's choices.
 
 ## Bolt capstone — two things to feel for next playtest
 - **What:** ADR-0014 moved the auto stream from L3 to L6. Both open questions are playtest

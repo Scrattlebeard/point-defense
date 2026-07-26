@@ -6,7 +6,7 @@
 // the boss rams, knocks back, returns.
 export const ENEMIES = {
   grunt:    { name: 'Circle Grunt',    sides: 0, hp: 16,  spd: 44, r: 12, dmg: 8,  cost: 1,   minWave: 1,  color: '#ff5c6c', intro: 'slow and direct', lore: 'A circle with commitment issues — it commits to exactly one direction.' },
-  dart:     { name: 'Triangle Dart',     sides: 3, hp: 10,  spd: 96, r: 10, dmg: 6,  cost: 1.5, minWave: 2,  color: '#ffb84d', intro: 'fast and fragile', lore: 'An acute problem. Arrives fast, leaves faster.' },
+  dart:     { name: 'Triangle Dart',     sides: 3, hp: 9,  spd: 96, r: 10, dmg: 6,  cost: 1.5, minWave: 2,  color: '#ffb84d', intro: 'fast and fragile', lore: 'An acute problem. Arrives fast, leaves faster.' },
   tank:     { name: 'Square Tank',     sides: 4, hp: 60,  spd: 29, r: 15, dmg: 16,  cost: 3,   minWave: 4,  color: '#c06bff', intro: 'slow, heavily built', lore: 'Four right angles, zero right of way.' },
   splitter: { name: 'Pentagon Splitter', sides: 5, hp: 43,  spd: 37, r: 14, dmg: 10,  cost: 4,   minWave: 8,  color: '#59ff9c', intro: 'splits when destroyed', lore: 'The whole is worse than the sum of its parts.' },
   elite:    { name: 'Hexagon Elite',    sides: 6, hp: 138, spd: 33, r: 18, dmg: 20, cost: 8,   minWave: 14, color: '#59d5ff', intro: 'fast, tough, mean', lore: 'Six sides, all of them rude.' },

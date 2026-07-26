@@ -212,7 +212,7 @@ multipliers (swift ×1.7) stack on top: a swift is still a swift *relative to it
 | id | shape | hp | speed | radius | dmg | cost | from wave | color |
 |----|-------|----|-------|--------|-----|------|-----------|-------|
 | grunt | circle | 16 | 44 | 12 | 8 | 1 | 1 | red |
-| dart | triangle | 10 | 96 | 10 | 6 | 1.5 | 2 | amber |
+| dart | triangle | 9 | 96 | 10 | 6 | 1.5 | 2 | amber |
 | tank | square | 60 | 29 | 15 | 16 | 3 | 4 | violet |
 | splitter | pentagon | 43 | 37 | 14 | 10 | 4 | 8 | green — splits into 2 darts (60% dart hp) on death |
 | elite | hexagon | 138 | 33 | 18 | 20 | 8 | 14 | blue |

@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as B from '../src/core/balance.js';
-import { ENEMIES, VARIANTS } from '../src/core/config.js';
+import { ENEMIES, VARIANTS, WEAPONS } from '../src/core/config.js';
+import { defaultMeta, newRun } from '../src/core/state.js';
 
 test('enemyHpMult is 1 at wave 1 and strictly increasing', () => {
   assert.equal(B.enemyHpMult(1), 1);
@@ -34,6 +35,22 @@ test('spawnInterval bounded and non-increasing', () => {
 test('the opening draft is a small positive number of levels', () => {
   assert.ok(Number.isInteger(B.OPENING_LEVELS) && B.OPENING_LEVELS >= 1);
   assert.ok(B.OPENING_LEVELS <= 5, 'an opening draft bigger than the hand is a menu, not a choice');
+});
+
+// Daniel, playtesting 2026-07-26: "dial down triangle base hp so they die from a
+// single bolt when introduced." They missed it by 0.03 HP — dart at wave 2 carried
+// 17.03 effective HP against the bastion's opening bolt L2 at 17 damage, so the
+// game's designated *fragile* shape needed two hits from the default gun on its
+// debut wave. This is the repo's most repeated defect shape once more: an absolute
+// number (base hp) sitting beside a scaling curve (enemyHpMult) with nothing
+// keeping them in relation.
+test('the fragile shape dies to one bolt on the wave it debuts', () => {
+  const S = newRun(defaultMeta(), 'bastion'); // the free tower — a fresh account has no other
+  const bolt = WEAPONS.bolt.stats(S.weapons.bolt);
+  const dart = ENEMIES.dart;
+  const hp = dart.hp * B.enemyHpMult(dart.minWave);
+  assert.ok(hp <= bolt.dmg * S.dmgMult,
+    `dart debuts with ${hp.toFixed(2)} hp against a ${bolt.dmg} bolt — two hits for the fragile one`);
 });
 
 test('the hp-bar gate stays meaningful as the HP curve climbs', () => {
