@@ -1,8 +1,11 @@
-## ⚠ Law·Delegation is unenforced at the boss — build the telegraphed guard
-- **State, 2026-07-26 (ADR-0013):** `BOSS_AUTO_RESIST` is gone at Daniel's call, and with it
-  the only thing making a boss undelegatable. Conductor: **hands ×1.000** (band ≥1.12),
-  parked deaths 3/11 (that clause still passes). **The gate is red on purpose and prod is
-  blocked until it is not.** Nobody broke this; see the README banner.
+## Law·Delegation has no mechanic behind it — build the telegraphed guard
+- **State, 2026-07-26 (ADR-0013), corrected same day:** `BOSS_AUTO_RESIST` is gone at
+  Daniel's call, and with it the only *mechanic* making a boss undelegatable. The gate
+  dipped to ×1.000 and is now back to **×1.259, parked deaths 6/11 — green, prod
+  unblocked** (three identical sets; the earlier red banner was stale, nobody had re-run
+  it after the boss-HP tuning landed). **Not urgent, still wanted:** the law is currently
+  held up by bosses simply having enough HP to kill a parked run, which a future HP tweak
+  can undo without anyone noticing.
 - **The replacement, already argued and not yet built:** an **episodic, telegraphed guard**.
   The boss raises its guard on a cycle — visible, reusing the `guard` scalar and the
   telegraph vocabulary that already exist — and during that window delegated damage is weak
@@ -25,6 +28,18 @@
 # Pins
 
 Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short version: written immediately when they surface, self-contained enough to be picked up cold, candidates not commitments, deleted on resolution (git history is the archive).
+
+## Bolt capstone — two things to feel for next playtest
+- **What:** ADR-0014 moved the auto stream from L3 to L6. Both open questions are playtest
+  questions, not spreadsheet ones — deliberately not tuned further (Daniel, 2026-07-26:
+  *"we're still very early, we don't need to be super heavy-handed about the balance
+  impact yet"*).
+- **(a)** L5→L6 is now a ×3.7 emission step — not *new* power (L6 is unchanged) but newly
+  concentrated into one purchase. Does maxing bolt feel like a milestone or a light switch?
+- **(b)** Fresh-run calibrate fell 7 → 5, in band but on its floor (three sweeps at 5, two
+  baselines at 7 — a real move, not instrument noise). If fresh humans now wall at the
+  wave-5 boss, fix the **early curve** (`enemyHpMult`, `BOSS_TTK_FIRST`), not the ladder.
+- **Where:** `src/core/config.js` bolt `stats`, `src/core/core.md` bolt row, `adr/0014`.
 
 ## Balance pass, round 2
 - **What:** Continue tuning against human play. Round 1 (2026-07-23, Daniel's first session) landed: bolt reworked to auto-fire-at-aim (spam-clicking dominated), frost slow capped at 45%, orbital knockback 60→35 (frost+orbit held enemies in place), nova/frost visuals disambiguated.

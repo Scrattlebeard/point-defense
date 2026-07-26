@@ -1,6 +1,7 @@
 // Bolt: two streams, center-true fan volleys (core.md bolt row, 2026-07-24).
-// Manual stream fires at the aim point; from L3 an auto stream fires at the
-// nearest in-bounds shape. A fan of n = one bolt EXACTLY on the target line +
+// Manual stream fires at the aim point; at L6 (MAX) an auto stream fires at the
+// nearest in-bounds shape (ADR-0014 moved it there from L3 — it is the
+// capstone). A fan of n = one bolt EXACTLY on the target line +
 // flanks at ±0.11 — the enforceable form of "you hit where you aim", kept
 // through the 2026-07-24 rebalance (independent auto-aims were overpowered).
 import { test } from 'node:test';
@@ -51,8 +52,12 @@ const inFan = (G, shots, x, y) => shots.filter(b => angErr(G, b, x, y) < 0.111);
 // one bolt per stream at every level. Not a loosening: the spread behaviour is
 // pinned harder in test/ricochet.test.mjs (emission-neutral AND actually wider),
 // and the ladder's new gift, ricochet, is pinned there too.
+// RE-CUT 2026-07-26 (ADR-0014): the auto stream moved from L3 to MAX, so the
+// second bolt now appears at L6 and nowhere earlier. Not a loosening — the same
+// invariant (one bolt per stream) over the same six levels, with the stream
+// count corrected to the new ladder.
 test('volley sizes across the ladder: one bolt per stream, always', () => {
-  const expect = { 1: 1, 2: 1, 3: 2, 4: 2, 5: 2, 6: 2 };
+  const expect = { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 2 };
   for (const [l, n] of Object.entries(expect)) {
     const G = makeG(Number(l));
     spawnEnemy(G, 'grunt', null, 650, 300);
@@ -64,16 +69,15 @@ test('volley sizes across the ladder: one bolt per stream, always', () => {
 
 test('every fan is center-true: exactly one bolt on each target line', () => {
   for (const l of [1, 3, 5, 6]) {
+    const hasAuto = l >= 6; // ADR-0014: the auto stream is the capstone
     const G = makeG(l);
     spawnEnemy(G, 'grunt', null, 650, 300);
     G.aim = { x: 200, y: 120 }; // deliberately NOT at the enemy
     const shots = fireOnce(G);
     assert.equal(onLine(G, shots, 200, 120).length, 1,
       `L${l}: expected exactly 1 bolt on the aim line`);
-    if (l >= 3) {
-      assert.equal(onLine(G, shots, 650, 300).length, 1,
-        `L${l}: expected exactly 1 bolt on the auto-target line`);
-    }
+    assert.equal(onLine(G, shots, 650, 300).length, hasAuto ? 1 : 0,
+      `L${l}: wrong bolt count on the auto-target line`);
     // no strays: every bolt belongs to one of the two fans
     const strays = shots.filter(b =>
       angErr(G, b, 200, 120) >= 0.111 && angErr(G, b, 650, 300) >= 0.111);
@@ -102,7 +106,7 @@ test('wearing the Fan form, each stream spreads again — 3+3', () => {
 });
 
 test('auto stream ignores shapes outside the arena walls', () => {
-  const G = makeG(3);
+  const G = makeG(6); // ADR-0014: MAX is the only level with an auto stream
   spawnEnemy(G, 'grunt', null, -40, 300);  // outside — nearest, but unhittable
   spawnEnemy(G, 'grunt', null, 650, 300);  // inside
   G.aim = { x: 200, y: 120 };

@@ -98,16 +98,22 @@ HP — the do-nothing run could not die at all). Deterministic given the code
 (every rng call seeded), so a trip always means the sim changed. Wired into the
 prod gate beside calibrate.
 
-> **⚠ THE CONDUCTOR GATE IS KNOWINGLY RED (2026-07-26, ADR-0013).** Hands buy
-> **×1.000** against a ≥1.12 band; the parked-deaths clause still passes (3/11).
-> **You did not break this.** `BOSS_AUTO_RESIST` — a permanent, invisible 50% tax on
-> delegated damage — was the only thing enforcing Law·Delegation at the boss, and it
-> was removed deliberately: a hidden multiplier corrupts every measurement taken
-> through it, so no other balance lever could be trusted while it existed. The law is
-> now visibly unenforced instead of invisibly upheld, which is the safer of the two.
-> `scripts/promote` will refuse prod until it is green again — that is the gate
-> working. The replacement is an **episodic, telegraphed boss guard**; see ADR-0013
-> and PINS.
+> **The gate went red and came back — read this before trusting an old banner.**
+> Removing `BOSS_AUTO_RESIST` (2026-07-26, ADR-0013) took the conductor to **×1.000**
+> against its ≥1.12 band, because that hidden multiplier had been the only thing
+> enforcing Law·Delegation at the boss. It was removed anyway and on purpose: a hidden
+> multiplier corrupts every measurement taken through it, so no other balance lever
+> could be trusted while it existed.
+>
+> **Re-measured 2026-07-26 after the boss-HP tuning that followed: ×1.259, parked
+> deaths 6/11 — green, three sets, identical every time (deterministic sim).** The
+> banner claiming otherwise stood for part of a day and was simply stale: nobody
+> re-ran the gate after the tuning commit. *Which* change restored it is not bisected
+> — the plausible cause is fatter bosses killing parked runs, i.e. **the law is
+> currently enforced by a number, not by a mechanic**, and a future HP reduction can
+> silently unenforce it again. So the **episodic telegraphed boss guard** (ADR-0013,
+> PINS) is still the design we want; it is no longer an emergency. `scripts/promote`
+> is unblocked.
 
 The gate scores **survival time, not wave reached** (ADR-0010). Wave-reached is
 rate-sensitive — a Force Wall halves the rate waves arrive at with no survival

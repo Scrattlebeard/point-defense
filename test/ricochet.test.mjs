@@ -51,10 +51,38 @@ test('the ladder no longer gives fans away — that is the form\'s job now', () 
   }
 });
 
+// RE-CUT 2026-07-26 (ADR-0014): ricochet moved a rung earlier — L4 grants it,
+// L5 deepens it — because the auto stream vacated L3 for MAX and the grants
+// above it each shifted down. Not a loosening: same two properties (it arrives,
+// then it escalates), asserted one level lower, plus a new assertion that it
+// does NOT arrive before L4.
 test('the ladder gives ricochet instead, and it escalates', () => {
-  assert.equal(WEAPONS.bolt.stats(4).ricochet || 0, 0, 'ricochet should not arrive before L5');
-  assert.ok(WEAPONS.bolt.stats(5).ricochet >= 1, 'L5 must grant ricochet');
-  assert.ok(WEAPONS.bolt.stats(6).ricochet > WEAPONS.bolt.stats(5).ricochet, 'MAX must deepen it');
+  assert.equal(WEAPONS.bolt.stats(3).ricochet || 0, 0, 'ricochet should not arrive before L4');
+  assert.ok(WEAPONS.bolt.stats(4).ricochet >= 1, 'L4 must grant ricochet');
+  assert.ok(WEAPONS.bolt.stats(5).ricochet > WEAPONS.bolt.stats(4).ricochet, 'L5 must deepen it');
+});
+
+// The whole point of ADR-0014: the capstone is the second stream, and it is the
+// ONLY rung that grants one. A future rebalance that quietly hands a stream back
+// to the mid-ladder has to argue with this test.
+test('the second stream belongs to MAX and nowhere else', () => {
+  for (let l = 1; l < WEAPONS.bolt.max; l++) {
+    assert.equal(WEAPONS.bolt.stats(l).auto || 0, 0,
+      `bolt L${l} grants an auto stream — the second stream is the capstone (ADR-0014)`);
+  }
+  assert.equal(WEAPONS.bolt.stats(WEAPONS.bolt.max).auto, 1, 'MAX must grant the auto stream');
+});
+
+// Max bolt is byte-for-byte what it was before ADR-0014 — the ADR re-slopes the
+// road, not the destination. Pins the numbers so "move the stream" can never
+// silently become "buff or nerf the max build".
+test('ADR-0014 left the max build untouched', () => {
+  const st = WEAPONS.bolt.stats(WEAPONS.bolt.max);
+  assert.equal(st.dmg, 99);
+  assert.equal(st.auto, 1);
+  assert.equal(st.ricochet, 2);
+  assert.equal(st.pierce, 1);
+  assert.equal(st.volley, 1);
 });
 
 test('a ricocheting bolt kicks to a SECOND shape instead of dying', () => {

@@ -93,15 +93,14 @@ export function chipOf(w) {
 export const WEAPONS = {
   bolt: {
     name: 'Bolt', input: 'aim', category: 'gun', max: 6,
-    descs: ['Auto-fires toward your aim', '+damage', 'A second bolt picks its own target', 'Bolts pierce one extra shape', 'Bolts ricochet to another shape', 'MAX: bolts ricochet twice'],
-    // Two streams (manual + auto), ONE bolt each — the fan moved out of this
-    // ladder and became the Fan form (ADR-0006 Decision 8, core.md bolt row).
-    // L5/L6 damage is the old ladder's EMISSION collapsed into one bolt
-    // (L5 was 2x29, L6 was 3x33), so the levels are worth what they always
-    // were; ricochet replaces the fan's coverage. L1-L4 are untouched — they
-    // never granted a fan, so buffing them would have moved the onboarding
-    // curve for no reason (it did, in the first attempt: median 8 -> 14).
-    stats: l => ({ dmg: l >= 6 ? 99 : l >= 5 ? 58 : 9 + 4 * l, volley: 1, auto: l >= 3 ? 1 : 0, pierce: l >= 4 ? 1 : 0, ricochet: l >= 6 ? 2 : l >= 5 ? 1 : 0, cd: 0.38 - 0.02 * l }),
+    descs: ['Auto-fires toward your aim', '+damage', 'Bolts pierce one extra shape', 'Bolts ricochet to another shape', 'Bolts ricochet twice', 'MAX: a second bolt picks its own target'],
+    // ONE bolt per stream — the fan moved out of this ladder and became the Fan
+    // form (ADR-0006 Decision 8, core.md bolt row). The second stream is the
+    // CAPSTONE (ADR-0014): it was L3's gift and the ladder's steepest rung, so
+    // it moved to MAX and pierce/ricochet each shifted down one. L5/L6 damage
+    // is the old ladder's EMISSION collapsed into one bolt (L5 was 2x29, L6 was
+    // 3x33) and stays pinned to the level, not to the grants that moved.
+    stats: l => ({ dmg: l >= 6 ? 99 : l >= 5 ? 58 : 9 + 4 * l, volley: 1, auto: l >= 6 ? 1 : 0, pierce: l >= 3 ? 1 : 0, ricochet: l >= 5 ? 2 : l >= 4 ? 1 : 0, cd: 0.38 - 0.02 * l }),
   },
   wall: {
     name: 'Force Wall', input: 'swipe', category: 'swipe', max: 5,
