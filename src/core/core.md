@@ -124,11 +124,15 @@ prereqs enforced), not exact constants, so tuning stays cheap.
     `clear`), so a boss too tanky to kill does not raise difficulty — it *freezes
     the run* at that wave. This is why the fight length is now the thing being
     controlled directly rather than inferred.
-- `BOSS_AUTO_RESIST = 0.5` — **delegated damage lands at half on a boss** (ADR-0012).
-  Aim, hold and swipe all count as hands. This exists so that *how long a fight is*
-  and *whether hands are required* are separate mechanisms: sizing the boss in
-  seconds broke the conductor outright (hands ×1.000, parked deaths 1/11) precisely
-  because the health bar had been doing both jobs at once.
+- *(`BOSS_AUTO_RESIST` was **removed 2026-07-26, ADR-0013.** It made delegated damage land
+  at half on a boss, which upheld Law·Delegation but did so as a permanent, invisible,
+  global multiplier with no tell — the exact failure this file already names for `guard`
+  ("without a tell this reads as 'my weapons stopped working'"). The decisive objection was
+  not the player's but the designer's: **a hidden multiplier corrupts every measurement taken
+  through it**, so changing boss HP produced effects composed with a factor nobody could see.
+  Law·Delegation is consequently unenforced at the boss and the conductor gate is knowingly
+  RED — see ADR-0013 for why a visibly failing law is safer than an invisibly upheld one, and
+  for the telegraphed replacement.)*
 - `BOSS_ENTRY = 0.33` — where the boss enters its wave's spawn queue. Appended last
   (the old behaviour) it fought an **empty field**, because the wave was already
   cleared by the time it arrived — a solo duel, which is the opposite of a

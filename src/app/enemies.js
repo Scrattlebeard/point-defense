@@ -1,7 +1,7 @@
 // Enemy entities: spawning (base × variant), movement, contact, damage/death
 // side-effects. Rules and numbers come from core; this file executes them.
 import { ENEMIES, VARIANTS, SPLIT, BOSS_MOVES, WEAPONS } from '../core/config.js';
-import { enemyHpMult, enemySpeedMult, bossHp, enemyMass, BOSS_KNOCK_RESIST, BOSS_AUTO_RESIST } from '../core/balance.js';
+import { enemyHpMult, enemySpeedMult, bossHp, enemyMass, BOSS_KNOCK_RESIST } from '../core/balance.js';
 import { addXp } from '../core/state.js';
 import { dist, edgeSpawn } from '../core/geom.js';
 import { burst, dmgText, shake, flash, announce } from './fx.js';
@@ -235,11 +235,6 @@ export function damageEnemy(G, e, raw, { noMult = false, silent = false, src = n
   // guarded bosses (core.md "Boss signature moves"): scalar, not a shield —
   // applied before attribution so a guarded hit is recorded at what it dealt
   if (e.guard != null && e.guard < 1) dmg *= e.guard;
-  // A boss is a focus-forcer BY CONSTRUCTION, not by having a lot of HP
-  // (ADR-0012): delegated damage lands at a fraction. This is what lets bossHp
-  // encode fight LENGTH while Law·Delegation is encoded separately, instead of
-  // both being smuggled into one number that cannot serve them at once.
-  if (e.boss && src && WEAPONS[src] && WEAPONS[src].input === 'none') dmg *= BOSS_AUTO_RESIST;
   // An interruptible charge (core.md "Boss signature moves"): damage pushes the
   // wind-up back, and emptying its resistance staggers the boss instead. ALL
   // damage counts — the bias toward hands is emergent, since concentrating enough

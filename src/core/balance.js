@@ -69,14 +69,6 @@ export const REF_DPS_K = 8.0;
 export const REF_DPS_EXP = 1.15;
 export const referenceDps = w => REF_DPS_K * Math.pow(w, REF_DPS_EXP);
 
-/** Delegated damage lands at this fraction on a BOSS (ADR-0012). Law·Delegation
- *  says autos are deliberately insufficient alone; before this, the only thing
- *  making that true of a boss was its HP bar — so sizing the fight in seconds
- *  broke the delegation gate outright (hands x1.000, parked deaths 1/11). The two
- *  concerns are now separate: HP says how LONG the fight is, this says whether
- *  hands are REQUIRED. Aim, hold and swipe all count as hands. */
-export const BOSS_AUTO_RESIST = 0.5;
-
 /** A presence floor, not the definition (ADR-0012 supersedes ADR-0008 Decision 2).
  *  The share is still doing one job nothing else does: keeping the boss visible
  *  against its own wave, so it cannot decay into one chunky elite among forty —

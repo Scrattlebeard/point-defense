@@ -1,3 +1,27 @@
+## ⚠ Law·Delegation is unenforced at the boss — build the telegraphed guard
+- **State, 2026-07-26 (ADR-0013):** `BOSS_AUTO_RESIST` is gone at Daniel's call, and with it
+  the only thing making a boss undelegatable. Conductor: **hands ×1.000** (band ≥1.12),
+  parked deaths 3/11 (that clause still passes). **The gate is red on purpose and prod is
+  blocked until it is not.** Nobody broke this; see the README banner.
+- **The replacement, already argued and not yet built:** an **episodic, telegraphed guard**.
+  The boss raises its guard on a cycle — visible, reusing the `guard` scalar and the
+  telegraph vocabulary that already exist — and during that window delegated damage is weak
+  while aim / hold / swipe get through. Same law, but it becomes an event that demands a
+  response instead of a constant nobody learns about, which is what Law·Bosses asks for. It
+  composes with the interruptible charge rather than sitting underneath it.
+- **Design questions to settle first, none of them expensive:** how long the window is and
+  how often; whether it should be a *separate* move or a property every boss carries (a
+  property is more reliable for the law, a move is more characterful and the roster is
+  already full — that tension is the real decision); and what it looks like, given
+  **gold is now crowded** — `guard` breathes, the charge stagger spins, and a third gold
+  thing would be a smudge.
+- **Why not bundled into the removal:** Daniel asked for the removal on its own, and shipping
+  an unratified design beside it would be the "decide it in code" move ADR-0013 exists to
+  reject.
+- **Where:** `enemies.js` runBossMove (the cycle), `config.js` BOSS_MOVES or a boss-wide
+  constant, `render.js` (the tell), `core.md` "Boss signature moves", `scripts/conductor.mjs`
+  to re-measure.
+
 # Pins
 
 Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short version: written immediately when they surface, self-contained enough to be picked up cold, candidates not commitments, deleted on resolution (git history is the archive).
@@ -698,6 +722,13 @@ wrong about diagnosis.
   | 0.07 (first cut) | 6% | 30% |
   | **0.035 (shipped)** | **27%** | **70%** |
   | 0.025 | 44% | 88% |
+
+  **⚠ THIS SWEEP IS STALE (2026-07-26).** It was measured while `BOSS_AUTO_RESIST` halved
+  delegated damage, so autos now reach the interrupt threshold on **half** the raw damage
+  they needed then — every row above under-reports the current interrupt rate, the
+  "ignores the tell" column most of all, since that arm is carried by autos. Re-run before
+  touching `interruptFrac`. First worked example of ADR-0013's point: the hidden multiplier
+  was silently inside a measurement that looked like it was about something else.
 
   0.035 because reacting should usually work (70%) while ignoring it usually costs you (73%
   charge through). At 0.07 a player doing the right thing still ate the charge 70% of the

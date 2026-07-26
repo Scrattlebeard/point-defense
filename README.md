@@ -98,6 +98,17 @@ HP — the do-nothing run could not die at all). Deterministic given the code
 (every rng call seeded), so a trip always means the sim changed. Wired into the
 prod gate beside calibrate.
 
+> **⚠ THE CONDUCTOR GATE IS KNOWINGLY RED (2026-07-26, ADR-0013).** Hands buy
+> **×1.000** against a ≥1.12 band; the parked-deaths clause still passes (3/11).
+> **You did not break this.** `BOSS_AUTO_RESIST` — a permanent, invisible 50% tax on
+> delegated damage — was the only thing enforcing Law·Delegation at the boss, and it
+> was removed deliberately: a hidden multiplier corrupts every measurement taken
+> through it, so no other balance lever could be trusted while it existed. The law is
+> now visibly unenforced instead of invisibly upheld, which is the safer of the two.
+> `scripts/promote` will refuse prod until it is green again — that is the gate
+> working. The replacement is an **episodic, telegraphed boss guard**; see ADR-0013
+> and PINS.
+
 The gate scores **survival time, not wave reached** (ADR-0010). Wave-reached is
 rate-sensitive — a Force Wall halves the rate waves arrive at with no survival
 cost, so good play posts a *lower* wave number — and it is quantized to 5,

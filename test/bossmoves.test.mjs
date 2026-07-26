@@ -409,22 +409,36 @@ test('the interrupt costs the same SHARE of the boss at every depth', () => {
     `${(late * 100).toFixed(0)}% at wave 40 — it must be a share, not a number`);
 });
 
-test('autos interrupt too, but pay double for it', () => {
-  // Deliberately NOT the `study` rule (hands-only). A hands-only interrupt would
-  // make the move HARDER, which is the opposite of the reported problem. The focus
-  // bias is emergent instead, and it comes from a rule that already exists:
-  // BOSS_AUTO_RESIST halves delegated damage, so an auto needs twice the raw
-  // damage inside the same ~1.1s window. Concentrating that is what aiming does.
-  const need = b => b.maxHp * CH.interruptFrac;
+// LOOSENED 2026-07-26 (ADR-0013), called out per the review protocol. This used to
+// assert that autos paid DOUBLE to interrupt, which was true only because
+// BOSS_AUTO_RESIST halved delegated damage. That multiplier is gone, so the cost
+// ratio it pinned no longer exists. What survives is the design decision that
+// still holds: the interrupt is deliberately NOT hands-only (unlike `study`),
+// because a hands-only interrupt would make the move harder — the opposite of the
+// problem it was built to fix. The focus bias is now purely emergent: what aiming
+// buys you is concentrating damage inside a ~1.1s window, not a damage-class rule.
+test('autos can interrupt: this exists to make a fresh wave 10 survivable', () => {
+  const { G, b } = windingRhombus();
+  damageEnemy(G, b, b.maxHp * CH.interruptFrac * 1.2, { noMult: true, src: 'turret' });
+  assert.ok(!b.winding && b.stun > 0, 'delegated damage must be able to interrupt');
+});
 
-  const a = windingRhombus();
-  damageEnemy(a.G, a.b, need(a.b) * 1.2, { noMult: true, src: 'turret' });
-  assert.ok(a.b.winding, 'setup: half of 1.2x should not yet reach the threshold');
-
-  const c = windingRhombus();
-  damageEnemy(c.G, c.b, need(c.b) * 2.2, { noMult: true, src: 'turret' });
-  assert.ok(!c.b.winding && c.b.stun > 0,
-    'delegated damage must be ABLE to interrupt — it just costs twice as much');
+test('no weapon class is secretly taxed on a boss (ADR-0013)', () => {
+  // The regression guard for the removed hidden multiplier. Identical raw damage
+  // from an auto and from a hand must remove identical HP — anything else is a
+  // rule the player cannot see and, worse, one that corrupts every balance
+  // measurement taken through it.
+  const hit = src => {
+    const { G, b } = spawnBossWithMove(20, 'LORD RHOMBUS');
+    b.winding = false; b.stun = 0;
+    const hp0 = b.hp;
+    damageEnemy(G, b, 1000, { noMult: true, src });
+    return hp0 - b.hp;
+  };
+  assert.equal(Math.round(hit('turret')), Math.round(hit('bolt')),
+    'an auto and a hand dealt different damage for the same raw number');
+  assert.equal(Math.round(hit('beam')), Math.round(hit('bolt')),
+    'hold and aim must also agree — no weapon class carries a hidden coefficient');
 });
 
 test('an uninterrupted charge still fires — the move was not defanged', () => {
