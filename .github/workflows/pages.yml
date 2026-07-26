@@ -47,11 +47,16 @@ jobs:
           # branch heads, and a channel head may predate a gate script this file
           # names. A gate is a property of the commit it guards (README
           # "Deployment") — hard-failing here bricks the whole site instead.
-          # onboarding-band gate (README Deployment, ADR-0003): out of band = no ship
-          if [ -f scripts/calibrate.mjs ]; then node scripts/calibrate.mjs 32
+          # ADR-0017: the two BALANCE gates below are ADVISORY — they run and print,
+          # they never fail the build, because the arsenal is still moving and a gate
+          # against a moving target is false precision. npm test and the perf gate
+          # stay hard: they measure code, not design target. Re-arm when the weapons
+          # stop changing, and re-derive both bands first.
+          # onboarding-band reading (README Deployment, ADR-0003)
+          if [ -f scripts/calibrate.mjs ]; then node scripts/calibrate.mjs 32 || echo "::warning::calibrate out of band - ADVISORY only (ADR-0017)"
           else echo "::notice::calibrate gate absent on this channel head - skipped"; fi
           # conductor gate (README balance tooling, GDD §3): delegation law enforced
-          if [ -f scripts/conductor.mjs ]; then node scripts/conductor.mjs
+          if [ -f scripts/conductor.mjs ]; then node scripts/conductor.mjs || echo "::warning::conductor red - ADVISORY only (ADR-0017)"
           else echo "::notice::conductor gate absent on this channel head - skipped"; fi
           # JS-cost gate (README performance tooling): bounds OUR javascript only —
           # a stub canvas is blind to rasterisation. Catches an O(n^2) landing, not
@@ -78,9 +83,9 @@ jobs:
           npm ci
           npm test
           # Guarded for the same reason as prod, above.
-          if [ -f scripts/calibrate.mjs ]; then node scripts/calibrate.mjs 32
+          if [ -f scripts/calibrate.mjs ]; then node scripts/calibrate.mjs 32 || echo "::warning::calibrate out of band - ADVISORY only (ADR-0017)"
           else echo "::notice::calibrate gate absent on this channel head - skipped"; fi
-          if [ -f scripts/conductor.mjs ]; then node scripts/conductor.mjs
+          if [ -f scripts/conductor.mjs ]; then node scripts/conductor.mjs || echo "::warning::conductor red - ADVISORY only (ADR-0017)"
           else echo "::notice::conductor gate absent on this channel head - skipped"; fi
           # JS-cost gate (README performance tooling): bounds OUR javascript only —
           # a stub canvas is blind to rasterisation. Catches an O(n^2) landing, not

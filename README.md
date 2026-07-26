@@ -98,35 +98,31 @@ HP — the do-nothing run could not die at all). Deterministic given the code
 (every rng call seeded), so a trip always means the sim changed. Wired into the
 prod gate beside calibrate.
 
-> **⚠ CALIBRATE IS OUT OF BAND — AND THE INSTRUMENT IS SUSPECT (2026-07-26).** Fresh-run
-> median death wave **4** against a [5, 10] floor. Four difficulty changes landed the same
-> day (boss HP +47%, the bolt capstone, XP removal, the level-1 opening) and the median
-> walked 7 → 5 → 5 → 4. **You did not break this either — and do not "fix" it by tuning
-> the difficulty curve.** The robot only sets an aim point: it cannot hold or swipe, so
-> beam, walls, flame and blades do nothing in its hands, yet it still drafts them at
-> random and burns the pick. Filtering those out of its choices moves the median **4 → 5,
-> back in band** — so most of the deficit is the ruler, not the game. Corroborating human
-> datum the same day: a fresh no-lattice run got **past wave 10**, with Lance Beam named
-> as the early-game lifesaver — the one tool the robot cannot hold. Fix the instrument
-> first; it moves a gate, so it wants an ADR. See PINS.
+> **ⓘ THE BALANCE GATES ARE ADVISORY (2026-07-26, ADR-0017).** Calibrate and the
+> conductor run and print in CI; **neither fails a build and neither blocks prod.** The
+> arsenal is still moving — most weapons have not had a balance pass — and a gate against a
+> moving target is false precision. `npm test` and the perf gate stay hard: they measure
+> code, not design target. **Re-arm when the weapons stop changing, and re-derive both
+> bands first.**
 >
-> **⚠ THE CONDUCTOR GATE IS KNOWINGLY RED AGAIN (2026-07-26, ADR-0015).** Hands buy
-> **×1.000** against a ≥1.12 band and **parked deaths are 0/11** — a run with the aim
-> parked at t=0 reaches wave 49 at 100% HP. **You did not break this.** Removing the in-run
-> XP economy (ADR-0015) removed the last in-run reward for killing things yourself, and
-> Law·Delegation went with it. It was landed anyway, deliberately and with the numbers on
-> the table, because the change is worth playing and a revert is one commit.
-> **`scripts/promote` refuses prod until this is green; dev carries it.**
+> Current readings, so nobody has to re-run them to know where things stand:
 >
-> *Earlier the same day this banner said the opposite.* Removing `BOSS_AUTO_RESIST`
-> (ADR-0013) had taken the gate to ×1.000; the boss-HP tuning that followed quietly
-> restored it to ×1.259 / 6-11 and **nobody re-ran the gate**, so a stale red banner stood
-> for part of a day. Lesson kept here on purpose: **re-run the gate after the change that
-> might have fixed it, not only after the change that broke it.**
+> - **Calibrate: median death wave 4**, band [5, 10]. Four difficulty changes landed
+>   2026-07-26 (boss HP +47%, the bolt capstone, XP removal, the level-1 opening) and the
+>   median walked 7 → 5 → 5 → 4. **Do not tune the curve to this number** — the robot only
+>   sets an aim point, so it cannot hold or swipe, yet it still drafts beam/walls/flame/
+>   blades at random and burns the pick. Filtering those moves the median 4 → 5. Human
+>   datum the same day: a fresh no-lattice run got past wave 10, with Lance Beam named the
+>   early-game lifesaver — the one tool the robot cannot hold.
+> - **Conductor: ×1.000, parked deaths 0/11.** Removing in-run XP (ADR-0015) took the
+>   do-nothing run to wave 49 at 100% HP. This one is a real finding, not an instrument
+>   artifact — a human playtest cannot see it, because a human plays with their hands on —
+>   and it stays pinned at full severity. Advisory ≠ resolved.
 >
-> The standing replacement design is the **episodic, telegraphed boss guard** (ADR-0013,
-> PINS). ADR-0015's break is larger and may want its own answer — see its "What the gate
-> caught" section, which records that the mechanism is *not* established.
+> Earlier history worth keeping: removing `BOSS_AUTO_RESIST` (ADR-0013) took the conductor
+> to ×1.000; the boss-HP tuning that followed quietly restored it to ×1.259 and **nobody
+> re-ran the gate**, so a stale red banner stood for part of a day. **Re-run the gate after
+> the change that might have fixed it, not only after the one that broke it.**
 
 The gate scores **survival time, not wave reached** (ADR-0010). Wave-reached is
 rate-sensitive — a Force Wall halves the rate waves arrive at with no survival

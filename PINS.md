@@ -1,4 +1,7 @@
 ## ⚠ Law·Delegation is BROKEN (0/11) — the biggest open thing in the repo
+- *(Gate authority suspended 2026-07-26 by ADR-0017 — advisory, not blocking. That is a
+  statement about the gate, NOT about this finding: parked-unkillable is real, playtest
+  cannot see it, and it stays at full severity.)*
 - **State, 2026-07-26 after ADR-0015:** removing in-run XP took the gate from ×1.259 /
   6-11 parked deaths to **×1.000 / 0-11** — the do-nothing run reaches wave 49 at 100% HP
   and cannot be killed. Landed deliberately (Daniel: *"we can always revert"*); prod is
@@ -104,6 +107,10 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
 - **So: do NOT tune the early curve yet.** The previous version of this pin said to pay for
   the day's four difficulty changes with an `enemyHpMult` pass. That would have been tuning
   the game to fit a broken ruler.
+- **Priority lowered 2026-07-26 (ADR-0017):** the gate no longer blocks anything, so this is
+  no longer urgent — it is a prerequisite for *re-arming* the gates, which happens when the
+  arsenal settles. Daniel: *"most of our weapons still require a proper pass."* Do that
+  first; the ruler only needs to be right when we start trusting it again.
 - **The decision to make first, and it wants an ADR because it moves a gate:** should the
   robot (a) skip weapons it cannot operate, (b) learn to hold and swipe, or (c) stay
   handicapped on purpose, with the band re-derived to mean "a player who only aims"? (a) is
