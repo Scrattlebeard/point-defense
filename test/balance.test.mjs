@@ -167,6 +167,17 @@ test('the orbit ring is a constant — levelling lengthens the blade, never move
   }
 });
 
+test('a maxed orbit is six knives, not a cogwheel', () => {
+  // Daniel, 2026-07-26, on the first ADR-0020 build: "6 blades this long is a bit
+  // much." The airiness bound is a real design property — a ring filled edge to
+  // edge stops reading as separate blades and stops reading as rotation at all.
+  // Drawn arc per blade is `len` plus the tips the renderer adds beyond the chord.
+  const st = WEAPONS.orbit.stats(WEAPONS.orbit.max);
+  const filled = (st.n * (st.len + 20)) / (2 * Math.PI * st.radius);
+  assert.ok(filled < 0.45,
+    `maxed blades fill ${(filled * 100).toFixed(0)}% of the ring — past ~45% it is a cogwheel`);
+});
+
 test('the blades stay inside the frost aura at every level of both weapons', () => {
   // Daniel, 2026-07-26: "taking it out of the slow aura is a huge nerf actually."
   // The weakest aura is frost L1; the blade's innermost reach must still clip it,

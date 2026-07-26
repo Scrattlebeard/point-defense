@@ -541,31 +541,52 @@ function drawField(G) {
   // orbit blades
   if (S.weapons.orbit >= 1) {
     const st = WEAPONS.orbit.stats(S.weapons.orbit);
-    // ADR-0020: a blade is an arc of the ring, honed on its outer edge — the face
-    // inbound shapes meet. Its drawn *length* is the hit segment plus a tip, so what
-    // the eye reads as reach along the ring is the reach; its drawn *thickness* is
-    // deliberately under `reach`, which is the usual forgiving-hitbox trade and the
-    // only place the picture and the physics differ. One gradient serves every
-    // blade: they share a radius, so the light across them is identical.
+    // ADR-0021: the blade is RAKED — its leading end rides `RAKE` further out than
+    // its trailing heel — and tapers to a point at the leading end only. Both cues
+    // exist to say which way it is going: a symmetric shape travelling along its own
+    // axis reads as a spike being carried, not a blade cutting. The rake also makes
+    // ADR-0019's radial gradient double as a leading-edge highlight for free, since
+    // "further out" and "further forward" are now the same direction.
+    // The hit test (ADR-0020) is untouched and stays the straight chord; the rake
+    // spans ±7 against a reach of 13, so the picture stays inside what already bites.
     const R = st.radius;
-    const spine = 7;
-    const g = ctx.createRadialGradient(G.cx, G.cy, R - spine, G.cx, G.cy, R);
-    g.addColorStop(0, '#3d7a8c');     // the spine, turned away
+    const RAKE = 7, THICK = 4.6, STEPS = 7;
+    const g = ctx.createRadialGradient(G.cx, G.cy, R - RAKE - THICK, G.cx, G.cy, R + RAKE);
+    g.addColorStop(0, '#357285');     // the heel, turned away
     g.addColorStop(0.55, '#9ff3ff');
-    g.addColorStop(1, '#eafcff');     // the honed edge
+    g.addColorStop(1, '#eafcff');     // the honed leading edge
+    // t runs +1 (leading tip) → −1 (trailing heel); orbA increases, so a+half leads.
+    const edge = (a, half, t) => a + t * half;
+    const rad = t => R + RAKE * t;
+    const wide = t => THICK * Math.sqrt(Math.max(0, (1 - t) * 0.5));
     for (let i = 0; i < st.n; i++) {
       const a = G.wt.orbA + (i * TAU) / st.n;
       const half = (st.len * 0.5 + 10) / R;   // the +10 is the tip beyond the hit chord
       ctx.fillStyle = g;
       ctx.beginPath();
-      ctx.arc(G.cx, G.cy, R, a - half, a + half);
-      // the spine runs shorter than the edge, which is what tapers both ends to points
-      ctx.arc(G.cx, G.cy, R - spine, a + half * 0.68, a - half * 0.68, true);
+      for (let s = 0; s <= STEPS; s++) {       // honed edge, tip → heel
+        const t = 1 - (2 * s) / STEPS;
+        const ang = edge(a, half, t), rr = rad(t) + wide(t) * 0.35;
+        const x = G.cx + Math.cos(ang) * rr, y = G.cy + Math.sin(ang) * rr;
+        if (s === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      for (let s = STEPS; s >= 0; s--) {       // spine, heel → tip
+        const t = 1 - (2 * s) / STEPS;
+        const ang = edge(a, half, t), rr = rad(t) - wide(t);
+        ctx.lineTo(G.cx + Math.cos(ang) * rr, G.cy + Math.sin(ang) * rr);
+      }
       ctx.closePath();
       ctx.fill();
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
       ctx.lineWidth = 1.2;
-      ctx.beginPath(); ctx.arc(G.cx, G.cy, R, a - half, a + half); ctx.stroke();
+      ctx.beginPath();
+      for (let s = 0; s <= STEPS; s++) {
+        const t = 1 - (2 * s) / STEPS;
+        const ang = edge(a, half, t), rr = rad(t) + wide(t) * 0.35;
+        const x = G.cx + Math.cos(ang) * rr, y = G.cy + Math.sin(ang) * rr;
+        if (s === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
     }
   }
 

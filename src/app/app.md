@@ -105,6 +105,12 @@ simulated-dpr-2 phone shot — recipes in README quickstart) and by play; not un
     listed as emissive when ADR-0019 landed and drawn as lit solids in the same commit — a
     tier divergence, corrected here in the `.md` because steel catching light is the right
     reading of a knife and the code was already right.)*
+  - **Anything that moves along its own long axis has to be told which end is the front**
+    (ADR-0021). The cues are **rake** — the leading end rides further out along the direction
+    of travel than the trailing one — and **asymmetry**, a point at the front and a heel at
+    the back. Without them the eye reads a shape being *carried sideways*, which is a spike,
+    not a blade. The orbit blades carry both; the boomerang and the force blades are still
+    symmetric and are the next candidates, not changed here.
   - **The orbit blades are the one lit thing whose light does not come from `LIGHT_A`**, and
     deliberately: they are an arc of a ring centred on the Point, so the gradient runs
     *radially* — dark at the spine, white at the honed outer edge. A blade sweeping a circle
