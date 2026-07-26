@@ -5,15 +5,15 @@ import { OPENING_LEVELS } from '../src/core/balance.js';
 import { WEAPONS, LATTICE } from '../src/core/config.js';
 import { mulberry32 } from '../src/core/rng.js';
 
-test('bastion baseline: 100 hp, bolt L2, and the opening draft is banked', () => {
+test('bastion baseline: 100 hp, bolt L2, level 1 with nothing banked', () => {
   const S = newRun(defaultMeta(), 'bastion');
   assert.equal(S.maxHp, 100);
   assert.equal(S.hp, 100);
   assert.equal(S.weapons.bolt, 2);
-  // ADR-0015: levels come from waves, and the run opens with a draft rather than
-  // grinding the first three out of wave 1's grunts.
-  assert.equal(S.lvl, OPENING_LEVELS);
-  assert.equal(S.pendingLevels, OPENING_LEVELS - 1, 'the opening picks are banked');
+  // ADR-0016: the run starts at the bottom and climbs. The first card is the reward
+  // for clearing wave 1, not a menu served before the meal.
+  assert.equal(S.lvl, 1);
+  assert.equal(S.pendingLevels, 0, 'nothing is banked before the first wave');
 });
 
 // The whole point of ADR-0015: the grant schedule is a function of the wave and
@@ -23,23 +23,19 @@ test('levels come from waves: one per clear, and the curve is level = wave + 2',
   for (let w = 1; w <= 12; w++) {
     S.wave = w;
     waveCleared(S);
-    assert.equal(S.lvl, OPENING_LEVELS + w, `after clearing wave ${w}`);
+    assert.equal(S.lvl, OPENING_LEVELS + w, `after clearing wave ${w}`); // relative form: the schedule
   }
 });
 
-// The ADR's headline promise, in literals rather than in terms of the constants —
-// otherwise the assertions are tautologies that pass for ANY value (they did: setting
-// OPENING_LEVELS to 1 left the suite green until this test existed). These numbers are
-// the curve the DELETED xp economy was measured to deliver: level at the start of
-// wave N was N+2 across 40 runs, and it still is.
-test('the wave grant reproduces the measured pre-ADR-0015 curve exactly', () => {
+// In LITERALS, not in terms of OPENING_LEVELS — assertions written against the
+// constant are tautologies that pass for any value, which is exactly how a wrong
+// opening once survived a green suite. ADR-0016: level at the start of wave N is N.
+test('the level curve is exactly one per wave, starting from one', () => {
   const S = newRun(defaultMeta(), 'bastion');
-  assert.equal(S.lvl, 3, 'a fresh run opens at level 3 with 2 picks banked');
+  assert.equal(S.lvl, 1, 'a fresh run opens at level 1 with nothing banked');
   const seen = [];
   for (let w = 1; w <= 8; w++) { S.wave = w; waveCleared(S); seen.push(S.lvl); }
-  // level at the START of wave N+1 == level after clearing wave N == N + 3... but the
-  // run is level 3 before wave 1 spawns, so at the start of wave N the player is N+2.
-  assert.deepEqual(seen, [4, 5, 6, 7, 8, 9, 10, 11]);
+  assert.deepEqual(seen, [2, 3, 4, 5, 6, 7, 8, 9]);
 });
 
 test('a wave pays the same level whether you killed everything or barely survived', () => {
@@ -66,8 +62,8 @@ test('tech effects fold into the run', () => {
   const S = newRun(meta, 'bastion');
   assert.equal(S.maxHp, 120);
   assert.ok(Math.abs(S.dmgMult - 1.08) < 1e-9);
-  assert.equal(S.lvl, OPENING_LEVELS + 1, 'head start stacks on the opening draft');
-  assert.equal(S.pendingLevels, OPENING_LEVELS, 'head start grants a free pick');
+  assert.equal(S.lvl, 2, 'head start opens the run one level higher');
+  assert.equal(S.pendingLevels, 1, 'head start grants a free pick');
 });
 
 test('every level-up heals: chip damage is recoverable (GDD §2/§7)', () => {

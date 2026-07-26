@@ -77,8 +77,9 @@ prereqs enforced), not exact constants, so tuning stays cheap.
 - `mixTilt(w) = clamp(0.55·(w−14)/40, 0, 0.55)` — the composition tilt (Enemies
   → "Wave composition"): 0 until the elite debut at wave 14, reaching 0.55 at wave
   54. Species budget share ∝ `cost^mixTilt`, pick weight ∝ `cost^(mixTilt−1)`.
-- **Levels come from waves, not kills** (ADR-0015): three at run start, then one per
-  wave cleared. There is no XP curve — the old one is gone, and the measurement that
+- **Levels come from waves, not kills** (ADR-0015): the run opens at level 1 and every
+  wave cleared pays one level (ADR-0016 — 0015 opened with a draft of three; the player
+  starts at the bottom and climbs instead). Level at the start of wave N is N. There is no XP curve — the old one is gone, and the measurement that
   killed it showed it had been paying exactly 1.00 levels/wave (min = max, 40 runs) at
   every depth anyway.
 - `stackChance(w) = w < 40 ? 0 : clamp(0.12 + 0.012(w−40), 0, 0.55)` — the chance a

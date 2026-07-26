@@ -91,6 +91,26 @@ Deferred work and mid-session asides. Rules live in CLAUDE.md ("Pins") — short
 - **Where:** `src/core/config.js` LATTICE + `SECTORS`, `src/core/core.md` branch table,
   `src/app/lattice.js` (layout is data-driven — no code change needed), ADR-0005.
 
+## ⚠ The early curve has to pay for 2026-07-26 — one tuning pass, against the whole stack
+- **What:** fresh-run calibrate median is **4**, below the [5, 10] floor, measured twice at
+  200 trials. The gate is red and prod is blocked on it.
+- **Why it is not any single change's fault:** four difficulty increases landed that day and
+  the median walked down with each — **7** (wave-5 boss +47% HP, `BOSS_TTK_FIRST` 15→22),
+  **5** (ADR-0014, bolt's second stream moved to MAX), **5** (ADR-0015, in-run XP removed),
+  **4** (ADR-0016, the run opens at level 1). Each was individually right and individually
+  small; the stack is what broke the band.
+- **What to do:** ONE tuning pass on the early curve — `enemyHpMult`'s linear term is the
+  blunt instrument, `BOSS_TTK_FIRST` the targeted one, since it is the wave-5 boss that most
+  fresh runs die to. Tune it **once, against the finished stack**, not four times against
+  moving parts. Target the middle of the band (~7), not the floor.
+- **Do not:** walk back any of the four. Each has its own ADR and its own reason, and the
+  band is the thing that should move.
+- **Where:** `src/core/balance.js` (`enemyHpMult`, `BOSS_TTK_FIRST`), `scripts/calibrate.mjs`,
+  `src/core/core.md` `enemyHpMult` note (which carries the round-by-round history — add a
+  round), README banner.
+- **Caution:** a fresh *human* has not played any of this. If the human curve and the robot
+  curve disagree, the human wins — the robot has perfect 0.2s retargeting and no fear.
+
 ## Bolt capstone — two things to feel for next playtest
 - **What:** ADR-0014 moved the auto stream from L3 to L6. Both open questions are playtest
   questions, not spreadsheet ones — deliberately not tuned further (Daniel, 2026-07-26:

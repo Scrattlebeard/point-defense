@@ -98,6 +98,13 @@ HP — the do-nothing run could not die at all). Deterministic given the code
 (every rng call seeded), so a trip always means the sim changed. Wired into the
 prod gate beside calibrate.
 
+> **⚠ CALIBRATE IS ALSO OUT OF BAND (2026-07-26, ADR-0016).** Fresh-run median death
+> wave **4** against a [5, 10] floor, measured twice at 200 trials. Four difficulty changes
+> landed the same day — boss HP +47%, the bolt capstone, XP removal, and the level-1
+> opening — and the median walked 7 → 5 → 5 → 4 across them. **You did not break this
+> either.** The fix belongs in the early curve (`enemyHpMult`, `BOSS_TTK_FIRST`), tuned
+> once against the finished stack; see PINS.
+>
 > **⚠ THE CONDUCTOR GATE IS KNOWINGLY RED AGAIN (2026-07-26, ADR-0015).** Hands buy
 > **×1.000** against a ≥1.12 band and **parked deaths are 0/11** — a run with the aim
 > parked at t=0 reaches wave 49 at 100% HP. **You did not break this.** Removing the in-run
