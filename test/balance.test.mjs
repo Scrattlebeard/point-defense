@@ -113,3 +113,19 @@ test('variantChance: none before wave 6, capped at 0.35, non-decreasing', () => 
   }
   assert.ok(B.variantChance(10) > 0);
 });
+
+// The early ramp was raised 2026-07-26 (Daniel: the wave-5 noble had "too little HP
+// to be meaningful", wave 10 wanted "10-15% extra"). Raising the ramp's FLOOR is the
+// whole change — the complaint was about the shape of the early curve, not about two
+// waves, and the mid/late curve nobody complained about must stay put.
+test('raising the early ramp lifts waves 5 and 10 and leaves the late curve alone', () => {
+  const ttk = B.bossTargetTtk;
+  assert.ok(ttk(5) >= 20, `the first boss is ${ttk(5)}s — too short to be meaningful`);
+  // wave 10 sits inside the band Daniel asked for, measured against the old floor of 15
+  const oldAt = w => 15 + (B.BOSS_TTK_TARGET - 15) * Math.min(1, Math.max(0, (w - 5) / 20));
+  const lift = w => ttk(w) / oldAt(w) - 1;
+  assert.ok(lift(10) >= 0.10 && lift(10) <= 0.15,
+    `wave 10 moved ${(lift(10) * 100).toFixed(1)}%, outside the requested 10-15%`);
+  assert.ok(lift(20) < 0.05, `wave 20 moved ${(lift(20) * 100).toFixed(1)}% — the late curve should barely notice`);
+  assert.equal(ttk(30), B.BOSS_TTK_TARGET, 'and past the ramp nothing changed at all');
+});

@@ -707,50 +707,40 @@ headroom is left, and once vsync-locked the gap alone cannot tell those apart.**
 design timed only the gap and I wrote a paragraph justifying it — right about detection,
 wrong about diagnosis.
 
-## The charge is interruptible — what remains is thumbs and one colour collision
-- **Landed 2026-07-26** to Daniel's spec: *"Level 10 was brutal on a fresh account… a charge
-  up where it can be delayed by damage, like a timer that ticks up but gets reduced by damage
-  taken, brief stun on the boss if you get it to zero."* Built as described. Threshold is
-  **3.5% of the boss's own max HP** inside the ~1.1s window — a share, never an absolute
-  number, because an absolute threshold beside a scaling curve is this repo's most repeated
-  defect.
-- **Tuned on measurement, not feel.** Interrupt rate over 8 fresh-account runs, comparing a
-  robot that ignores the tell against one that aims at the boss during it:
+## The charge interrupt may now be TOO easy to break, and the instrument cannot tell
+- **State after 2026-07-26:** tell **3.3s** (tripled, Daniel: *"the charge-up is too quick,
+  there's very little time to react if you're not already on the boss"*), `interruptFrac`
+  **0.105** (tripled with it, to hold the demanded damage-per-second constant).
+- **Tripling both is NOT neutral, and that is the finding.** Holding damage-per-second
+  constant does not hold *difficulty* constant, because the autos' passive contribution
+  scales with the length of the window. Measured across 8 fresh-account runs:
 
-  | interruptFrac | ignores the tell | reacts to it |
+  | | ignores the tell | reacts to it |
   |---|---|---|
-  | 0.07 (first cut) | 6% | 30% |
-  | **0.035 (shipped)** | **27%** | **70%** |
-  | 0.025 | 44% | 88% |
+  | before (tell 1.1, frac 0.035, auto-resist ON) | 27% | 70% |
+  | **now (tell 3.3, frac 0.105, no auto-resist)** | **42%** | **57%** |
 
-  **⚠ THIS SWEEP IS STALE (2026-07-26).** It was measured while `BOSS_AUTO_RESIST` halved
-  delegated damage, so autos now reach the interrupt threshold on **half** the raw damage
-  they needed then — every row above under-reports the current interrupt rate, the
-  "ignores the tell" column most of all, since that arm is carried by autos. Re-run before
-  touching `interruptFrac`. First worked example of ADR-0013's point: the hidden multiplier
-  was silently inside a measurement that looked like it was about something else.
-
-  0.035 because reacting should usually work (70%) while ignoring it usually costs you (73%
-  charge through). At 0.07 a player doing the right thing still ate the charge 70% of the
-  time, which reads as luck rather than counterplay; at 0.025 it fires itself.
-- **It also improved the delegation gate**, ×1.227 → **×1.661**, because interrupting rewards
-  aiming. That is the first direct evidence for route 3 in the pin below — undelegatable
-  pressure that is *not* a health bar. **It did NOT rescue the 60s target**, though: retested
-  at 60s the conductor still reads ×1.000 with parked deaths 2/11. Worth knowing before
-  anyone assumes more counterplay closes that gap.
-- **What needs a human eye:**
-  1. **A gold-on-gold collision I introduced.** The stagger draws three short *spinning* gold
-     arcs; `guard` (sunder/bulwark) draws a steady *breathing* gold double-ring. Same hue,
-     different motion, both on a boss. Distinct on the `?specimen=charge` plate — untested in
-     a fight where a Marquis could be guarded and staggered inside the same second.
-  2. **Whether wave 10 is actually fixed.** The whole change is aimed at "level 10 was
-     brutal"; nothing here can confirm it feels better, only that the interrupt is reachable.
-  3. Whether the stagger at 1.4s is long enough to matter and short enough not to make the
-     boss farmable. It deliberately grants no damage bonus — a boss that becomes a free hit
-     is a boss you farm.
-- **Where:** `config.js` BOSS_MOVES['LORD RHOMBUS'] (interruptFrac/stun), `enemies.js`
-  runBossMove + damageEnemy + the stun branch in updateEnemies, `render.js` the wind arc and
-  stagger ring, `core.md` "Boss signature moves", `app.md` "The charge meter", `?specimen=charge`.
+  The skill gap has nearly closed: a player who never looks at the boss breaks the charge
+  **42%** of the time by accident. Two compounding causes — the tripled window gives autos
+  3× as long to accumulate, and removing `BOSS_AUTO_RESIST` (ADR-0013) doubled what they
+  contribute. Both were right calls; the interaction was not anticipated.
+- **The instrument has run out of resolution, and the tell is unmistakable.** Sweeping the
+  threshold higher, at `frac 0.22` the "reacts" arm scored **worse** than the "ignores" arm
+  (9% vs 14%). That is impossible, so it is noise: ~37 wind-ups per arm is too few, and the
+  proxy is weak anyway — the robot merely re-aims, where a human seeing a 3.3s dial fill
+  would dump everything into the boss. **Do not tune `interruptFrac` against this rig.**
+  Either give it far more runs and a robot that commits (drops trash entirely, uses hold
+  weapons on the boss), or accept that this one is a thumbs question.
+- **So the shipped value is Daniel's instruction taken literally**, not a tuned number, and
+  it is flagged rather than sold as balanced. If 42% passive feels like the charge no longer
+  exists, the lever is `interruptFrac` upward — the sweep above is the starting point, with
+  its own unreliability stated.
+- **Still open from the previous round:** a gold-on-gold collision I introduced — the stagger
+  draws three short *spinning* gold arcs, `guard` draws a steady *breathing* gold double-ring.
+  Distinct on the `?specimen=charge` plate, untested in a fight where a Marquis could be
+  guarded and staggered in the same second. And whether wave 10 now feels right at all.
+- **Where:** `config.js` BOSS_MOVES['LORD RHOMBUS'], `enemies.js` runBossMove + damageEnemy,
+  `render.js` the dial, `core.md` / `app.md`, `?specimen=charge`.
 
 ## The 60s boss target is 40s away, and the gap is not tuning
 

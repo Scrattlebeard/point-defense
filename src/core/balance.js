@@ -48,7 +48,7 @@ export const BOSS_ENTRY = 0.33;
  *  The first boss is a short, legible wall — it teaches what a boss is, and it is
  *  where ~45% of fresh runs end, so lengthening it would move the onboarding band.
  *  By `BOSS_TTK_WAVE` they are full-length events and stay there. */
-export const BOSS_TTK_FIRST = 15;
+export const BOSS_TTK_FIRST = 22;
 /** DESIGN INTENT is 60s (Daniel, 2026-07-25: "around 60s events as the default").
  *  100 is what Law·Delegation currently permits, and the gap is measured, not
  *  guessed — see ADR-0012. Below ~90s the conductor gate fails outright, because

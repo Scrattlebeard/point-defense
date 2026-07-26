@@ -695,23 +695,36 @@ function drawEnemies(G) {
     // (white, draining). Channel is free — nothing else draws a partial arc on an
     // enemy; the tower's hp arc is the only other one and it is at the centre.
     if (e.winding && e.windNeed > 0) {
-      // ONE arc, not two. The first attempt drew charge progress in magenta and
-      // resistance in white — and magenta IS the boss's own outline colour, so the
-      // meter that mattered was invisible against the shape carrying it. Caught on
-      // the ?specimen=charge plate, which is the same lesson as armored's weak
-      // contrast: build the instrument, then look.
+      // A CLOCK DIAL FILLING INSIDE THE SHAPE (Daniel, 2026-07-26; app.md). The
+      // timer belongs where the eye already is — on the thing about to hit you —
+      // not on the perimeter, where it competed with the annulus channels that
+      // variants use. Sweeps clockwise from twelve; damage pushes it back.
       //
-      // The single arc is charge progress, and damage pushes it BACK, so it reads
-      // exactly as Daniel specified it — "a timer that ticks up but gets reduced by
-      // damage taken". The interrupt accumulator is the same damage, so the arc is
-      // an honest signal of progress toward the stagger without a second channel.
-      // Form is the channel here: nothing else on an enemy draws a partial arc.
+      // This bends "enemies are outlines, never fills" (pillar 3) and the bend is
+      // bounded so the law still means something: white at low alpha, never a
+      // species hue, inset inside the stroke, and only ever during a ~3.3s wind-up.
+      // It reads as an overlay on a shape, not as "this shape became friendly".
+      // An earlier version drew it OUTSIDE in magenta — the boss's own colour —
+      // and was invisible against the shape carrying it; caught on ?specimen=charge.
       const fill = clamp(1 - e.moveT / Math.max(0.001, e.windTell), 0, 1);
-      ctx.lineWidth = 3.5;
-      ctx.strokeStyle = `rgba(255, 255, 255, ${0.55 + 0.4 * fill})`;
-      ctx.beginPath();
-      ctx.arc(e.x, e.y, e.r + 7, -Math.PI / 2, -Math.PI / 2 + TAU * fill);
-      ctx.stroke();
+      if (fill > 0.001) {
+        const rr = e.r * 0.78;
+        ctx.fillStyle = `rgba(255, 255, 255, ${0.16 + 0.22 * fill})`;
+        ctx.beginPath();
+        ctx.moveTo(e.x, e.y);
+        ctx.arc(e.x, e.y, rr, -Math.PI / 2, -Math.PI / 2 + TAU * fill);
+        ctx.closePath();
+        ctx.fill();
+        // a thin leading edge, so the dial reads as MOVING at a glance rather than
+        // as a static wedge — the whole point is that it is a clock
+        const a = -Math.PI / 2 + TAU * fill;
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(e.x, e.y);
+        ctx.lineTo(e.x + Math.cos(a) * rr, e.y + Math.sin(a) * rr);
+        ctx.stroke();
+      }
     }
     // Staggered: the charge was broken. A brief gold flicker-ring, distinct from
     // guard's steady breathing double-ring because this one is spinning and short.

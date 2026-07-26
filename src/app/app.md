@@ -260,12 +260,22 @@ Costs nothing when off: `G.perf` is null unless `?perf` is in the query string, 
 every call site is behind that check.
 
 
-## The charge meter, and why it is one arc
+## The charge meter, and why it is a dial inside the shape
 
 Lord Rhombus's wind-up is interruptible (core.md "Boss signature moves"), so it must be
-*visible* — counterplay you cannot see is indistinguishable from a difficulty number. A
-white partial arc rides just outside the shape and fills toward the charge; damage pushes
-it back, which is the whole mechanic rendered directly.
+*visible* — counterplay you cannot see is indistinguishable from a difficulty number. It
+draws as a **clock dial filling inside the silhouette**, sweeping clockwise from twelve;
+damage pushes it back, which is the whole mechanic rendered directly. (Daniel's call,
+2026-07-26, replacing an outside arc: a dial inside the shape puts the timer where the eye
+already is — on the thing that is about to hit you — instead of on its perimeter, where it
+competed with the annulus channels that variants use.)
+
+**This deliberately bends "enemies are outlines, never fills" (README pillar 3), and the
+bend is bounded so the law still means something.** The law exists so *fill encodes
+allegiance* — filled = yours, outlined = theirs. The dial is drawn in **white at low alpha,
+never a species hue**, inset well inside the stroke, and exists only during a ~3.3s wind-up.
+So it never reads as "this shape became friendly"; it reads as an overlay on a shape, which
+is what it is. A variant highlight or a permanent state must still never fill.
 
 **The first version drew two arcs — charge progress in magenta, remaining resistance in
 white — and magenta is the boss's own outline colour**, so the meter that mattered was
@@ -273,7 +283,7 @@ invisible against the shape carrying it. Found on the `?specimen=charge` plate, 
 fight, which is the third time a staged plate has caught a channel collision that a live
 screenshot would have missed (armored's weak ring, the siege spur, this).
 
-The channel here is **form, not hue**: nothing else on an enemy draws a partial arc. The
+The channel is **form and position, not hue**: nothing else draws inside an enemy at all. The
 stagger that follows a successful interrupt uses three short *spinning* gold arcs, against
 `guard`'s steady breathing gold double-ring — a deliberate reuse of hue with different
 motion, and the one collision on this plate that still wants a human eye.

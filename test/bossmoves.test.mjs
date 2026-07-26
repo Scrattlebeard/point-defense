@@ -446,3 +446,20 @@ test('an uninterrupted charge still fires — the move was not defanged', () => 
   step(G, CH.tell + 0.2);
   assert.ok(b.charging, 'nobody shot it and it still failed to charge');
 });
+
+// Tripled 2026-07-26. Daniel: "the charge-up is too quick, there's very little time
+// to react if you're not already on the boss." Tripling the window AND the threshold
+// together is the point — it holds the damage-per-second the interrupt demands
+// roughly constant while tripling the time available to notice, decide and turn.
+test('the wind-up is long enough to turn around in', () => {
+  assert.ok(CH.tell >= 3, `a ${CH.tell}s window is a check on where your cursor already was`);
+});
+
+test('tripling the window did not make the interrupt cheaper per second', () => {
+  // If the threshold had stayed put, a 3x longer window would have made interrupting
+  // nearly automatic — the move would be gone rather than answerable.
+  const dpsDemand = CH.interruptFrac / CH.tell;   // share of boss hp per second
+  assert.ok(dpsDemand > 0.025 && dpsDemand < 0.038,
+    `interrupt demands ${(dpsDemand * 100).toFixed(1)}% of boss hp per second — ` +
+    'tripling the window without the threshold makes the charge a formality');
+});

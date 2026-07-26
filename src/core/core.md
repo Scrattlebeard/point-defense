@@ -91,10 +91,14 @@ prereqs enforced), not exact constants, so tuning stays cheap.
 - `bossHp(w) = max( bossTargetTtk(w) · referenceDps(w), presenceFloor(w) )` — **a boss
   fight is an event with a designed length, and its HP is whatever produces that
   length** (ADR-0012, superseding ADR-0008's fixed share).
-  - `bossTargetTtk(w)` ramps **15s → `BOSS_TTK_TARGET` by wave 25**, then holds. The
-    first boss stays short on purpose: it is the onboarding wall where ~45% of fresh
-    runs end, so lengthening it moves the calibrate band. Sizing in seconds *kept*
-    the band (median 8) where a flat target would have wrecked it.
+  - `bossTargetTtk(w)` ramps **`BOSS_TTK_FIRST` → `BOSS_TTK_TARGET` by wave 25**, then
+    holds. The first boss is still the shortest — it is the onboarding wall where ~45%
+    of fresh runs end — but not *trivial*: raised 15s → **22s on 2026-07-26** because
+    Daniel found the wave-5 noble "too little HP to be meaningful". Raising the ramp's
+    floor is the whole change: it lifts wave 5 by **+47%**, wave 10 by **+14.5%** (his
+    stated 10–15%), and converges to ~2% by wave 20, so the mid and late curve — which
+    nobody complained about — is left alone. One constant, because the complaint was
+    about the *shape* of the early ramp rather than about two waves.
   - `referenceDps(w) = 8.0 · w^1.15` — **fitted to measurement, not derived.** Player
     power comes from level-ups, weapon ladders and build luck; none has a closed
     form. The reference is a **fresh account playing naturally**, because a maxed
@@ -365,7 +369,7 @@ recirculated noble brings its signature back with it. Decisions live in the tabl
 | The Obtuse One | **surge** — +60% speed below 35% hp | finish it or buy time; a wounded boss is a *faster* boss, so chip damage without commitment is the worst option |
 | Marquis de Sides | **sunder** — at 55% hp, once, sheds 4 shards and is **guarded (×0.25 damage) while any shard lives** | *stop hitting the boss.* Your DPS is now being wasted; the fight demands a target switch and a return |
 | The Final Vertex | **bulwark** — every ~9s, plants itself for 3s: **guarded (×0.25 damage) and completely stationary** | *stop hitting the boss, for a while.* It is not threatening you during the window either — the seconds are a gift you waste by dumping damage into armour instead of clearing trash or placing setups |
-| Lord Rhombus | **charge** — winds up in place for ~1.1s, then crosses at ×4 speed until it reaches the rim. **The wind-up is interruptible: damage pushes the timer back, and emptying it staggers the boss** | *distance is not safety* — but it is now a question you get to answer. The wind-up is a window with a meter in it: burn it down and the charge never happens and the boss is briefly stunned; ignore it and the margin you were banking is spent in a second |
+| Lord Rhombus | **charge** — winds up in place for ~3.3s, then crosses at ×4 speed until it reaches the rim. **The wind-up is interruptible: damage pushes the timer back, and emptying it staggers the boss** | *distance is not safety* — but it is now a question you get to answer. The wind-up is a window with a meter in it: burn it down and the charge never happens and the boss is briefly stunned; ignore it and the margin you were banking is spent in a second |
 | Grandmaster Hexley | **study** — every consecutive second of ***hand*** damage hardens it one step (×0.85 each, floor ×0.4); two seconds untouched by a hand and it forgets. **Auto weapons do not feed the clock** | *sustained focus is punished.* The exact inverse of surge: here chip-and-rotate beats commitment, so the two nobles ask opposite questions and a player who learned one must unlearn it |
 | Polygothra | **devour** — every ~5s, eats the nearest trash shape within 150px, healing 4% max HP | *the escort is the boss's food.* Inverts the standing target priority: ignore the chaff here and the fight lengthens under you |
 
@@ -385,6 +389,12 @@ on the boss-charge-rush-thing."* His design, built as specified: the wind-up car
 that ticks toward the charge and is **pushed back by damage**; empty it and the boss is
 **staggered** instead of charging.
 
+- **The window is long enough to turn around in.** Tripled 2026-07-26 — tell 1.1s → **3.3s**,
+  and `interruptFrac` 0.035 → **0.105** with it. Daniel: *"the charge-up is too quick, there's
+  very little time to react if you're not already on the boss."* Tripling **both** is the
+  point: it holds the damage-per-second the interrupt demands roughly constant while tripling
+  the time you have to notice, decide and turn. A window you can only answer by already
+  looking at it is not counterplay, it is a check on where your cursor happened to be.
 - **The interrupt threshold is a fraction of the boss's own max HP** (`interruptFrac`), never
   an absolute damage number. An absolute threshold beside a scaling curve is this codebase's
   most repeated defect — `bossHp` linear vs quartic, boss variants vs a wave-share pool, the
@@ -397,7 +407,8 @@ that ticks toward the charge and is **pushed back by damage**; empty it and the 
   across whatever is on the field, so **concentrating enough damage inside a ~1.1s window is
   something aiming does naturally and delegation does not.** The pressure comes from the
   window, not from a rule about weapon classes.
-- **A meter you cannot see is not counterplay.** The wind-up draws a depleting arc, so
+- **A meter you cannot see is not counterplay.** The wind-up draws a **dial that fills inside
+  the shape** — a clock running down toward the charge, pushed back when damage lands, so
   "shooting it is doing something" is visible while it is happening. Without that the move is
   indistinguishable from the old uninterruptible one, and the player learns nothing.
 - The stagger is deliberately **short and damage-free**: it buys tempo, not a damage window.
